@@ -1,19 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function AdminServiceManager() {
-  const [services, setServices] = useState([
-    {
-      name: "FITNESS",
-      image: "/fitness.jpg",
-      description: "Tập gym cá nhân với HLV chuyên nghiệp.",
-    },
-    {
-      name: "YOGA",
-      image: "/yoga.jpg",
-      description: "Yoga giúp thư giãn tinh thần và tăng sự dẻo dai.",
-    },
-  ]);
-
+  const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     image: "",
@@ -21,7 +10,21 @@ export default function AdminServiceManager() {
   });
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editIndex, setEditIndex] = useState(null);
+  const [editId, setEditId] = useState(null);
+
+  // Lấy danh sách dịch vụ từ DB
+  const fetchServices = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/services");
+      setServices(res.data);
+    } catch (err) {
+      console.error("Lỗi khi tải dịch vụ:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,32 +34,40 @@ export default function AdminServiceManager() {
     }));
   };
 
-  const handleAdd = (e) => {
+  const handleAddOrUpdate = async (e) => {
     e.preventDefault();
-    if (isEditing) {
-      // Sửa dịch vụ
-      const updated = [...services];
-      updated[editIndex] = formData;
-      setServices(updated);
+    try {
+      if (isEditing) {
+        await axios.put(
+          `http://localhost:5000/api/services/${editId}`,
+          formData
+        );
+      } else {
+        await axios.post("http://localhost:5000/api/services", formData);
+      }
+      setFormData({ name: "", image: "", description: "" });
       setIsEditing(false);
-      setEditIndex(null);
-    } else {
-      // Thêm dịch vụ mới
-      setServices([...services, formData]);
+      setEditId(null);
+      fetchServices();
+    } catch (err) {
+      console.error("Lỗi khi thêm/cập nhật dịch vụ:", err);
     }
-    setFormData({ name: "", image: "", description: "" });
   };
 
-  const handleEdit = (index) => {
-    setFormData(services[index]);
+  const handleEdit = (service) => {
+    setFormData(service);
     setIsEditing(true);
-    setEditIndex(index);
+    setEditId(service._id);
   };
 
-  const handleDelete = (index) => {
+  const handleDelete = async (id) => {
     if (confirm("Bạn có chắc muốn xóa dịch vụ này không?")) {
-      const updated = services.filter((_, i) => i !== index);
-      setServices(updated);
+      try {
+        await axios.delete(`http://localhost:5000/api/services/${id}`);
+        fetchServices();
+      } catch (err) {
+        console.error("Lỗi khi xóa dịch vụ:", err);
+      }
     }
   };
 
@@ -66,7 +77,7 @@ export default function AdminServiceManager() {
 
       {/* Form Thêm/Sửa */}
       <form
-        onSubmit={handleAdd}
+        onSubmit={handleAddOrUpdate}
         className="bg-gray-100 p-6 rounded-lg space-y-4 shadow"
       >
         <input
@@ -105,9 +116,9 @@ export default function AdminServiceManager() {
 
       {/* Danh sách dịch vụ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {services.map((service, index) => (
+        {services.map((service) => (
           <div
-            key={index}
+            key={service._id}
             className="bg-white p-4 rounded-lg shadow-md space-y-2 relative"
           >
             <img
@@ -119,13 +130,13 @@ export default function AdminServiceManager() {
             <p className="text-gray-600">{service.description}</p>
             <div className="flex gap-2 mt-2">
               <button
-                onClick={() => handleEdit(index)}
+                onClick={() => handleEdit(service)}
                 className="text-blue-600 hover:underline"
               >
                 Sửa
               </button>
               <button
-                onClick={() => handleDelete(index)}
+                onClick={() => handleDelete(service._id)}
                 className="text-red-600 hover:underline"
               >
                 Xóa

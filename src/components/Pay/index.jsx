@@ -1,19 +1,64 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function PaymentPage() {
-  const navigate = useNavigate(); // Khởi tạo useNavigate để điều hướng
+  const navigate = useNavigate();
   const [userData, setUserData] = useState({ name: "", email: "", phone: "" });
+  const [registeredClasses, setRegisteredClasses] = useState([]);
   const [selectedMethod, setSelectedMethod] = useState("");
-  const [isPaid, setIsPaid] = useState(false);
-  const [order, setOrder] = useState({
-    classes: [
-      { name: "Yoga Buổi Sáng", price: 150000 },
-      { name: "Tập Lực Cường Độ Cao", price: 200000 },
-    ],
-  });
+  const [loading, setLoading] = useState(true);
   const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
-  const totalAmount = order.classes.reduce((sum, cls) => sum + cls.price, 0);
+
+  const userId = "6616e899125c8e4c6b4b5a1e"; // giả sử userId cố định
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch thông tin người dùng
+        const userRes = await fetch(
+          `http://localhost:5000/api/users/${userId}`
+        );
+        const userData = await userRes.json();
+        setUserData({
+          name: userData.name || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
+        });
+
+        // Fetch các lớp đã đăng ký
+        const regRes = await fetch(
+          `http://localhost:5000/api/classregistrations/user/${userId}`
+        );
+        const registrations = await regRes.json();
+
+        // Fetch chi tiết từng lớp học dựa trên scheduleId
+        const classDetailsPromises = registrations.map(async (reg) => {
+          const scheduleRes = await fetch(
+            `http://localhost:5000/api/schedules/${reg.scheduleId}`
+          );
+          const scheduleData = await scheduleRes.json();
+          return {
+            name: scheduleData.name || "Lớp học không xác định",
+            price: scheduleData.price || 0,
+          };
+        });
+
+        const classes = await Promise.all(classDetailsPromises);
+        setRegisteredClasses(classes);
+      } catch (error) {
+        console.error("Lỗi tải dữ liệu:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const totalAmount = registeredClasses.reduce(
+    (sum, cls) => sum + cls.price,
+    0
+  );
 
   const handlePayment = () => {
     if (!selectedMethod) {
@@ -23,26 +68,48 @@ export default function PaymentPage() {
     setShowPaymentConfirmation(true);
   };
 
-  const handlePaymentConfirm = () => {
-    alert("Thanh toán thành công!");
-    setIsPaid(true); // Khi thanh toán thành công, điều hướng đến trang hóa đơn
-    navigate("/bill"); // Điều hướng đến trang hóa đơn (BillPage)
+  const handlePaymentConfirm = async () => {
+    try {
+      await fetch("http://localhost:5000/api/payments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          amount: totalAmount,
+          method: selectedMethod,
+        }),
+      });
+
+      alert("Thanh toán thành công!");
+      navigate("/bill");
+    } catch (error) {
+      console.error("Lỗi thanh toán:", error);
+      alert("Thanh toán thất bại.");
+    }
   };
+
+  if (loading) return <p className="text-center py-10">Đang tải dữ liệu...</p>;
 
   return (
     <div className="min-h-screen bg-white text-gray-800 p-6">
-      {/* Thông tin đơn hàng và phương thức thanh toán */}
+      {/* Thông tin đơn hàng */}
       <div className="bg-gray-100 border border-gray-300 rounded-xl p-6 mb-8 shadow-sm">
         <h2 className="text-2xl font-semibold mb-4">Chi tiết đơn hàng</h2>
-        {order.classes.map((cls, idx) => (
-          <div
-            key={idx}
-            className="flex justify-between items-center mb-2 text-lg"
-          >
-            <span>{cls.name}</span>
-            <span>{cls.price.toLocaleString()}đ</span>
-          </div>
-        ))}
+        {registeredClasses.length > 0 ? (
+          registeredClasses.map((cls, idx) => (
+            <div
+              key={idx}
+              className="flex justify-between items-center mb-2 text-lg"
+            >
+              <span>{cls.name}</span>
+              <span>{cls.price.toLocaleString()}đ</span>
+            </div>
+          ))
+        ) : (
+          <p>Không có lớp nào trong đơn hàng.</p>
+        )}
         <hr className="my-4" />
         <div className="flex justify-between text-xl font-bold">
           <span>Tổng cộng:</span>
@@ -94,7 +161,6 @@ export default function PaymentPage() {
         <div className="bg-gray-100 border border-gray-300 rounded-xl p-6 mb-8 shadow-sm">
           <h2 className="text-2xl font-semibold mb-4">Phiếu thanh toán</h2>
 
-          {/* Thông tin cá nhân người dùng */}
           <div className="mb-4">
             <h3 className="font-semibold">Thông tin cá nhân:</h3>
             <div>
@@ -111,10 +177,9 @@ export default function PaymentPage() {
             </div>
           </div>
 
-          {/* Chi tiết dịch vụ */}
           <div className="mb-4">
             <h3 className="font-semibold">Chi tiết dịch vụ:</h3>
-            {order.classes.map((cls, idx) => (
+            {registeredClasses.map((cls, idx) => (
               <div
                 key={idx}
                 className="flex justify-between items-center mb-2 text-lg"
@@ -130,13 +195,11 @@ export default function PaymentPage() {
             </div>
           </div>
 
-          {/* Phương thức thanh toán */}
           <div className="mb-4">
             <h3 className="font-semibold">Phương thức thanh toán:</h3>
             <p>{selectedMethod}</p>
           </div>
 
-          {/* Xác nhận thanh toán */}
           <button
             onClick={handlePaymentConfirm}
             className="bg-green-600 text-white px-6 py-2 rounded-lg mt-4"

@@ -1,58 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GymImageGallery from "../Club/Banner";
-// Dữ liệu các dịch vụ của phòng gym
-const services = [
-  {
-    name: "FITNESS",
-    image: "/fitness.jpg",
-    description:
-      "Dịch vụ tập gym cá nhân với huấn luyện viên chuyên nghiệp, giúp bạn đạt được mục tiêu sức khỏe nhanh chóng.",
-  },
-  {
-    name: "DANCE COVER",
-    image: "/dancecover.jpg",
-    description:
-      "Lớp học Dance Cover giúp bạn vừa tập thể dục vừa thể hiện phong cách nhảy riêng biệt.",
-  },
-  {
-    name: "ZUMBA",
-    image: "/zumba.jpg",
-    description:
-      "Zumba là môn thể dục nhịp điệu vui nhộn giúp bạn giảm cân và tăng cường sức bền.",
-  },
-  {
-    name: "PERSONAL TRAINER",
-    image: "/trainer.jpg",
-    description:
-      "Dịch vụ huấn luyện viên cá nhân giúp bạn xây dựng kế hoạch tập luyện phù hợp với mục tiêu của mình.",
-  },
-  {
-    name: "YOGA",
-    image: "/yoga.jpg",
-    description:
-      "Yoga giúp bạn tăng cường sự dẻo dai, thư giãn tinh thần và cải thiện sức khỏe tổng thể.",
-  },
-  {
-    name: "MUAY THAI",
-    image: "/muaythai.jpg",
-    description:
-      "Muay Thai là môn thể thao võ thuật giúp bạn rèn luyện sức mạnh và khả năng phòng thủ bản thân.",
-  },
-  {
-    name: "BOXING",
-    image: "/boxing.jpg",
-    description:
-      "Lớp học Boxing giúp bạn cải thiện thể lực, sức mạnh và kỹ năng tự vệ hiệu quả.",
-  },
-  {
-    name: "CYCLING",
-    image: "/cyclling.jpg",
-    description:
-      "Dịch vụ đạp xe giúp bạn cải thiện sức bền, giảm mỡ và giữ dáng thon gọn.",
-  },
-];
+import axios from "axios";
 
 export default function ServicePage() {
+  const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -61,6 +12,20 @@ export default function ServicePage() {
     startDate: "",
     notes: "",
   });
+
+  // Gọi API để lấy danh sách dịch vụ
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/services");
+        setServices(res.data);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách dịch vụ:", error);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -84,6 +49,7 @@ export default function ServicePage() {
     <div className="p-6 space-y-10">
       {/* Banner */}
       <GymImageGallery />
+
       {/* Danh sách dịch vụ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
         {services.map((service, index) => (

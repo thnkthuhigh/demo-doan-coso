@@ -21,6 +21,7 @@ export default function ManageScheduleAdmin() {
       endTime: "",
       date: "",
       instructor: "",
+      price: "", // 👉 thêm field price
     });
   };
 
@@ -36,7 +37,6 @@ export default function ManageScheduleAdmin() {
   const formatTime = (time) => {
     if (!time || typeof time !== "string" || !time.includes(":"))
       return time || "";
-
     const [hour, minute] = time.split(":");
     return `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
   };
@@ -47,7 +47,8 @@ export default function ManageScheduleAdmin() {
       !creatingClass.service ||
       !creatingClass.startTime ||
       !creatingClass.endTime ||
-      !creatingClass.date
+      !creatingClass.date ||
+      !creatingClass.price
     ) {
       alert("Vui lòng điền đầy đủ thông tin!");
       return;
@@ -56,6 +57,7 @@ export default function ManageScheduleAdmin() {
     const newClass = {
       ...creatingClass,
       date: new Date(creatingClass.date),
+      price: Number(creatingClass.price), // 👉 ép giá về số
     };
 
     try {
@@ -82,6 +84,7 @@ export default function ManageScheduleAdmin() {
     const updatedData = {
       ...updatedClass,
       date: new Date(updatedClass.date),
+      price: Number(updatedClass.price),
     };
 
     try {
@@ -179,6 +182,14 @@ export default function ManageScheduleAdmin() {
                 setCreatingClass({ ...creatingClass, date: e.target.value }),
               "date"
             )}
+            {renderInput(
+              "Giá tiền",
+              creatingClass.price,
+              (e) =>
+                setCreatingClass({ ...creatingClass, price: e.target.value }),
+              "number",
+              "VND"
+            )}
             {renderInput("Tên huấn luyện viên", creatingClass.instructor, (e) =>
               setCreatingClass({ ...creatingClass, instructor: e.target.value })
             )}
@@ -218,6 +229,9 @@ export default function ManageScheduleAdmin() {
             </p>
             <p>
               <strong>Ngày:</strong> {formatDate(cls.date)}
+            </p>
+            <p>
+              <strong>Giá:</strong> {cls.price?.toLocaleString()} VND
             </p>
             <p>
               <strong>Huấn luyện viên:</strong> {cls.instructor}
@@ -269,6 +283,14 @@ export default function ManageScheduleAdmin() {
               editingClass.date,
               (e) => setEditingClass({ ...editingClass, date: e.target.value }),
               "date"
+            )}
+            {renderInput(
+              "Giá tiền",
+              editingClass.price,
+              (e) =>
+                setEditingClass({ ...editingClass, price: e.target.value }),
+              "number",
+              "VND"
             )}
             {renderInput("Tên huấn luyện viên", editingClass.instructor, (e) =>
               setEditingClass({ ...editingClass, instructor: e.target.value })

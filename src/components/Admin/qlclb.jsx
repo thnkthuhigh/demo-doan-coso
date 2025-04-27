@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function AdminClubManager() {
   const [clubs, setClubs] = useState([]);
@@ -11,38 +12,78 @@ export default function AdminClubManager() {
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
 
+  const apiUrl = "http://localhost:5000/api/clubs"; // Thay đổi URL với API backend của bạn
+
+  // Lấy dữ liệu CLB từ backend khi component mount
+  useEffect(() => {
+    const fetchClubs = async () => {
+      try {
+        const response = await axios.get(apiUrl);
+        setClubs(response.data);
+      } catch (error) {
+        console.error("Error fetching clubs:", error);
+      }
+    };
+    fetchClubs();
+  }, []);
+
+  // Xử lý thay đổi form input
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  // Xử lý gửi form (thêm hoặc cập nhật CLB)
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isEditing) {
-      const updatedClubs = [...clubs];
-      updatedClubs[editIndex] = formData;
-      setClubs(updatedClubs);
+      try {
+        const updatedClub = {
+          ...formData,
+        };
+        await axios.put(`${apiUrl}/${clubs[editIndex]._id}`, updatedClub); // Cập nhật CLB theo _id
+        const updatedClubs = [...clubs];
+        updatedClubs[editIndex] = updatedClub;
+        setClubs(updatedClubs);
+      } catch (error) {
+        console.error("Error updating club:", error);
+      }
       setIsEditing(false);
       setEditIndex(null);
     } else {
-      setClubs([...clubs, formData]);
+      try {
+        const newClub = {
+          ...formData,
+        };
+        const response = await axios.post(apiUrl, newClub); // Thêm CLB mới
+        setClubs([...clubs, response.data]);
+      } catch (error) {
+        console.error("Error adding club:", error);
+      }
     }
     setFormData({ name: "", address: "", image: "", description: "" });
   };
 
+  // Xử lý chỉnh sửa CLB
   const handleEdit = (index) => {
     setFormData(clubs[index]);
     setIsEditing(true);
     setEditIndex(index);
   };
 
-  const handleDelete = (index) => {
+  // Xử lý xóa CLB
+  const handleDelete = async (index) => {
     const confirmDelete = confirm("Bạn có chắc muốn xóa CLB này?");
     if (!confirmDelete) return;
 
-    const updatedClubs = [...clubs];
-    updatedClubs.splice(index, 1);
-    setClubs(updatedClubs);
+    try {
+      await axios.delete(`${apiUrl}/${clubs[index]._id}`); // Xóa CLB theo _id
+      const updatedClubs = [...clubs];
+      updatedClubs.splice(index, 1);
+      setClubs(updatedClubs);
+    } catch (error) {
+      console.error("Error deleting club:", error);
+    }
   };
 
   return (
@@ -104,7 +145,7 @@ export default function AdminClubManager() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {clubs.map((club, index) => (
           <div
-            key={index}
+            key={club._id}
             className="bg-white rounded-2xl shadow-md overflow-hidden"
           >
             <img
