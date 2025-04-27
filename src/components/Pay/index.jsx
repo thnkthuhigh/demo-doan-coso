@@ -34,7 +34,7 @@ export default function PaymentPage() {
         // Fetch chi tiết từng lớp học dựa trên scheduleId
         const classDetailsPromises = registrations.map(async (reg) => {
           const scheduleRes = await fetch(
-            `http://localhost:5000/api/schedules/${reg.scheduleId}`
+            `http://localhost:5000/api/schedules/${reg.schedule._id}`
           );
           const scheduleData = await scheduleRes.json();
           return {

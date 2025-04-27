@@ -26,7 +26,7 @@ app.use("/api/schedules", scheduleRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/clubs", clubRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/classregistrations", classRegistrationRoutes); // Gắn route này cho đúng URL
+app.use("/api/classregistrations", classRegistrationRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;

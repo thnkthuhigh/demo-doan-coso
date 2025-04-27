@@ -1,30 +1,18 @@
-// models/ClassRegistration.js
 import mongoose from "mongoose";
 
-const ClassRegistrationSchema = new mongoose.Schema(
-  {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // hoặc ref 'users' tùy theo collection
-      required: true,
-    },
-    scheduleId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Schedule", // lịch tập
-      required: true,
-    },
-    registeredAt: {
-      type: Date,
-      default: Date.now,
-    },
+const classRegistrationSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  schedule: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Schedule",
+    required: true,
   },
-  {
-    timestamps: true, // thêm createdAt, updatedAt
-  }
-);
+  paymentStatus: { type: Boolean, default: false },
+  registrationDate: { type: Date, default: Date.now },
+});
 
-const ClassRegistration = mongoose.model(
-  "ClassRegistration",
-  ClassRegistrationSchema
-);
+const ClassRegistration =
+  mongoose.models.ClassRegistration ||
+  mongoose.model("ClassRegistration", classRegistrationSchema);
+
 export default ClassRegistration;
