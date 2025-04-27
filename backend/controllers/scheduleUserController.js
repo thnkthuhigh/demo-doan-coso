@@ -1,6 +1,5 @@
-// controllers/registrationController.js
-import ClassRegistration from "../models/ScheduleUser.js";
-import Schedule from "../models/Schedule.js"; // file Schedule bạn cũng cần sửa thành import/export nhé
+import ClassRegistration from "../models/ClassRegistration.js";
+import Schedule from "../models/Schedule.js";
 
 // Đăng ký lớp tập
 export const registerClass = async (req, res) => {
@@ -34,13 +33,13 @@ export const registerClass = async (req, res) => {
   }
 };
 
-// Lấy danh sách lớp đã đăng ký
+// Lấy danh sách lớp đã đăng ký của user
 export const getUserRegistrations = async (req, res) => {
   try {
     const { userId } = req.params;
 
     const registrations = await ClassRegistration.find({ userId })
-      .populate("scheduleId")
+      .populate("scheduleId") // lấy luôn chi tiết schedule
       .sort({ createdAt: -1 });
 
     res.status(200).json(registrations);
