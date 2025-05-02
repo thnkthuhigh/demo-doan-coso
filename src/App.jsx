@@ -6,7 +6,8 @@ import HomePage from "./components/Home";
 import NavBar from "./components/Global/Nav";
 import Footer from "./components/Global/Fot";
 import Club from "./components/Club/index";
-import ServicePage from "./components/Services";
+import ServicePage from "./components/Services/ServicePage";
+import ServiceDetail from "./components/Services/ServiceDetail";
 import PricingPage from "./components/Price";
 import ViewSchedulePage from "./components/Schedule";
 import ManageSchedule from "./components/Manage";
@@ -35,6 +36,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/club" element={<Club />} />
         <Route path="/services" element={<ServicePage />} />
+        <Route path="/services/:id" element={<ServiceDetail />} />
         <Route path="/prices" element={<PricingPage />} />
         <Route path="/schedule" element={<ViewSchedulePage />} />
         <Route path="/manage" element={<ManageSchedule />} />

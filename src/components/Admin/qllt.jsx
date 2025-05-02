@@ -5,6 +5,16 @@ export default function ManageScheduleAdmin() {
   const [scheduledClassesState, setScheduledClassesState] = useState([]);
   const [editingClass, setEditingClass] = useState(null);
   const [creatingClass, setCreatingClass] = useState(null);
+  const servicesOptions = [
+    "FITNESS",
+    "DANCE COVER",
+    "ZUMBA",
+    "PERSONAL TRAINER",
+    "YOGA",
+    "MUAY THAI",
+    "BOXING",
+    "CYCLING",
+  ];
 
   useEffect(() => {
     axios
@@ -136,6 +146,24 @@ export default function ManageScheduleAdmin() {
     </div>
   );
 
+  const renderSelect = (label, value, onChange, options) => (
+    <div className="flex flex-col gap-1">
+      <label className="font-medium">{label}</label>
+      <select
+        value={value}
+        onChange={onChange}
+        className="form-select rounded-lg border-gray-300"
+      >
+        <option value="">Chọn dịch vụ</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 p-8">
       <div className="flex justify-between items-center mb-6">
@@ -155,8 +183,12 @@ export default function ManageScheduleAdmin() {
             {renderInput("Tên lớp", creatingClass.className, (e) =>
               setCreatingClass({ ...creatingClass, className: e.target.value })
             )}
-            {renderInput("Dịch vụ", creatingClass.service, (e) =>
-              setCreatingClass({ ...creatingClass, service: e.target.value })
+            {renderSelect(
+              "Dịch vụ",
+              creatingClass.service,
+              (e) =>
+                setCreatingClass({ ...creatingClass, service: e.target.value }),
+              servicesOptions
             )}
             {renderInput(
               "Giờ bắt đầu",
@@ -261,8 +293,12 @@ export default function ManageScheduleAdmin() {
             {renderInput("Tên lớp", editingClass.className, (e) =>
               setEditingClass({ ...editingClass, className: e.target.value })
             )}
-            {renderInput("Dịch vụ", editingClass.service, (e) =>
-              setEditingClass({ ...editingClass, service: e.target.value })
+            {renderSelect(
+              "Dịch vụ",
+              creatingClass.service,
+              (e) =>
+                setCreatingClass({ ...creatingClass, service: e.target.value }),
+              servicesOptions
             )}
             {renderInput(
               "Giờ bắt đầu",

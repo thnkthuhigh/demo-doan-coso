@@ -6,6 +6,7 @@ function SignUp() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     dob: "",
@@ -24,7 +25,7 @@ function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { username, email, password, confirmPassword, dob, gender } =
+    const { username, email, phone, password, confirmPassword, dob, gender } =
       formData;
 
     if (password !== confirmPassword) {
@@ -36,11 +37,12 @@ function SignUp() {
       const response = await axios.post(
         "http://localhost:5000/api/auth/signup",
         {
-          username,
-          email,
+          username: username.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
           password,
-          dob: new Date(dob).toISOString(), // chuyển dob về dạng chuẩn ISO
-          gender: gender || "other", // nếu chưa chọn gender thì gửi 'other'
+          dob: new Date(dob).toISOString(),
+          gender: gender || "other",
         }
       );
 
@@ -52,7 +54,7 @@ function SignUp() {
       console.log("Full error:", error.response);
       alert(
         error.response?.data?.message ||
-          error.message || // Hiển thị thông báo lỗi nếu có
+          error.message ||
           "An error occurred. Please try again later."
       );
     }
@@ -66,9 +68,11 @@ function SignUp() {
         </h2>
 
         <form onSubmit={handleSubmit}>
+          {/* List input fields */}
           {[
             { id: "username", type: "text", label: "Username" },
             { id: "email", type: "email", label: "Email" },
+            { id: "phone", type: "text", label: "Phone" }, // 🆕 thêm input phone
             { id: "password", type: "password", label: "Password" },
             {
               id: "confirmPassword",
@@ -96,6 +100,7 @@ function SignUp() {
             </div>
           ))}
 
+          {/* Gender select */}
           <div className="mb-6">
             <label
               htmlFor="gender"
@@ -117,6 +122,7 @@ function SignUp() {
             </select>
           </div>
 
+          {/* Submit button */}
           <button
             type="submit"
             className="w-full py-3 bg-black text-white rounded-md hover:bg-gray-900 focus:outline-none"
@@ -124,6 +130,7 @@ function SignUp() {
             Sign Up
           </button>
 
+          {/* Link to login */}
           <div className="mt-6 text-center">
             <span className="text-sm text-gray-600">
               Already have an account?

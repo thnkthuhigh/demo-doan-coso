@@ -4,7 +4,7 @@ import User from "../models/User.js";
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select(
-      "username email gender dob"
+      "username email gender dob phone"
     );
     if (!user) {
       return res.status(404).json({ message: "Không tìm thấy user." });

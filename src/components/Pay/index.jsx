@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 export default function PaymentPage() {
   const navigate = useNavigate();
@@ -7,102 +8,83 @@ export default function PaymentPage() {
   const [registeredClasses, setRegisteredClasses] = useState([]);
   const [selectedMethod, setSelectedMethod] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [userId, setUserId] = useState(null);
 
-  const userId = "6616e899125c8e4c6b4b5a1e"; // giả sử userId cố định
-
+  // 1) Decode token only once
   useEffect(() => {
-    const fetchData = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const payload = jwtDecode(token);
+      setUserId(payload.userId);
+    } catch {
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  // 2) Fetch user info + registrations
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
       try {
-        // Fetch thông tin người dùng
-        const userRes = await fetch(
-          `http://localhost:5000/api/users/${userId}`
-        );
-        const userData = await userRes.json();
+        const [userRes, regRes] = await Promise.all([
+          fetch(`http://localhost:5000/api/users/${userId}`),
+          fetch(`http://localhost:5000/api/registrations/user/${userId}`),
+        ]);
+
+        console.log("/api/users status:", userRes.status);
+        console.log("/api/registrations status:", regRes.status);
+
+        const userInfo = await userRes.json();
+        const regs = await regRes.json();
+
+        if (!userRes.ok) throw new Error("User API error");
+        if (!regRes.ok) throw new Error("Registrations API error");
+
+        console.log("📋 User payload:", userInfo);
+        console.log("📋 Registrations payload:", regs);
         setUserData({
-          name: userData.name || "",
-          email: userData.email || "",
-          phone: userData.phone || "",
+          name: userInfo.username,
+          email: userInfo.email,
+          phone: userInfo.phone || "",
         });
 
-        // Fetch các lớp đã đăng ký
-        const regRes = await fetch(
-          `http://localhost:5000/api/classregistrations/user/${userId}`
+        // Filter duplicates by schedule._id
+        const uniqueBySchedule = regs.filter(
+          (reg, idx, arr) =>
+            idx === arr.findIndex((r) => r.schedule._id === reg.schedule._id)
         );
-        const registrations = await regRes.json();
 
-        // Fetch chi tiết từng lớp học dựa trên scheduleId
-        const classDetailsPromises = registrations.map(async (reg) => {
-          const scheduleRes = await fetch(
-            `http://localhost:5000/api/schedules/${reg.schedule._id}`
-          );
-          const scheduleData = await scheduleRes.json();
-          return {
-            name: scheduleData.name || "Lớp học không xác định",
-            price: scheduleData.price || 0,
-          };
-        });
-
-        const classes = await Promise.all(classDetailsPromises);
-        setRegisteredClasses(classes);
-      } catch (error) {
-        console.error("Lỗi tải dữ liệu:", error);
+        setRegisteredClasses(
+          uniqueBySchedule.map(({ schedule }) => ({
+            name: schedule.className,
+            price: schedule.price,
+          }))
+        );
+      } catch (e) {
+        console.error("Load error:", e);
       } finally {
         setLoading(false);
       }
-    };
+    })();
+  }, [userId]);
 
-    fetchData();
-  }, []);
+  if (loading) return <p className="text-center py-10">Đang tải...</p>;
 
-  const totalAmount = registeredClasses.reduce(
-    (sum, cls) => sum + cls.price,
-    0
-  );
-
-  const handlePayment = () => {
-    if (!selectedMethod) {
-      alert("Vui lòng chọn phương thức thanh toán.");
-      return;
-    }
-    setShowPaymentConfirmation(true);
-  };
-
-  const handlePaymentConfirm = async () => {
-    try {
-      await fetch("http://localhost:5000/api/payments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          amount: totalAmount,
-          method: selectedMethod,
-        }),
-      });
-
-      alert("Thanh toán thành công!");
-      navigate("/bill");
-    } catch (error) {
-      console.error("Lỗi thanh toán:", error);
-      alert("Thanh toán thất bại.");
-    }
-  };
-
-  if (loading) return <p className="text-center py-10">Đang tải dữ liệu...</p>;
+  const total = registeredClasses.reduce((sum, c) => sum + c.price, 0);
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 p-6">
-      {/* Thông tin đơn hàng */}
-      <div className="bg-gray-100 border border-gray-300 rounded-xl p-6 mb-8 shadow-sm">
+    <div className="min-h-screen p-6 bg-white text-gray-800">
+      {/* Order Details */}
+      <div className="mb-8 p-6 bg-gray-100 rounded-xl shadow-sm">
         <h2 className="text-2xl font-semibold mb-4">Chi tiết đơn hàng</h2>
         {registeredClasses.length > 0 ? (
-          registeredClasses.map((cls, idx) => (
-            <div
-              key={idx}
-              className="flex justify-between items-center mb-2 text-lg"
-            >
+          registeredClasses.map((cls, i) => (
+            <div key={i} className="flex justify-between mb-2">
               <span>{cls.name}</span>
               <span>{cls.price.toLocaleString()}đ</span>
             </div>
@@ -111,119 +93,102 @@ export default function PaymentPage() {
           <p>Không có lớp nào trong đơn hàng.</p>
         )}
         <hr className="my-4" />
-        <div className="flex justify-between text-xl font-bold">
+        <div className="flex justify-between font-bold">
           <span>Tổng cộng:</span>
-          <span>{totalAmount.toLocaleString()}đ</span>
+          <span>{total.toLocaleString()}đ</span>
         </div>
       </div>
 
-      {/* Phương thức thanh toán */}
-      <div className="bg-gray-100 border border-gray-300 rounded-xl p-6 mb-8 shadow-sm">
+      {/* Payment Method */}
+      <div className="mb-8 p-6 bg-gray-100 rounded-xl shadow-sm">
         <h2 className="text-2xl font-semibold mb-4">
           Chọn phương thức thanh toán
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <PaymentMethod
-            label="Thẻ ngân hàng"
-            value="Thẻ ngân hàng"
-            selected={selectedMethod}
-            onChange={setSelectedMethod}
-          />
-          <PaymentMethod
-            label="VNPay"
-            value="VNPay"
-            selected={selectedMethod}
-            onChange={setSelectedMethod}
-          />
-          <PaymentMethod
-            label="Momo"
-            value="Momo"
-            selected={selectedMethod}
-            onChange={setSelectedMethod}
-          />
-          <PaymentMethod
-            label="ZaloPay"
-            value="ZaloPay"
-            selected={selectedMethod}
-            onChange={setSelectedMethod}
-          />
+          {["Thẻ ngân hàng", "VNPay", "Momo", "ZaloPay"].map((m) => (
+            <label
+              key={m}
+              className="flex items-center gap-3 p-4 bg-white border rounded-lg cursor-pointer"
+            >
+              <input
+                type="radio"
+                value={m}
+                checked={selectedMethod === m}
+                onChange={() => setSelectedMethod(m)}
+                className="w-5 h-5 accent-blue-600"
+              />
+              <span>{m}</span>
+            </label>
+          ))}
         </div>
         <button
-          onClick={handlePayment}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg mt-4"
+          onClick={() =>
+            selectedMethod ? setShowReceipt(true) : alert("Chọn phương thức!")
+          }
+          className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg"
         >
           Thanh toán
         </button>
       </div>
 
-      {/* Phiếu thanh toán */}
-      {showPaymentConfirmation && (
-        <div className="bg-gray-100 border border-gray-300 rounded-xl p-6 mb-8 shadow-sm">
+      {/* Receipt */}
+      {showReceipt && (
+        <div className="p-6 bg-gray-100 rounded-xl shadow-sm">
           <h2 className="text-2xl font-semibold mb-4">Phiếu thanh toán</h2>
-
           <div className="mb-4">
             <h3 className="font-semibold">Thông tin cá nhân:</h3>
-            <div>
-              <strong>Tên: </strong>
-              {userData.name}
-            </div>
-            <div>
-              <strong>Email: </strong>
-              {userData.email}
-            </div>
-            <div>
-              <strong>Số điện thoại: </strong>
-              {userData.phone}
-            </div>
+            <p>
+              <strong>Tên:</strong> {userData.name}
+            </p>
+            <p>
+              <strong>Email:</strong> {userData.email}
+            </p>
+            <p>
+              <strong>SĐT:</strong> {userData.phone}
+            </p>
           </div>
-
           <div className="mb-4">
-            <h3 className="font-semibold">Chi tiết dịch vụ:</h3>
-            {registeredClasses.map((cls, idx) => (
-              <div
-                key={idx}
-                className="flex justify-between items-center mb-2 text-lg"
-              >
+            <h3 className="font-semibold">Danh sách lớp:</h3>
+            {registeredClasses.map((cls, i) => (
+              <div key={i} className="flex justify-between mb-2">
                 <span>{cls.name}</span>
                 <span>{cls.price.toLocaleString()}đ</span>
               </div>
             ))}
             <hr className="my-4" />
-            <div className="flex justify-between text-xl font-bold">
+            <div className="flex justify-between font-bold">
               <span>Tổng cộng:</span>
-              <span>{totalAmount.toLocaleString()}đ</span>
+              <span>{total.toLocaleString()}đ</span>
             </div>
           </div>
-
           <div className="mb-4">
-            <h3 className="font-semibold">Phương thức thanh toán:</h3>
+            <h3 className="font-semibold">PT thanh toán:</h3>
             <p>{selectedMethod}</p>
           </div>
-
           <button
-            onClick={handlePaymentConfirm}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg mt-4"
+            onClick={async () => {
+              try {
+                await fetch("http://localhost:5000/api/payments", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    userId,
+                    amount: total,
+                    method: selectedMethod,
+                  }),
+                });
+                alert("Thanh toán thành công!");
+                navigate("/bill");
+              } catch {
+                alert("Thanh toán lỗi");
+              }
+            }}
+            className="px-6 py-2 bg-green-600 text-white rounded-lg"
           >
-            Xác nhận thanh toán
+            Xác nhận
           </button>
         </div>
       )}
     </div>
-  );
-}
-
-function PaymentMethod({ label, value, selected, onChange }) {
-  return (
-    <label className="flex items-center gap-3 bg-white border rounded-lg p-4 cursor-pointer hover:shadow-md transition">
-      <input
-        type="radio"
-        name="payment-method"
-        value={value}
-        checked={selected === value}
-        onChange={() => onChange(value)}
-        className="accent-blue-600 w-5 h-5"
-      />
-      <span className="text-lg">{label}</span>
-    </label>
   );
 }

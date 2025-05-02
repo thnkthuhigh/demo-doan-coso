@@ -5,7 +5,7 @@ export default function ViewSchedule() {
   const [search, setSearch] = useState("");
   const [filterService, setFilterService] = useState("");
   const [loading, setLoading] = useState(true);
-  const [userId] = useState("6616e899125c8e4c6b4b5a1e"); // Giả sử ID user cố định
+  const [userId, setUserId] = useState(""); // 👉 chỉ lưu userId
   const [message, setMessage] = useState("");
 
   const services = [
@@ -20,10 +20,22 @@ export default function ViewSchedule() {
   ];
 
   useEffect(() => {
+    // ✅ Load user từ localStorage
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      const id = parsedUser._id || parsedUser.id; // 👈 lấy _id hoặc id đều được
+      if (id) {
+        setUserId(id);
+      } else {
+        console.warn("Không tìm thấy user id!");
+      }
+    }
+
     const fetchClasses = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/schedules");
-        const data = await response.json();
+        const res = await fetch("http://localhost:5000/api/schedules");
+        const data = await res.json();
         setClasses(data);
       } catch (error) {
         console.error("Lỗi load lịch:", error);
@@ -36,6 +48,12 @@ export default function ViewSchedule() {
   }, []);
 
   const handleRegister = async (scheduleId) => {
+    if (!userId) {
+      setMessage("⚠️ Bạn cần đăng nhập trước khi đăng ký!");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
     try {
       const res = await fetch("http://localhost:5000/api/registrations", {
         method: "POST",
@@ -50,7 +68,7 @@ export default function ViewSchedule() {
       if (res.ok) {
         setMessage("🎉 Đăng ký thành công!");
       } else {
-        setMessage(`⚠️ ${result.message}`);
+        setMessage(`⚠️ ${result.message || "Đăng ký thất bại"}`);
       }
     } catch (error) {
       console.error("Lỗi đăng ký:", error);
@@ -69,12 +87,14 @@ export default function ViewSchedule() {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
-  if (loading) return <p className="text-center py-10">Đang tải lịch tập...</p>;
+  if (loading) {
+    return <p className="text-center py-10">Đang tải lịch tập...</p>;
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -110,44 +130,44 @@ export default function ViewSchedule() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredClasses.map((cls) => (
-          <div
-            key={cls._id}
-            className="bg-white rounded-xl shadow-md p-4 hover:shadow-xl transition duration-300 flex flex-col justify-between"
-          >
-            <div className="space-y-1">
-              <h2 className="text-xl font-semibold">{cls.className}</h2>
-              <p>🗓 Ngày: {formatDate(cls.date)}</p>
-              <p>
-                ⏰ Thời gian: {cls.startTime} - {cls.endTime}
-              </p>
-              <p>🏋️‍♂️ Huấn luyện viên: {cls.instructor || "Đang cập nhật"}</p>
-              <p>
-                📌 Dịch vụ: <span className="font-medium">{cls.service}</span>
-              </p>
-              <p>
-                💵 Giá:{" "}
-                <span className="font-semibold">
-                  {cls.price?.toLocaleString()} VND
-                </span>
-              </p>
-            </div>
-
-            <button
-              onClick={() => handleRegister(cls._id)}
-              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
+        {filteredClasses.length > 0 ? (
+          filteredClasses.map((cls) => (
+            <div
+              key={cls._id}
+              className="bg-white rounded-xl shadow-md p-4 hover:shadow-xl transition duration-300 flex flex-col justify-between"
             >
-              Đăng ký
-            </button>
-          </div>
-        ))}
-      </div>
+              <div className="space-y-1">
+                <h2 className="text-xl font-semibold">{cls.className}</h2>
+                <p>🗓 Ngày: {formatDate(cls.date)}</p>
+                <p>
+                  ⏰ Thời gian: {cls.startTime} - {cls.endTime}
+                </p>
+                <p>🏋️‍♂️ Huấn luyện viên: {cls.instructor || "Đang cập nhật"}</p>
+                <p>
+                  📌 Dịch vụ: <span className="font-medium">{cls.service}</span>
+                </p>
+                <p>
+                  💵 Giá:{" "}
+                  <span className="font-semibold">
+                    {cls.price?.toLocaleString()} VND
+                  </span>
+                </p>
+              </div>
 
-      {filteredClasses.length === 0 && (
-        <p className="text-center col-span-full text-gray-500">
-          Không tìm thấy lớp học phù hợp.
-        </p>
-      )}
+              <button
+                onClick={() => handleRegister(cls._id)}
+                className="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
+              >
+                Đăng ký
+              </button>
+            </div>
+          ))
+        ) : (
+          <p className="text-center col-span-full text-gray-500">
+            Không tìm thấy lớp học phù hợp.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

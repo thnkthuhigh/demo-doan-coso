@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function Login({ setUser }) {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -12,26 +12,21 @@ export default function Login({ setUser }) {
     e.preventDefault();
     setError("");
 
-    if (!email || !password) {
-      setError("Vui lòng nhập email và mật khẩu.");
+    if (!identifier || !password) {
+      setError("Vui lòng nhập email/username/số điện thoại và mật khẩu.");
       return;
     }
 
     try {
       const { data } = await axios.post(
         "http://localhost:5000/api/auth/login",
-        { email, password },
+        { identifier, password },
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // Lưu token + user vào localStorage để dùng trong ProtectedRoute
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
-      // Cập nhật user vào state trong App
       setUser(data.user);
-
-      // Chuyển đến trang chủ hoặc dashboard
       navigate("/");
     } catch (err) {
       if (err.response?.data?.message) {
@@ -49,16 +44,16 @@ export default function Login({ setUser }) {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium">
-              Email
+            <label htmlFor="identifier" className="block text-sm font-medium">
+              Email / Username / Số điện thoại
             </label>
             <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="identifier"
+              type="text"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               className="mt-1 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="you@example.com"
+              placeholder="Nhập email, username hoặc số điện thoại"
               required
             />
           </div>

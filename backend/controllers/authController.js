@@ -3,75 +3,82 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 export const signup = async (req, res) => {
-  const { username, email, password, dob, gender } = req.body;
-
-  // Validate input
-  if (!username || !email || !password || !dob || !gender) {
-    return res.status(400).json({ message: "All fields are required." });
-  }
-
-  const normalizedEmail = email.toLowerCase().trim();
-
   try {
+    const { username, email, phone, password, dob, gender } = req.body;
+
+    if (!username || !email || !phone || !password || !dob || !gender) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const trimmedUsername = username.trim();
+    const trimmedPhone = phone.trim();
+
+    // Check trùng email, username hoặc phone
     const existingUser = await User.findOne({
-      $or: [{ email: normalizedEmail }, { username: username.trim() }],
+      $or: [
+        { email: normalizedEmail },
+        { username: trimmedUsername },
+        { phone: trimmedPhone },
+      ],
     });
+
     if (existingUser) {
       return res
         .status(400)
-        .json({ message: "Email or username already exists!" });
+        .json({ message: "Email, username hoặc phone đã tồn tại!" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = new User({
-      username: username.trim(),
+      username: trimmedUsername,
       email: normalizedEmail,
-      password: hashedPassword,
+      phone: trimmedPhone,
+      password,
       dob: new Date(dob),
       gender,
     });
 
     await newUser.save();
-    return res.status(201).json({ message: "User created successfully!" });
-  } catch (err) {
-    console.error("Error during signup:", err);
-    return res
-      .status(500)
-      .json({ message: "Server error. Please try again later." });
+
+    return res.status(201).json({ message: "Đăng ký thành công!" });
+  } catch (error) {
+    console.error("Signup error:", error);
+    return res.status(500).json({ message: "Đăng ký thất bại. Lỗi server." });
   }
 };
 
 export const login = async (req, res) => {
-  const { email, username, password } = req.body;
-
-  if ((!email && !username) || !password) {
-    return res
-      .status(400)
-      .json({ message: "Email/username and password are required." });
-  }
-
-  const identifier = email ? email.toLowerCase().trim() : username.trim();
-
   try {
+    const { identifier, password } = req.body;
+
+    if (!identifier || !password) {
+      return res.status(400).json({
+        message: "Vui lòng nhập email/số điện thoại/tên đăng nhập và mật khẩu.",
+      });
+    }
+
+    const normalizedIdentifier = identifier.trim().toLowerCase();
+
     const user = await User.findOne({
-      $or: [{ email: identifier }, { username: identifier }],
+      $or: [
+        { email: normalizedIdentifier },
+        { username: normalizedIdentifier },
+        { phone: normalizedIdentifier },
+      ],
     });
 
     if (!user) {
-      return res
-        .status(401)
-        .json({ message: "Invalid credentials: user not found" });
+      return res.status(401).json({ message: "Tài khoản không tồn tại." });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.comparePassword(password);
+
     if (!isMatch) {
-      return res
-        .status(401)
-        .json({ message: "Invalid credentials: wrong password" });
+      return res.status(401).json({ message: "Mật khẩu không đúng." });
     }
 
     const payload = { userId: user._id, role: user.role };
+
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
@@ -79,18 +86,17 @@ export const login = async (req, res) => {
     return res.status(200).json({
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
+        phone: user.phone,
         dob: user.dob,
         gender: user.gender,
         role: user.role,
       },
     });
-  } catch (err) {
-    console.error("Error during login:", err);
-    return res
-      .status(500)
-      .json({ message: "Server error. Please try again later." });
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.status(500).json({ message: "Đăng nhập thất bại. Lỗi server." });
   }
 };

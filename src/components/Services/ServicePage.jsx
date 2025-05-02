@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import GymImageGallery from "../Club/Banner";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 export default function ServicePage() {
   const [services, setServices] = useState([]);
@@ -13,7 +14,6 @@ export default function ServicePage() {
     notes: "",
   });
 
-  // Gọi API để lấy danh sách dịch vụ
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -29,15 +29,11 @@ export default function ServicePage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Thực hiện logic gửi đăng ký dịch vụ ở đây (ví dụ: gửi dữ liệu tới backend)
     alert(
       `Đăng ký thành công dịch vụ: ${
         formData.serviceName
@@ -46,36 +42,53 @@ export default function ServicePage() {
   };
 
   return (
-    <div className="p-6 space-y-10">
+    <div className="p-6 space-y-16">
       {/* Banner */}
       <GymImageGallery />
 
-      {/* Danh sách dịch vụ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-        {services.map((service, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300"
-          >
-            <img
-              src={service.image}
-              alt={service.name}
-              className="w-full h-56 object-cover"
-            />
-            <div className="p-4 space-y-3">
-              <h3 className="text-xl font-semibold">{service.name}</h3>
-              <p className="text-gray-600">{service.description}</p>
-            </div>
-          </div>
-        ))}
+      {/* Tiêu đề + slogan */}
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold text-gray-800">
+          Khám Phá Các Dịch Vụ Hàng Đầu Của Chúng Tôi
+        </h1>
+        <p className="text-lg text-gray-600">
+          Chăm Sóc Bạn Từ Tâm - Thay Đổi Từ Hình Thể Đến Cuộc Sống!
+        </p>
       </div>
 
+      {/* Danh sách dịch vụ */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
+        {services.map((service, index) => (
+          <Link
+            key={index}
+            to={`/services/${service._id}`}
+            className="hover:no-underline"
+          >
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300 transform hover:-translate-y-2">
+              <div className="overflow-hidden">
+                <img
+                  src={service.image}
+                  alt={service.name}
+                  className="w-full h-72 object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <div className="p-6 space-y-4">
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {service.name}
+                </h3>
+                <p className="text-gray-600 text-sm">{service.description}</p>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </section>
+
       {/* Form đăng ký dịch vụ */}
-      <div className="bg-gray-100 p-6 rounded-xl shadow-md max-w-xl mx-auto">
-        <h3 className="text-2xl font-semibold mb-4 text-center">
+      <section className="bg-gray-100 p-8 rounded-2xl shadow-lg max-w-2xl mx-auto">
+        <h3 className="text-3xl font-bold mb-6 text-center text-gray-800">
           Đăng Ký Dịch Vụ
         </h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <input
             type="text"
             name="fullName"
@@ -83,7 +96,7 @@ export default function ServicePage() {
             value={formData.fullName}
             onChange={handleChange}
             required
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
             type="email"
@@ -92,7 +105,7 @@ export default function ServicePage() {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
             type="tel"
@@ -101,14 +114,14 @@ export default function ServicePage() {
             value={formData.phone}
             onChange={handleChange}
             required
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <select
             name="serviceName"
             value={formData.serviceName}
             onChange={handleChange}
             required
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-4 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Chọn Dịch Vụ</option>
             {services.map((service, index) => (
@@ -123,23 +136,23 @@ export default function ServicePage() {
             value={formData.startDate}
             onChange={handleChange}
             required
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <textarea
             name="notes"
             placeholder="Ghi chú thêm (nếu có)"
             value={formData.notes}
             onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition"
+            className="w-full bg-blue-600 text-white py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition duration-300"
           >
             Gửi Đăng Ký
           </button>
         </form>
-      </div>
+      </section>
     </div>
   );
 }

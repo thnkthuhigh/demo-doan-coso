@@ -12,5 +12,4 @@ router.post("/", createSchedule);
 router.get("/", getAllSchedules);
 router.put("/:id", updateSchedule);
 router.delete("/:id", deleteSchedule);
-
 export default router;
