@@ -56,3 +56,17 @@ export const deleteSchedule = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Lấy chi tiết lịch học theo _id
+export const getScheduleById = async (req, res) => {
+  try {
+    const schedule = await Schedule.findById(req.params.id);
+    if (!schedule) {
+      return res.status(404).json({ message: "Lịch học không tồn tại" });
+    }
+    res.status(200).json(schedule);
+  } catch (error) {
+    console.error("Lỗi lấy chi tiết lịch:", error);
+    res.status(500).json({ message: error.message });
+  }
+};

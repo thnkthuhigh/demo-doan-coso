@@ -27,6 +27,9 @@ export default function NavBar({ user, setUser }) {
         <Link to="/schedule" className="hover:text-gray-600">
           Xem lịch tập
         </Link>
+        <Link to="/my-schedule" className="hover:text-gray-600">
+          Lịch của tôi
+        </Link>
 
         {/* Quản lý cho Admin */}
         {user?.role === "admin" && (
@@ -62,7 +65,7 @@ export default function NavBar({ user, setUser }) {
         {user ? (
           <>
             <span className="text-gray-700 font-semibold">
-              👤 {user.username}
+              <Link to="/user">👤 {user.username}</Link>
             </span>
             <button
               onClick={handleLogout}

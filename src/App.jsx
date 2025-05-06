@@ -16,7 +16,8 @@ import PaymentPage from "./components/Pay/index";
 import BillPage from "./components/Pay/bill";
 import AdminClubManager from "./components/Admin/qlclb";
 import AdminServiceManager from "./components/Admin/qldv";
-
+import UserProfile from "./components/Users";
+import UserPaidClasses from "./components/UserPaidClasses";
 function App() {
   const [user, setUser] = useState(null);
 
@@ -45,6 +46,8 @@ function App() {
         <Route path="/bill" element={<BillPage />} />
         <Route path="/qlclb" element={<AdminClubManager />} />
         <Route path="/qldv" element={<AdminServiceManager />} />
+        <Route path="/user" element={<UserProfile />} />
+        <Route path="/my-schedule" element={<UserPaidClasses />} />
       </Routes>
       <Footer />
     </Router>

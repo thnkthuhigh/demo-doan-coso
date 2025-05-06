@@ -11,7 +11,7 @@ export default function PaymentPage() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [userId, setUserId] = useState(null);
 
-  // 1) Decode token only once
+  // Decode token
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -26,7 +26,7 @@ export default function PaymentPage() {
     }
   }, [navigate]);
 
-  // 2) Fetch user info + registrations
+  // Fetch user info + unpaid registrations
   useEffect(() => {
     if (!userId) return;
     (async () => {
@@ -36,31 +36,29 @@ export default function PaymentPage() {
           fetch(`http://localhost:5000/api/registrations/user/${userId}`),
         ]);
 
-        console.log("/api/users status:", userRes.status);
-        console.log("/api/registrations status:", regRes.status);
-
         const userInfo = await userRes.json();
         const regs = await regRes.json();
 
         if (!userRes.ok) throw new Error("User API error");
         if (!regRes.ok) throw new Error("Registrations API error");
 
-        console.log("📋 User payload:", userInfo);
-        console.log("📋 Registrations payload:", regs);
         setUserData({
           name: userInfo.username,
           email: userInfo.email,
           phone: userInfo.phone || "",
         });
 
-        // Filter duplicates by schedule._id
-        const uniqueBySchedule = regs.filter(
+        // Chỉ lấy các đăng ký chưa thanh toán
+        const unpaidRegs = regs.filter((reg) => !reg.paymentStatus);
+
+        // Loại bỏ trùng lịch học theo schedule._id
+        const uniqueUnpaid = unpaidRegs.filter(
           (reg, idx, arr) =>
             idx === arr.findIndex((r) => r.schedule._id === reg.schedule._id)
         );
 
         setRegisteredClasses(
-          uniqueBySchedule.map(({ schedule }) => ({
+          uniqueUnpaid.map(({ schedule }) => ({
             name: schedule.className,
             price: schedule.price,
           }))
@@ -90,7 +88,7 @@ export default function PaymentPage() {
             </div>
           ))
         ) : (
-          <p>Không có lớp nào trong đơn hàng.</p>
+          <p>Không có lớp nào cần thanh toán.</p>
         )}
         <hr className="my-4" />
         <div className="flex justify-between font-bold">
