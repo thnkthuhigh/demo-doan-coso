@@ -5,8 +5,9 @@ export default function ViewSchedule() {
   const [search, setSearch] = useState("");
   const [filterService, setFilterService] = useState("");
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState(""); // 👉 chỉ lưu userId
+  const [userId, setUserId] = useState("");
   const [message, setMessage] = useState("");
+  const [userRegistrations, setUserRegistrations] = useState([]); // Thêm state lưu đăng ký của user
 
   const services = [
     "FITNESS",
@@ -20,11 +21,11 @@ export default function ViewSchedule() {
   ];
 
   useEffect(() => {
-    // ✅ Load user từ localStorage
+    // Load user từ localStorage
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
-      const id = parsedUser._id || parsedUser.id; // 👈 lấy _id hoặc id đều được
+      const id = parsedUser._id || parsedUser.id;
       if (id) {
         setUserId(id);
       } else {
@@ -47,6 +48,45 @@ export default function ViewSchedule() {
     fetchClasses();
   }, []);
 
+  // Thêm useEffect để lấy danh sách lớp học đã đăng ký của user
+  useEffect(() => {
+    // Chỉ fetch khi có userId
+    if (!userId) return;
+
+    const fetchUserRegistrations = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const res = await fetch(
+          `http://localhost:5000/api/registrations/user/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Không thể lấy danh sách đăng ký");
+        }
+
+        const data = await res.json();
+
+        // Lưu danh sách ID các lịch đã đăng ký
+        const registeredScheduleIds = data.map(
+          (reg) => reg.schedule._id || reg.schedule
+        );
+
+        setUserRegistrations(registeredScheduleIds);
+      } catch (error) {
+        console.error("Lỗi khi lấy đăng ký của user:", error);
+      }
+    };
+
+    fetchUserRegistrations();
+  }, [userId]);
+
   const handleRegister = async (scheduleId) => {
     if (!userId) {
       setMessage("⚠️ Bạn cần đăng nhập trước khi đăng ký!");
@@ -66,6 +106,8 @@ export default function ViewSchedule() {
       const result = await res.json();
 
       if (res.ok) {
+        // Thêm schedule vừa đăng ký vào danh sách đã đăng ký
+        setUserRegistrations((prev) => [...prev, scheduleId]);
         setMessage("🎉 Đăng ký thành công!");
       } else {
         setMessage(`⚠️ ${result.message || "Đăng ký thất bại"}`);
@@ -78,11 +120,20 @@ export default function ViewSchedule() {
     setTimeout(() => setMessage(""), 3000);
   };
 
-  const filteredClasses = classes.filter(
-    (cls) =>
+  // Lọc các lớp học chưa đăng ký và phù hợp với bộ lọc
+  const filteredClasses = classes.filter((cls) => {
+    // Kiểm tra xem người dùng đã đăng ký lớp này chưa
+    const alreadyRegistered = userRegistrations.includes(cls._id);
+
+    // Nếu đã đăng ký rồi thì không hiển thị
+    if (alreadyRegistered) return false;
+
+    // Lọc theo các tiêu chí khác
+    return (
       cls.className?.toLowerCase().includes(search.toLowerCase()) &&
       (filterService === "" || cls.service === filterService)
-  );
+    );
+  });
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -129,6 +180,14 @@ export default function ViewSchedule() {
         </select>
       </div>
 
+      {/* Thông báo cho người dùng biết đã lọc các lớp đã đăng ký */}
+      {userId && (
+        <div className="text-sm text-blue-600 italic">
+          * Lịch tập bạn đã đăng ký sẽ không hiển thị tại đây. Xem tại "Lịch của
+          tôi".
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredClasses.length > 0 ? (
           filteredClasses.map((cls) => (
@@ -164,7 +223,9 @@ export default function ViewSchedule() {
           ))
         ) : (
           <p className="text-center col-span-full text-gray-500">
-            Không tìm thấy lớp học phù hợp.
+            {userId && userRegistrations.length > 0
+              ? "Bạn đã đăng ký tất cả các lớp phù hợp hoặc không tìm thấy lớp phù hợp với bộ lọc."
+              : "Không tìm thấy lớp học phù hợp."}
           </p>
         )}
       </div>
