@@ -18,6 +18,8 @@ import AdminClubManager from "./components/Admin/qlclb";
 import AdminServiceManager from "./components/Admin/qldv";
 import UserProfile from "./components/Users";
 import UserPaidClasses from "./components/UserPaidClasses";
+import PaymentManagement from "./components/Admin/PaymentManagement"; // Thêm nếu đã tạo component này
+
 function App() {
   const [user, setUser] = useState(null);
 
@@ -48,6 +50,12 @@ function App() {
         <Route path="/qldv" element={<AdminServiceManager />} />
         <Route path="/user" element={<UserProfile />} />
         <Route path="/my-schedule" element={<UserPaidClasses />} />
+        <Route path="/my-classes" element={<UserPaidClasses />} />{" "}
+        {/* Thêm đường dẫn mới */}
+        {/* Thêm trang quản lý thanh toán cho admin */}
+        {user?.role === "admin" && (
+          <Route path="/admin/payments" element={<PaymentManagement />} />
+        )}
       </Routes>
       <Footer />
     </Router>

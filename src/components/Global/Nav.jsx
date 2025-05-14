@@ -54,6 +54,12 @@ export default function NavBar({ user, setUser }) {
               >
                 Quản Lý CLB
               </Link>
+              <Link
+                to="/admin/payments"
+                className="block px-4 py-2 text-sm hover:bg-gray-200 transition-colors"
+              >
+                Quản Lý Thanh Toán
+              </Link>
             </div>
           </div>
         )}

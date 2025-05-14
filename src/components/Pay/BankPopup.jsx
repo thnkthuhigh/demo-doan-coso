@@ -1,6 +1,12 @@
 import React from "react";
 
-export default function BankPopup({ show, onClose, amount, userData }) {
+export default function BankPopup({
+  show,
+  onClose,
+  amount,
+  userData,
+  registeredClasses,
+}) {
   if (!show) return null;
 
   const bankInfo = {
@@ -8,6 +14,42 @@ export default function BankPopup({ show, onClose, amount, userData }) {
     accountNumber: "0359498968",
     accountName: "NGUYEN CHI THANH",
     content: `GYM-${userData.phone || "PAYMENT"}`,
+  };
+
+  const handlePaymentSubmit = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Cần đăng nhập lại!");
+        return;
+      }
+
+      // Lưu thông tin thanh toán chờ xác nhận
+      const response = await fetch("http://localhost:5000/api/payments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: userData.id,
+          amount: amount,
+          method: "Thẻ ngân hàng",
+          registrationIds: registeredClasses.map((cls) => cls.id), // Lưu danh sách ID đăng ký
+          status: "pending", // Trạng thái chờ xác nhận
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Không thể tạo thanh toán");
+      }
+
+      alert("Thanh toán của bạn đã được ghi nhận và đang chờ xác nhận!");
+      onClose();
+    } catch (error) {
+      console.error("Lỗi khi gửi thanh toán:", error);
+      alert("Có lỗi xảy ra. Vui lòng thử lại sau.");
+    }
   };
 
   return (
@@ -83,7 +125,7 @@ export default function BankPopup({ show, onClose, amount, userData }) {
 
           <div className="mt-6">
             <button
-              onClick={onClose}
+              onClick={handlePaymentSubmit}
               className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Đã chuyển khoản xong

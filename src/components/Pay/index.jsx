@@ -135,7 +135,45 @@ export default function PaymentPage() {
     if (selectedMethod === "Thẻ ngân hàng") {
       setShowBankPopup(true);
     } else {
+      // Xử lý thanh toán trực tiếp với các phương thức khác
+      handleDirectPayment();
+    }
+  };
+
+  // Xử lý thanh toán các phương thức khác
+  const handleDirectPayment = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Bạn cần đăng nhập lại!");
+        navigate("/login");
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/payments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId,
+          amount: total,
+          method: selectedMethod,
+          registrationIds: registeredClasses.map((cls) => cls.id),
+          status: "pending",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Thanh toán lỗi");
+      }
+
       setShowReceipt(true);
+    } catch (error) {
+      console.error("Lỗi khi thanh toán:", error);
+      alert("Không thể thanh toán. Vui lòng thử lại sau.");
     }
   };
 
@@ -209,7 +247,8 @@ export default function PaymentPage() {
           setShowReceipt(true);
         }}
         amount={total}
-        userData={userData}
+        userData={{ ...userData, id: userId }}
+        registeredClasses={registeredClasses}
       />
 
       {/* Receipt */}
@@ -245,28 +284,13 @@ export default function PaymentPage() {
           <div className="mb-4">
             <h3 className="font-semibold">PT thanh toán:</h3>
             <p>{selectedMethod}</p>
+            <p className="mt-2 text-orange-500">Đang chờ xác nhận thanh toán</p>
           </div>
           <button
-            onClick={async () => {
-              try {
-                await fetch("http://localhost:5000/api/payments", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    userId,
-                    amount: total,
-                    method: selectedMethod,
-                  }),
-                });
-                alert("Thanh toán thành công!");
-                navigate("/bill");
-              } catch {
-                alert("Thanh toán lỗi");
-              }
-            }}
+            onClick={() => navigate("/my-classes")}
             className="px-6 py-2 bg-green-600 text-white rounded-lg"
           >
-            Xác nhận
+            Xem danh sách lớp học đã đăng ký
           </button>
         </div>
       )}
