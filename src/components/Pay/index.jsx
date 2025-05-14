@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import BankPopup from "./BankPopup";
 
 export default function PaymentPage() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(true);
   const [showReceipt, setShowReceipt] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [showBankPopup, setShowBankPopup] = useState(false);
 
   // Decode token
   useEffect(() => {
@@ -75,6 +77,20 @@ export default function PaymentPage() {
 
   const total = registeredClasses.reduce((sum, c) => sum + c.price, 0);
 
+  // Thêm hàm xử lý thanh toán
+  const handlePayment = () => {
+    if (!selectedMethod) {
+      alert("Chọn phương thức!");
+      return;
+    }
+
+    if (selectedMethod === "Thẻ ngân hàng") {
+      setShowBankPopup(true);
+    } else {
+      setShowReceipt(true);
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 bg-white text-gray-800">
       {/* Order Details */}
@@ -120,14 +136,23 @@ export default function PaymentPage() {
           ))}
         </div>
         <button
-          onClick={() =>
-            selectedMethod ? setShowReceipt(true) : alert("Chọn phương thức!")
-          }
+          onClick={handlePayment}
           className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg"
         >
           Thanh toán
         </button>
       </div>
+
+      {/* Bank Payment Popup */}
+      <BankPopup
+        show={showBankPopup}
+        onClose={() => {
+          setShowBankPopup(false);
+          setShowReceipt(true);
+        }}
+        amount={total}
+        userData={userData}
+      />
 
       {/* Receipt */}
       {showReceipt && (
