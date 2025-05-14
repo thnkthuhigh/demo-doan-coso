@@ -29,49 +29,97 @@ export default function PaymentPage() {
   }, [navigate]);
 
   // Fetch user info + unpaid registrations
-  useEffect(() => {
+  const fetchUnpaidRegistrations = async () => {
     if (!userId) return;
-    (async () => {
-      try {
-        const [userRes, regRes] = await Promise.all([
-          fetch(`http://localhost:5000/api/users/${userId}`),
-          fetch(`http://localhost:5000/api/registrations/user/${userId}`),
-        ]);
 
-        const userInfo = await userRes.json();
-        const regs = await regRes.json();
+    try {
+      setLoading(true);
+      const [userRes, regRes] = await Promise.all([
+        fetch(`http://localhost:5000/api/users/${userId}`),
+        fetch(`http://localhost:5000/api/registrations/user/${userId}`),
+      ]);
 
-        if (!userRes.ok) throw new Error("User API error");
-        if (!regRes.ok) throw new Error("Registrations API error");
+      const userInfo = await userRes.json();
+      const regs = await regRes.json();
 
-        setUserData({
-          name: userInfo.username,
-          email: userInfo.email,
-          phone: userInfo.phone || "",
-        });
+      if (!userRes.ok) throw new Error("User API error");
+      if (!regRes.ok) throw new Error("Registrations API error");
 
-        // Chỉ lấy các đăng ký chưa thanh toán
-        const unpaidRegs = regs.filter((reg) => !reg.paymentStatus);
+      setUserData({
+        name: userInfo.username,
+        email: userInfo.email,
+        phone: userInfo.phone || "",
+      });
 
-        // Loại bỏ trùng lịch học theo schedule._id
-        const uniqueUnpaid = unpaidRegs.filter(
-          (reg, idx, arr) =>
-            idx === arr.findIndex((r) => r.schedule._id === reg.schedule._id)
-        );
+      // Chỉ lấy các đăng ký chưa thanh toán
+      const unpaidRegs = regs.filter((reg) => !reg.paymentStatus);
 
-        setRegisteredClasses(
-          uniqueUnpaid.map(({ schedule }) => ({
-            name: schedule.className,
-            price: schedule.price,
-          }))
-        );
-      } catch (e) {
-        console.error("Load error:", e);
-      } finally {
-        setLoading(false);
-      }
-    })();
+      // Loại bỏ trùng lịch học theo schedule._id
+      const uniqueUnpaid = unpaidRegs.filter(
+        (reg, idx, arr) =>
+          idx === arr.findIndex((r) => r.schedule._id === reg.schedule._id)
+      );
+
+      setRegisteredClasses(
+        uniqueUnpaid.map((reg) => ({
+          id: reg._id,
+          scheduleId: reg.schedule._id,
+          name: reg.schedule.className,
+          price: reg.schedule.price,
+        }))
+      );
+    } catch (e) {
+      console.error("Load error:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnpaidRegistrations();
   }, [userId]);
+
+  // Hàm xóa đăng ký lớp học - kiểm tra lại code này
+  const handleDeleteRegistration = async (registrationId) => {
+    if (!confirm("Bạn có chắc muốn xóa đăng ký lớp học này?")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Bạn cần đăng nhập lại!");
+        navigate("/login");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/registrations/${registrationId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Không thể xóa đăng ký");
+      }
+
+      // Cập nhật lại danh sách lớp học sau khi xóa
+      setRegisteredClasses(
+        registeredClasses.filter((cls) => cls.id !== registrationId)
+      );
+      alert("Đã xóa đăng ký lớp học thành công!");
+    } catch (error) {
+      console.error("Lỗi khi xóa đăng ký:", error);
+      alert("Không thể xóa đăng ký. Vui lòng thử lại sau.");
+    }
+  };
 
   if (loading) return <p className="text-center py-10">Đang tải...</p>;
 
@@ -97,10 +145,19 @@ export default function PaymentPage() {
       <div className="mb-8 p-6 bg-gray-100 rounded-xl shadow-sm">
         <h2 className="text-2xl font-semibold mb-4">Chi tiết đơn hàng</h2>
         {registeredClasses.length > 0 ? (
-          registeredClasses.map((cls, i) => (
-            <div key={i} className="flex justify-between mb-2">
-              <span>{cls.name}</span>
-              <span>{cls.price.toLocaleString()}đ</span>
+          registeredClasses.map((cls) => (
+            <div
+              key={cls.id}
+              className="flex justify-between mb-2 items-center"
+            >
+              <span className="flex-grow">{cls.name}</span>
+              <span className="mx-4">{cls.price.toLocaleString()}đ</span>
+              <button
+                onClick={() => handleDeleteRegistration(cls.id)}
+                className="px-3 py-1 bg-red-500 text-white rounded-md text-xs hover:bg-red-600"
+              >
+                Xóa
+              </button>
             </div>
           ))
         ) : (
@@ -138,6 +195,7 @@ export default function PaymentPage() {
         <button
           onClick={handlePayment}
           className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg"
+          disabled={registeredClasses.length === 0}
         >
           Thanh toán
         </button>
@@ -172,8 +230,8 @@ export default function PaymentPage() {
           </div>
           <div className="mb-4">
             <h3 className="font-semibold">Danh sách lớp:</h3>
-            {registeredClasses.map((cls, i) => (
-              <div key={i} className="flex justify-between mb-2">
+            {registeredClasses.map((cls) => (
+              <div key={cls.id} className="flex justify-between mb-2">
                 <span>{cls.name}</span>
                 <span>{cls.price.toLocaleString()}đ</span>
               </div>
