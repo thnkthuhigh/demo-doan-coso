@@ -118,7 +118,7 @@ export default function PaymentManagement() {
   if (error) return <div className="p-6 text-center text-red-500">{error}</div>;
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-24">
       <h1 className="text-2xl font-bold mb-6">Quản lý thanh toán</h1>
 
       {pendingPayments.length === 0 ? (

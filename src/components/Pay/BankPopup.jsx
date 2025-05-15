@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion"; // Đảm bảo bạn đã import motion
 
 export default function BankPopup({
   show,
@@ -53,86 +54,212 @@ export default function BankPopup({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-xl max-w-md w-full">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold">Thông tin chuyển khoản</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <p className="text-gray-600">Ngân hàng</p>
-            <p className="font-semibold">{bankInfo.bankName}</p>
-          </div>
-
-          <div>
-            <p className="text-gray-600">Số tài khoản</p>
-            <div className="flex items-center gap-2">
-              <p className="font-semibold">{bankInfo.accountNumber}</p>
-              <button
-                onClick={() =>
-                  navigator.clipboard.writeText(bankInfo.accountNumber)
-                }
-                className="text-sm text-blue-600 hover:text-blue-700"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 overflow-y-auto"
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", damping: 20 }}
+        className="bg-white rounded-2xl max-w-md w-full shadow-xl my-8"
+      >
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-4 px-6 sticky top-0 z-10">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-semibold text-white flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                Copy
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-gray-600">Chủ tài khoản</p>
-            <p className="font-semibold">{bankInfo.accountName}</p>
-          </div>
-
-          <div>
-            <p className="text-gray-600">Số tiền</p>
-            <div className="flex items-center gap-2">
-              <p className="font-semibold">{amount.toLocaleString()}đ</p>
-              <button
-                onClick={() => navigator.clipboard.writeText(amount)}
-                className="text-sm text-blue-600 hover:text-blue-700"
-              >
-                Copy
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-gray-600">Nội dung chuyển khoản</p>
-            <div className="flex items-center gap-2">
-              <p className="font-semibold">{bankInfo.content}</p>
-              <button
-                onClick={() => navigator.clipboard.writeText(bankInfo.content)}
-                className="text-sm text-blue-600 hover:text-blue-700"
-              >
-                Copy
-              </button>
-            </div>
-          </div>
-
-          <img
-            src={`https://img.vietqr.io/image/${bankInfo.bankName}-${bankInfo.accountNumber}-compact2.png?amount=${amount}&addInfo=${bankInfo.content}`}
-            alt="QR Code"
-            className="w-full mt-4"
-          />
-
-          <div className="mt-6">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              Thông tin chuyển khoản
+            </h3>
             <button
-              onClick={handlePaymentSubmit}
-              className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
             >
-              Đã chuyển khoản xong
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
             </button>
           </div>
         </div>
-      </div>
-    </div>
+
+        <div className="p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-indigo-50 rounded-lg p-3">
+                <p className="text-sm text-gray-600 mb-1">Ngân hàng</p>
+                <p className="font-semibold text-gray-800">
+                  {bankInfo.bankName}
+                </p>
+              </div>
+
+              <div className="bg-indigo-50 rounded-lg p-3">
+                <p className="text-sm text-gray-600 mb-1">Số tài khoản</p>
+                <div className="flex items-center">
+                  <p className="font-semibold text-gray-800 mr-2 truncate">
+                    {bankInfo.accountNumber}
+                  </p>
+                  <button
+                    onClick={() =>
+                      navigator.clipboard.writeText(bankInfo.accountNumber)
+                    }
+                    className="text-indigo-600 hover:text-indigo-800 transition-colors flex-shrink-0"
+                    title="Sao chép"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-indigo-50 rounded-lg p-3">
+              <p className="text-sm text-gray-600 mb-1">Chủ tài khoản</p>
+              <p className="font-semibold text-gray-800">
+                {bankInfo.accountName}
+              </p>
+            </div>
+
+            <div className="bg-indigo-50 rounded-lg p-3">
+              <p className="text-sm text-gray-600 mb-1">Số tiền</p>
+              <div className="flex items-center">
+                <p className="font-semibold text-gray-800 mr-2 text-lg">
+                  {amount.toLocaleString()}đ
+                </p>
+                <button
+                  onClick={() => navigator.clipboard.writeText(amount)}
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                  title="Sao chép"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-indigo-50 rounded-lg p-3">
+              <p className="text-sm text-gray-600 mb-1">
+                Nội dung chuyển khoản
+              </p>
+              <div className="flex items-center">
+                <p className="font-semibold text-gray-800 mr-2 truncate">
+                  {bankInfo.content}
+                </p>
+                <button
+                  onClick={() =>
+                    navigator.clipboard.writeText(bankInfo.content)
+                  }
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors flex-shrink-0"
+                  title="Sao chép"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-lg p-3 flex justify-center">
+              <img
+                src={`https://img.vietqr.io/image/${bankInfo.bankName}-${bankInfo.accountNumber}-compact2.png?amount=${amount}&addInfo=${bankInfo.content}`}
+                alt="QR Code"
+                className="h-48 object-contain"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-gray-100 bg-white sticky bottom-0 z-10">
+          <div className="flex flex-col space-y-3">
+            <button
+              onClick={handlePaymentSubmit}
+              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-medium transition-colors shadow-sm flex items-center justify-center"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Đã chuyển khoản xong
+            </button>
+
+            <button
+              onClick={onClose}
+              className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+            >
+              Quay lại
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
