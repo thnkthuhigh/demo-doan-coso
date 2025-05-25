@@ -1,49 +1,64 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Pencil, Save, X, User, Mail, Phone, Calendar, MapPin } from "lucide-react";
+import {
+  Pencil,
+  Save,
+  X,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  MapPin,
+} from "lucide-react";
 
-const ProfileInfo = ({ 
-  user, 
-  form, 
-  editMode, 
-  setEditMode, 
-  handleChange, 
-  handleSave, 
-  setForm, 
-  setPreviewUrl, 
-  setAvatar, 
-  cardVariants 
-}) => {
+function ProfileInfo({
+  user,
+  form,
+  editMode,
+  setEditMode,
+  handleChange,
+  handleSave,
+  setForm,
+  setPreviewUrl,
+  setAvatar,
+  cardVariants,
+}) {
   return (
     <motion.div
-      key="profile"
+      key="profile-info"
+      variants={cardVariants}
       initial="hidden"
       animate="visible"
       exit="exit"
-      variants={cardVariants}
-      className="bg-white rounded-3xl shadow-xl p-8"
+      className="bg-white rounded-xl shadow-md overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
+      <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
+        <h3 className="text-lg font-semibold text-gray-900">
           Thông tin cá nhân
-        </h2>
+        </h3>
         {!editMode ? (
           <button
             onClick={() => setEditMode(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white px-5 py-2 rounded-xl shadow-sm transition font-medium"
+            className="flex items-center text-sm font-medium text-purple-600 hover:text-purple-500"
           >
-            <Pencil size={18} />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+              />
+            </svg>
             Chỉnh sửa
           </button>
         ) : (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl shadow-sm transition font-medium"
-            >
-              <Save size={18} />
-              Lưu
-            </button>
+          <div className="flex space-x-3">
             <button
               onClick={() => {
                 setEditMode(false);
@@ -54,195 +69,210 @@ const ProfileInfo = ({
                 setPreviewUrl(user.avatar || "");
                 setAvatar(null);
               }}
-              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl shadow-sm transition font-medium"
+              className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700"
             >
-              <X size={18} />
               Hủy
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex items-center text-sm font-medium text-green-600 hover:text-green-500"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Lưu
             </button>
           </div>
         )}
       </div>
 
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-1">
-            <label className="text-sm text-gray-500 font-medium">
+      <div className="p-6">
+        <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-6">
+          {/* Full Name Field - New */}
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="fullName"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Họ và tên
             </label>
-            <div className="relative">
-              <User
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
+            {editMode ? (
               <input
-                name="username"
                 type="text"
+                name="fullName"
+                id="fullName"
+                value={form.fullName || ""}
+                onChange={handleChange}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+              />
+            ) : (
+              <div className="mt-1 text-gray-900">
+                {user.fullName || "Chưa cập nhật"}
+              </div>
+            )}
+          </div>
+
+          {/* Username field */}
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Tên người dùng
+            </label>
+            {editMode ? (
+              <input
+                type="text"
+                name="username"
+                id="username"
                 value={form.username || ""}
                 onChange={handleChange}
-                disabled={!editMode}
-                className={`w-full rounded-xl pl-10 pr-4 py-3 border text-gray-800 focus:outline-none transition-all duration-200 ${
-                  editMode
-                    ? "bg-white border-purple-400 focus:ring-2 ring-purple-200"
-                    : "bg-gray-50 border-gray-200"
-                }`}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
               />
-            </div>
+            ) : (
+              <div className="mt-1 text-gray-900">{user.username}</div>
+            )}
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-gray-500 font-medium">
+          {/* Email field */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email
             </label>
-            <div className="relative">
-              <Mail
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
+            {editMode ? (
               <input
-                name="email"
                 type="email"
+                name="email"
+                id="email"
                 value={form.email || ""}
                 onChange={handleChange}
-                disabled={!editMode}
-                className={`w-full rounded-xl pl-10 pr-4 py-3 border text-gray-800 focus:outline-none transition-all duration-200 ${
-                  editMode
-                    ? "bg-white border-purple-400 focus:ring-2 ring-purple-200"
-                    : "bg-gray-50 border-gray-200"
-                }`}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
               />
-            </div>
+            ) : (
+              <div className="mt-1 text-gray-900">{user.email}</div>
+            )}
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-gray-500 font-medium">
+          {/* Phone number field */}
+          <div>
+            <label
+              htmlFor="phone"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Số điện thoại
             </label>
-            <div className="relative">
-              <Phone
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
+            {editMode ? (
               <input
-                name="phone"
                 type="text"
+                name="phone"
+                id="phone"
                 value={form.phone || ""}
                 onChange={handleChange}
-                disabled={!editMode}
-                className={`w-full rounded-xl pl-10 pr-4 py-3 border text-gray-800 focus:outline-none transition-all duration-200 ${
-                  editMode
-                    ? "bg-white border-purple-400 focus:ring-2 ring-purple-200"
-                    : "bg-gray-50 border-gray-200"
-                }`}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
               />
-            </div>
+            ) : (
+              <div className="mt-1 text-gray-900">
+                {user.phone || "Chưa cập nhật"}
+              </div>
+            )}
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-gray-500 font-medium">
+          {/* Date of birth field */}
+          <div>
+            <label
+              htmlFor="dob"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Ngày sinh
             </label>
-            <div className="relative">
-              <Calendar
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
+            {editMode ? (
               <input
-                name="dob"
                 type="date"
+                name="dob"
+                id="dob"
                 value={form.dob || ""}
                 onChange={handleChange}
-                disabled={!editMode}
-                className={`w-full rounded-xl pl-10 pr-4 py-3 border text-gray-800 focus:outline-none transition-all duration-200 ${
-                  editMode
-                    ? "bg-white border-purple-400 focus:ring-2 ring-purple-200"
-                    : "bg-gray-50 border-gray-200"
-                }`}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
               />
-            </div>
+            ) : (
+              <div className="mt-1 text-gray-900">
+                {user.dob?.split("T")[0] || "Chưa cập nhật"}
+              </div>
+            )}
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-gray-500 font-medium">
+          {/* Address Field - New */}
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="address"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Địa chỉ
             </label>
-            <div className="relative">
-              <MapPin
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={18}
-              />
+            {editMode ? (
               <input
-                name="address"
                 type="text"
+                name="address"
+                id="address"
                 value={form.address || ""}
                 onChange={handleChange}
-                disabled={!editMode}
-                placeholder="Nhập địa chỉ của bạn"
-                className={`w-full rounded-xl pl-10 pr-4 py-3 border text-gray-800 focus:outline-none transition-all duration-200 ${
-                  editMode
-                    ? "bg-white border-purple-400 focus:ring-2 ring-purple-200"
-                    : "bg-gray-50 border-gray-200"
-                }`}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
               />
-            </div>
+            ) : (
+              <div className="mt-1 text-gray-900">
+                {user.address || "Chưa cập nhật"}
+              </div>
+            )}
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-gray-500 font-medium">
+          {/* Gender field */}
+          <div>
+            <label
+              htmlFor="gender"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Giới tính
             </label>
-            <select
-              name="gender"
-              value={form.gender || "other"}
-              onChange={handleChange}
-              disabled={!editMode}
-              className={`w-full rounded-xl px-4 py-3 border text-gray-800 focus:outline-none transition-all duration-200 ${
-                editMode
-                  ? "bg-white border-purple-400 focus:ring-2 ring-purple-200"
-                  : "bg-gray-50 border-gray-200"
-              }`}
-            >
-              <option value="male">Nam</option>
-              <option value="female">Nữ</option>
-              <option value="other">Khác</option>
-            </select>
+            {editMode ? (
+              <select
+                name="gender"
+                id="gender"
+                value={form.gender || "other"}
+                onChange={handleChange}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+              >
+                <option value="male">Nam</option>
+                <option value="female">Nữ</option>
+                <option value="other">Khác</option>
+              </select>
+            ) : (
+              <div className="mt-1 text-gray-900">
+                {user.gender === "male"
+                  ? "Nam"
+                  : user.gender === "female"
+                  ? "Nữ"
+                  : "Khác"}
+              </div>
+            )}
           </div>
         </div>
-
-        {!editMode && (
-          <div className="mt-6 p-5 bg-purple-50 rounded-xl border border-purple-100">
-            <div className="flex items-start">
-              <div className="bg-purple-100 p-2 rounded-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-purple-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <h4 className="text-sm font-semibold text-purple-800">
-                  Thông tin của bạn được bảo mật
-                </h4>
-                <p className="text-sm text-purple-600 mt-1">
-                  Chúng tôi chỉ sử dụng thông tin của bạn cho mục
-                  đích quản lý tài khoản và không chia sẻ cho bất kỳ
-                  bên thứ ba nào mà không có sự cho phép của bạn.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </motion.div>
   );
-};
+}
 
 export default ProfileInfo;

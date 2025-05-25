@@ -4,7 +4,8 @@ import bcrypt from "bcrypt";
 
 export const signup = async (req, res) => {
   try {
-    const { username, email, phone, password, dob, gender } = req.body;
+    const { username, email, phone, password, dob, gender, fullName, address } =
+      req.body;
 
     if (!username || !email || !phone || !password || !dob || !gender) {
       return res.status(400).json({ message: "All fields are required." });
@@ -13,8 +14,10 @@ export const signup = async (req, res) => {
     const normalizedEmail = email.toLowerCase().trim();
     const trimmedUsername = username.trim();
     const trimmedPhone = phone.trim();
+    const trimmedFullName = fullName ? fullName.trim() : "";
+    const trimmedAddress = address ? address.trim() : "";
 
-    // Check trùng email, username hoặc phone
+    // Check for existing user
     const existingUser = await User.findOne({
       $or: [
         { email: normalizedEmail },
@@ -29,11 +32,14 @@ export const signup = async (req, res) => {
         .json({ message: "Email, username hoặc phone đã tồn tại!" });
     }
 
+    // Create user with password - will be hashed by pre-save hook
     const newUser = new User({
       username: trimmedUsername,
       email: normalizedEmail,
       phone: trimmedPhone,
-      password,
+      password, // Password will be hashed in the pre-save hook
+      fullName: trimmedFullName,
+      address: trimmedAddress,
       dob: new Date(dob),
       gender,
     });
@@ -47,16 +53,23 @@ export const signup = async (req, res) => {
   }
 };
 
+// Update the login function to return the address field
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Check if the identifier is email, username or phone
+    const user = await User.findOne({
+      $or: [
+        { email },
+        { username: email }, // Using email field for username/phone too
+        { phone: email },
+      ],
+    });
 
     // If user not found
     if (!user) {
-      return res.status(400).json({ message: "Email không tồn tại" });
+      return res.status(400).json({ message: "Tài khoản không tồn tại" });
     }
 
     // Direct password comparison using bcrypt
@@ -80,11 +93,13 @@ export const login = async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        fullName: user.fullName,
         role: user.role,
         membership: user.membership,
         phone: user.phone,
         gender: user.gender,
         dob: user.dob,
+        address: user.address, // Include address
       },
     });
   } catch (error) {

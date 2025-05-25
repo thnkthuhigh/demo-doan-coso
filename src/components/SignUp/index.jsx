@@ -22,6 +22,8 @@ function SignUp() {
     confirmPassword: "",
     dob: "",
     gender: "",
+    address: "", // Thêm trường địa chỉ vào state
+    fullName: "", // Add fullName field
   });
 
   const [step, setStep] = useState(1);
@@ -57,6 +59,14 @@ function SignUp() {
       setError("Vui lòng nhập số điện thoại");
       return false;
     }
+    if (!formData.fullName.trim()) {
+      setError("Vui lòng nhập họ và tên");
+      return false;
+    }
+    if (!formData.address.trim()) {
+      setError("Vui lòng nhập địa chỉ");
+      return false;
+    }
     return true;
   };
 
@@ -90,6 +100,7 @@ function SignUp() {
     setStep(1);
   };
 
+  // Update the handleSubmit function to include fullName
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -97,7 +108,8 @@ function SignUp() {
       return;
     }
 
-    const { username, email, phone, password, dob, gender } = formData;
+    const { username, email, phone, password, dob, gender, address, fullName } =
+      formData;
 
     setLoading(true);
     setError("");
@@ -112,6 +124,8 @@ function SignUp() {
           password,
           dob: new Date(dob).toISOString(),
           gender: gender || "other",
+          address: address.trim(),
+          fullName: fullName.trim(), // Include fullName in the request
         }
       );
 
@@ -229,6 +243,43 @@ function SignUp() {
           onChange={handleChange}
           className="w-full p-3 border border-gray-200 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
           placeholder="Nhập số điện thoại của bạn"
+        />
+      </motion.div>
+      <motion.div variants={itemVariants} className="mb-4">
+        <label
+          htmlFor="fullName"
+          className="flex items-center text-sm font-medium text-gray-700 mb-1"
+        >
+          <User size={16} className="mr-2 text-purple-500" />
+          Họ và tên
+        </label>
+        <input
+          type="text"
+          id="fullName"
+          name="fullName"
+          value={formData.fullName}
+          onChange={handleChange}
+          className="w-full p-3 border border-gray-200 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
+          placeholder="Nhập họ tên của bạn"
+        />
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="mb-4">
+        <label
+          htmlFor="address"
+          className="flex items-center text-sm font-medium text-gray-700 mb-1"
+        >
+          <User size={16} className="mr-2 text-purple-500" />
+          Địa chỉ
+        </label>
+        <input
+          type="text"
+          id="address"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          className="w-full p-3 border border-gray-200 rounded-xl mt-1 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
+          placeholder="Nhập địa chỉ của bạn"
         />
       </motion.div>
 

@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
+// Add the address field to the user schema
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -12,12 +14,20 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    fullName: {
+      type: String,
+      default: "", // Default empty string
+    },
     password: {
       type: String,
       required: true,
     },
     phone: {
       type: String,
+    },
+    address: {
+      type: String,
+      default: "",
     },
     dob: {
       type: Date,
@@ -49,6 +59,23 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Add pre-save hook to hash password
+userSchema.pre("save", async function (next) {
+  // Only hash the password if it has been modified (or is new)
+  if (!this.isModified("password")) return next();
+
+  try {
+    // Generate a salt
+    const salt = await bcrypt.genSalt(10);
+
+    // Hash the password using our new salt
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 const User = mongoose.model("User", userSchema);
 

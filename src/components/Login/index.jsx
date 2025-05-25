@@ -12,6 +12,7 @@ export default function Login({ setUser }) {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+  // Update the handleLogin function to correctly send the identifier field
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -21,7 +22,7 @@ export default function Login({ setUser }) {
       const response = await axios.post(
         "http://localhost:5000/api/auth/login",
         {
-          email: identifier,
+          email: identifier, // The backend will check if this is email, username or phone
           password,
         }
       );

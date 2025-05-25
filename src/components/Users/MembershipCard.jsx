@@ -27,6 +27,37 @@ const MembershipCard = ({ user, cardVariants }) => {
   const [membership, setMembership] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showBenefits, setShowBenefits] = useState(false);
+
+  // Define membership benefits based on type
+  const membershipBenefits = {
+    Standard: [
+      "Sử dụng tất cả các thiết bị tập luyện cơ bản",
+      "Tham gia các lớp tập nhóm cơ bản",
+      "Tủ đồ cá nhân trong thời gian tập",
+      "Đặt lịch tập trực tuyến",
+    ],
+    VIP: [
+      "Tất cả quyền lợi của gói Standard",
+      "Sử dụng tất cả các thiết bị tập luyện cao cấp",
+      "Ưu tiên đăng ký các lớp tập đặc biệt",
+      "Huấn luyện viên cá nhân 2 buổi/tháng",
+      "Tủ đồ cá nhân cố định",
+      "Phòng tắm và thay đồ riêng",
+      "Đồ uống dinh dưỡng miễn phí",
+      "Giảm 15% dịch vụ spa và massage",
+    ],
+    Platinum: [
+      "Tất cả quyền lợi của gói VIP",
+      "Huấn luyện viên cá nhân 4 buổi/tháng",
+      "Đánh giá thể chất và dinh dưỡng định kỳ",
+      "Ưu tiên đặt lịch tập mọi lúc",
+      "Phòng tập riêng theo yêu cầu",
+      "Gửi xe VIP",
+      "Dịch vụ đưa đón tận nơi",
+      "Giảm 25% tất cả các dịch vụ bổ sung",
+    ],
+  };
 
   // Fetch membership data from API
   useEffect(() => {
@@ -315,7 +346,9 @@ const MembershipCard = ({ user, cardVariants }) => {
                   </div>
                   <div>
                     <p className="text-white/70 text-xs">Chủ thẻ</p>
-                    <p className="text-white font-medium">{user?.username}</p>
+                    <p className="text-white font-medium">
+                      {user?.fullName || user?.username}
+                    </p>
                   </div>
                 </div>
 
@@ -649,6 +682,101 @@ const MembershipCard = ({ user, cardVariants }) => {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Membership Benefits Popup */}
+      {showBenefits && membership && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Quyền lợi hạng {membership.type || "Standard"}
+              </h2>
+              <button
+                onClick={() => setShowBenefits(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <div
+                className={`p-4 rounded-lg ${
+                  membership.type === "VIP"
+                    ? "bg-indigo-50 border border-indigo-100"
+                    : membership.type === "Platinum"
+                    ? "bg-purple-50 border border-purple-100"
+                    : "bg-blue-50 border border-blue-100"
+                }`}
+              >
+                <ul className="space-y-3">
+                  {membershipBenefits[membership.type || "Standard"].map(
+                    (benefit, index) => (
+                      <li key={index} className="flex items-start">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className={`h-5 w-5 mr-2 flex-shrink-0 ${
+                            membership.type === "VIP"
+                              ? "text-indigo-500"
+                              : membership.type === "Platinum"
+                              ? "text-purple-500"
+                              : "text-blue-500"
+                          }`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span className="text-gray-700">{benefit}</span>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            </div>
+
+            {/* Show higher tier options if not already at the highest */}
+            {membership.type !== "Platinum" && (
+              <div className="mt-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-3">
+                  Nâng cấp thẻ thành viên
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Nâng cấp để nhận thêm nhiều quyền lợi hấp dẫn
+                </p>
+                <button
+                  onClick={() => {
+                    setShowBenefits(false);
+                    navigate("/upgrade-membership");
+                  }}
+                  className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-colors"
+                >
+                  Nâng cấp ngay
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
