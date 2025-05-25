@@ -1,10 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import QRCode from "react-qr-code";
+import { Link } from "react-router-dom";
 
 function BillPage({ userData, order, selectedMethod }) {
   const [isPaid] = useState(true);
+  const [selectedServices, setSelectedServices] = useState({});
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [allSelected, setAllSelected] = useState(true);
 
-  // Tính tổng tiền
-  const totalAmount = order.classes.reduce((sum, cls) => sum + cls.price, 0);
+  // Initialize selected services when component mounts or order changes
+  useEffect(() => {
+    if (order?.classes) {
+      const initialSelectedState = {};
+      order.classes.forEach((cls, idx) => {
+        initialSelectedState[idx] = true;
+      });
+      setSelectedServices(initialSelectedState);
+
+      // Calculate initial total
+      calculateTotal(initialSelectedState);
+    }
+  }, [order]);
+
+  // Toggle single service selection
+  const toggleServiceSelection = (idx) => {
+    const newSelectedServices = {
+      ...selectedServices,
+      [idx]: !selectedServices[idx],
+    };
+
+    setSelectedServices(newSelectedServices);
+    calculateTotal(newSelectedServices);
+
+    // Check if all are selected
+    const allServicesSelected = Object.values(newSelectedServices).every(
+      (value) => value
+    );
+    setAllSelected(allServicesSelected);
+  };
+
+  // Toggle all services selection/deselection
+  const toggleAllServices = () => {
+    const newAllSelected = !allSelected;
+    const newSelectedServices = {};
+
+    order.classes.forEach((_, idx) => {
+      newSelectedServices[idx] = newAllSelected;
+    });
+
+    setSelectedServices(newSelectedServices);
+    setAllSelected(newAllSelected);
+    calculateTotal(newSelectedServices);
+  };
+
+  // Calculate total based on selected services
+  const calculateTotal = (selectedState) => {
+    const total = order.classes.reduce((sum, cls, idx) => {
+      return sum + (selectedState[idx] ? cls.price : 0);
+    }, 0);
+
+    setTotalAmount(total);
+  };
 
   return (
     <div className="min-h-screen bg-white text-gray-800 p-6">
@@ -12,15 +68,36 @@ function BillPage({ userData, order, selectedMethod }) {
         <div className="bg-gray-100 border border-gray-300 rounded-xl p-6 mb-8 shadow-sm">
           <h2 className="text-2xl font-semibold mb-4">Hóa đơn thanh toán</h2>
 
-          {/* Thông tin đơn hàng */}
-          <div className="mb-4">
+          {/* Toggle all button */}
+          <div className="mb-4 flex justify-between items-center">
             <h3 className="font-semibold">Thông tin đơn hàng:</h3>
+            <button
+              onClick={toggleAllServices}
+              className="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition-colors"
+            >
+              {allSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+            </button>
+          </div>
+
+          {/* Thông tin đơn hàng với checkboxes */}
+          <div className="mb-4">
             {order.classes.map((cls, idx) => (
               <div
                 key={idx}
                 className="flex justify-between items-center mb-2 text-lg"
               >
-                <span>{cls.name}</span>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`service-${idx}`}
+                    checked={selectedServices[idx] || false}
+                    onChange={() => toggleServiceSelection(idx)}
+                    className="mr-3 h-5 w-5 accent-indigo-600 cursor-pointer"
+                  />
+                  <label htmlFor={`service-${idx}`} className="cursor-pointer">
+                    {cls.name}
+                  </label>
+                </div>
                 <span>{cls.price.toLocaleString()}đ</span>
               </div>
             ))}
@@ -64,12 +141,17 @@ function BillPage({ userData, order, selectedMethod }) {
 
           {/* Các nút hành động */}
           <div className="flex gap-4">
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg">
+            <button
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={() => window.print()}
+            >
               In hóa đơn
             </button>
-            <button className="bg-gray-600 text-white px-6 py-2 rounded-lg">
-              Quay về trang chủ
-            </button>
+            <Link to="/">
+              <button className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                Quay về trang chủ
+              </button>
+            </Link>
           </div>
         </div>
       )}
@@ -77,24 +159,7 @@ function BillPage({ userData, order, selectedMethod }) {
   );
 }
 
-// Dữ liệu mẫu
-const userData = {
-  name: "Nguyễn Văn A",
-  email: "nguyenvana@example.com",
-  phone: "0123456789",
-};
-
-const order = {
-  classes: [
-    { name: "Yoga Buổi Sáng", price: 150000 },
-    { name: "Tập Lực Cường Độ Cao", price: 200000 },
-    { name: "Cardio Buổi Tối", price: 180000 },
-  ],
-};
-
-const selectedMethod = "Thẻ ngân hàng";
-
-// Gọi trang BillPage và truyền dữ liệu mẫu
+// For demonstration only
 function App() {
   return (
     <BillPage

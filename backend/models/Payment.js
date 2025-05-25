@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const paymentSchema = new mongoose.Schema(
+const PaymentSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -13,31 +13,51 @@ const paymentSchema = new mongoose.Schema(
     },
     method: {
       type: String,
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "pending",
+      enum: [
+        "Chuyển khoản",
+        "Thẻ tín dụng",
+        "Ví điện tử",
+        "Thẻ ngân hàng",
+        "VNPay",
+        "Momo",
+        "ZaloPay",
+      ],
+      default: "Chuyển khoản",
     },
     registrationIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "ClassRegistration",
+        required: true,
       },
     ],
-    approvedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    status: {
+      type: String,
+      enum: ["pending", "completed", "cancelled", "failed"],
+      default: "pending",
     },
-    approvedAt: {
+    paymentType: {
+      type: String,
+      enum: [
+        "membership",
+        "membership_upgrade",
+        "class",
+        "personal_training",
+        "membership_and_class",
+      ],
+      default: "membership",
+    },
+    completedAt: {
       type: Date,
+      default: null,
+    },
+    rejectionReason: {
+      type: String,
+      default: null,
     },
   },
   { timestamps: true }
 );
 
-const Payment =
-  mongoose.models.Payment || mongoose.model("Payment", paymentSchema);
+const Payment = mongoose.model("Payment", PaymentSchema);
 
 export default Payment;

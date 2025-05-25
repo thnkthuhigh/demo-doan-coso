@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import BankPopup from "./BankPopup";
 import { motion } from "framer-motion"; // Đảm bảo bạn đã import motion
 
 export default function PaymentPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userData, setUserData] = useState({ name: "", email: "", phone: "" });
   const [registeredClasses, setRegisteredClasses] = useState([]);
   const [selectedMethod, setSelectedMethod] = useState("");
@@ -13,6 +14,9 @@ export default function PaymentPage() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [userId, setUserId] = useState(null);
   const [showBankPopup, setShowBankPopup] = useState(false);
+  const [membershipPayment, setMembershipPayment] = useState(null);
+  const [selectedClasses, setSelectedClasses] = useState({}); // Track selected classes for payment
+  const [includeMembership, setIncludeMembership] = useState(true); // State to track if membership is included
 
   // Thêm custom styling cho navbar khi vào trang Payment
   useEffect(() => {
@@ -39,6 +43,68 @@ export default function PaymentPage() {
       navigate("/login");
     }
   }, [navigate]);
+
+  // Check if we have a pending membership payment
+  useEffect(() => {
+    const pendingMembershipString = localStorage.getItem("pendingMembership");
+    console.log(
+      "Pending membership from localStorage:",
+      pendingMembershipString
+    );
+
+    if (pendingMembershipString) {
+      try {
+        const pendingMembership = JSON.parse(pendingMembershipString);
+        console.log("Parsed pending membership:", pendingMembership);
+        setMembershipPayment(pendingMembership);
+      } catch (error) {
+        console.error("Error parsing pending membership:", error);
+      }
+    } else {
+      // If no membership in localStorage, check if there's one from URL state
+      if (location.state?.fromMembership && location.state?.membershipId) {
+        // Fetch the membership details from API
+        const fetchMembershipDetails = async () => {
+          try {
+            const token = localStorage.getItem("token");
+            if (!token || !userId) return;
+
+            const response = await fetch(
+              `http://localhost:5000/api/memberships/${location.state.membershipId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (response.ok) {
+              const membershipData = await response.json();
+              console.log("Fetched membership data:", membershipData);
+
+              // Set the membership payment data
+              setMembershipPayment({
+                id: membershipData._id,
+                type: membershipData.type,
+                price: membershipData.price,
+                duration: membershipData.endDate
+                  ? Math.round(
+                      (new Date(membershipData.endDate) -
+                        new Date(membershipData.startDate)) /
+                        (1000 * 60 * 60 * 24)
+                    )
+                  : 30,
+              });
+            }
+          } catch (error) {
+            console.error("Error fetching membership details:", error);
+          }
+        };
+
+        fetchMembershipDetails();
+      }
+    }
+  }, [location, userId]);
 
   // Fetch user info + unpaid registrations
   const fetchUnpaidRegistrations = async () => {
@@ -150,6 +216,52 @@ export default function PaymentPage() {
     visible: { y: 0, opacity: 1 },
   };
 
+  // Add this effect to initialize selected classes
+  useEffect(() => {
+    if (registeredClasses.length > 0) {
+      const initialSelectedState = {};
+      registeredClasses.forEach((cls) => {
+        initialSelectedState[cls.id] = true;
+      });
+      setSelectedClasses(initialSelectedState);
+    }
+  }, [registeredClasses]);
+
+  // Hàm chuyển đổi trạng thái chọn lớp học
+  const toggleClassSelection = (classId) => {
+    const newState = {
+      ...selectedClasses,
+      [classId]: !selectedClasses[classId],
+    };
+    setSelectedClasses(newState);
+
+    // Tính toán lại tổng tiền khi trạng thái chọn lớp học thay đổi
+    const newTotal = calculateTotal(newState);
+    // setTotal(newTotal); // Nếu bạn có state total riêng, nếu không thì có thể tính toán trực tiếp khi cần hiển thị
+  };
+
+  // Hàm tính toán tổng tiền dựa trên trạng thái đã chọn của các lớp học
+  const calculateTotal = (selectedState) => {
+    let sum = 0;
+
+    // Tính tổng tiền cho các lớp học đã chọn
+    Object.keys(selectedState).forEach((clsId) => {
+      if (selectedState[clsId]) {
+        const cls = registeredClasses.find((c) => c.id === clsId);
+        if (cls) {
+          sum += cls.price;
+        }
+      }
+    });
+
+    // Thêm tiền gói thành viên nếu có
+    if (membershipPayment && includeMembership) {
+      sum += membershipPayment.price;
+    }
+
+    return sum;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
@@ -159,7 +271,7 @@ export default function PaymentPage() {
     );
   }
 
-  const total = registeredClasses.reduce((sum, c) => sum + c.price, 0);
+  const total = calculateTotal(selectedClasses);
 
   // Thêm hàm xử lý thanh toán
   const handlePayment = () => {
@@ -186,6 +298,46 @@ export default function PaymentPage() {
         return;
       }
 
+      // IMPORTANT: Get only the selected class IDs
+      const selectedClassIds = registeredClasses
+        .filter((cls) => selectedClasses[cls.id])
+        .map((cls) => cls.id);
+
+      // If nothing is selected to pay, show an alert
+      if (
+        selectedClassIds.length === 0 &&
+        (!membershipPayment || !includeMembership)
+      ) {
+        alert("Vui lòng chọn ít nhất một dịch vụ để thanh toán");
+        return;
+      }
+
+      // Create a new payment with ONLY the selected items
+      const registrationIds = [...selectedClassIds];
+
+      // Add membership ID to registrationIds if it exists AND is selected
+      if (membershipPayment && includeMembership) {
+        registrationIds.push(membershipPayment.id);
+      }
+
+      // Make sure the payment method matches one of the valid enum values in the backend
+      let paymentMethod = selectedMethod;
+
+      // Determine the payment type
+      let paymentType = "class";
+      if (
+        membershipPayment &&
+        includeMembership &&
+        selectedClassIds.length > 0
+      ) {
+        paymentType = "membership_and_class";
+      } else if (membershipPayment && includeMembership) {
+        paymentType = membershipPayment.isUpgrade
+          ? "membership_upgrade"
+          : "membership";
+      }
+
+      // Create the payment with only the selected registrations
       const response = await fetch("http://localhost:5000/api/payments", {
         method: "POST",
         headers: {
@@ -193,11 +345,11 @@ export default function PaymentPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          userId,
           amount: total,
-          method: selectedMethod,
-          registrationIds: registeredClasses.map((cls) => cls.id),
+          method: paymentMethod,
+          registrationIds: registrationIds, // Only includes selected items
           status: "pending",
+          paymentType: paymentType,
         }),
       });
 
@@ -206,10 +358,16 @@ export default function PaymentPage() {
         throw new Error(errorData.message || "Thanh toán lỗi");
       }
 
+      // Clear pending membership from localStorage after payment is created
+      if (membershipPayment && includeMembership) {
+        localStorage.removeItem("pendingMembership");
+        localStorage.removeItem("pendingPayment");
+      }
+
       setShowReceipt(true);
     } catch (error) {
       console.error("Lỗi khi thanh toán:", error);
-      alert("Không thể thanh toán. Vui lòng thử lại sau.");
+      alert("Không thể thanh toán. Vui lòng thử lại sau: " + error.message);
     }
   };
 
@@ -350,46 +508,195 @@ export default function PaymentPage() {
               </div>
 
               <div className="p-6">
-                {registeredClasses.length > 0 ? (
-                  <div className="space-y-4">
-                    {registeredClasses.map((cls) => (
-                      <div
-                        key={cls.id}
-                        className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"
+                {registeredClasses.length === 0 && !membershipPayment ? (
+                  // Show "no items" message only when there are truly no items to pay for
+                  <div className="py-10 text-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-16 w-16 text-gray-300 mx-auto mb-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    <p className="text-gray-500 mb-4">
+                      Không có mục nào cần thanh toán.
+                    </p>
+                    <div className="flex justify-center space-x-3">
+                      <button
+                        onClick={() => navigate("/schedule")}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
                       >
-                        <div className="flex-grow">
-                          <p className="font-medium text-gray-800">
-                            {cls.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Mã lớp: {cls.scheduleId.slice(-6)}
-                          </p>
-                        </div>
-                        <span className="mx-4 font-semibold text-gray-800">
-                          {cls.price.toLocaleString()}đ
-                        </span>
-                        <button
-                          onClick={() => handleDeleteRegistration(cls.id)}
-                          className="flex items-center justify-center w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
+                        Tìm lớp học
+                      </button>
+                      <button
+                        onClick={() => navigate("/membership")}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                      >
+                        Đăng ký gói tập
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // Show payment items - either classes, membership, or both
+                  <div className="space-y-4">
+                    {/* Classes section */}
+                    {registeredClasses.length > 0 && (
+                      <>
+                        <div className="flex justify-between items-center mb-2">
+                          <h3 className="font-semibold text-gray-700">
+                            Lớp học đã đăng ký
+                          </h3>
 
+                          {/* Add select all toggle button */}
+                          <button
+                            onClick={() => {
+                              const newSelectedState = {};
+                              const allSelected = registeredClasses.every(
+                                (cls) => selectedClasses[cls.id]
+                              );
+
+                              registeredClasses.forEach((cls) => {
+                                newSelectedState[cls.id] = !allSelected;
+                              });
+
+                              setSelectedClasses(newSelectedState);
+                              // Tính toán lại tổng tiền khi chọn/bỏ chọn tất cả
+                              const newTotal = calculateTotal(newSelectedState);
+                              // setTotal(newTotal); // Nếu bạn có state total riêng
+                            }}
+                            className="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition-colors"
+                          >
+                            {registeredClasses.every(
+                              (cls) => selectedClasses[cls.id]
+                            )
+                              ? "Bỏ chọn tất cả"
+                              : "Chọn tất cả"}
+                          </button>
+                        </div>
+
+                        {registeredClasses.map((cls) => (
+                          <div
+                            key={cls.id}
+                            className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"
+                          >
+                            <div className="flex items-center flex-grow">
+                              <input
+                                type="checkbox"
+                                id={`class-${cls.id}`}
+                                checked={selectedClasses[cls.id] || false}
+                                onChange={() => toggleClassSelection(cls.id)}
+                                className="mr-3 h-5 w-5 accent-indigo-600 cursor-pointer"
+                              />
+                              <div>
+                                <label
+                                  htmlFor={`class-${cls.id}`}
+                                  className="font-medium text-gray-800 cursor-pointer"
+                                >
+                                  {cls.name}
+                                </label>
+                                <p className="text-sm text-gray-500">
+                                  Mã lớp: {cls.scheduleId.slice(-6)}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="mx-4 font-semibold text-gray-800">
+                              {cls.price.toLocaleString()}đ
+                            </span>
+                            <button
+                              onClick={() => handleDeleteRegistration(cls.id)}
+                              className="flex items-center justify-center w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Membership payment info */}
+                    {membershipPayment && (
+                      <>
+                        {registeredClasses.length > 0 && (
+                          <h3 className="font-semibold text-gray-700 mt-6 mb-2">
+                            Gói tập
+                          </h3>
+                        )}
+                        <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl border border-blue-100 mb-4">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id="membership-checkbox"
+                                checked={includeMembership}
+                                onChange={() =>
+                                  setIncludeMembership(!includeMembership)
+                                }
+                                className="mr-3 h-5 w-5 accent-indigo-600 cursor-pointer"
+                              />
+                              <div>
+                                <label
+                                  htmlFor="membership-checkbox"
+                                  className="font-semibold text-indigo-800 cursor-pointer"
+                                >
+                                  {membershipPayment.name ||
+                                    `Gói ${membershipPayment.type}`}
+                                </label>
+                                <p className="text-sm text-gray-600">
+                                  Thời hạn:{" "}
+                                  {membershipPayment.duration
+                                    ? membershipPayment.duration === 30
+                                      ? "1 tháng"
+                                      : membershipPayment.duration === 90
+                                      ? "3 tháng"
+                                      : membershipPayment.duration === 180
+                                      ? "6 tháng"
+                                      : membershipPayment.duration === 365
+                                      ? "12 tháng"
+                                      : `${membershipPayment.duration} ngày`
+                                    : "30 ngày"}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Mã thẻ:{" "}
+                                  {membershipPayment.id.substring(
+                                    membershipPayment.id.length - 6
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-indigo-800">
+                                {new Intl.NumberFormat("vi-VN").format(
+                                  membershipPayment.price
+                                )}
+                                đ
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Total section */}
                     <div className="mt-6 pt-4 border-t border-gray-200">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Tạm tính</span>
@@ -410,32 +717,6 @@ export default function PaymentPage() {
                         </span>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="py-10 text-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-16 w-16 text-gray-300 mx-auto mb-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    <p className="text-gray-500 mb-4">
-                      Không có lớp nào cần thanh toán.
-                    </p>
-                    <button
-                      onClick={() => navigate("/schedule")}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-                    >
-                      Tìm lớp học
-                    </button>
                   </div>
                 )}
               </div>
@@ -476,9 +757,13 @@ export default function PaymentPage() {
                 <div className="mt-8">
                   <button
                     onClick={handlePayment}
-                    disabled={registeredClasses.length === 0 || !selectedMethod}
+                    disabled={
+                      (registeredClasses.length === 0 && !membershipPayment) ||
+                      !selectedMethod
+                    }
                     className={`w-full py-3 px-6 rounded-xl font-medium text-white shadow-sm flex items-center justify-center ${
-                      registeredClasses.length === 0 || !selectedMethod
+                      (registeredClasses.length === 0 && !membershipPayment) ||
+                      !selectedMethod
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
                     } transition-all duration-300`}
@@ -526,16 +811,24 @@ export default function PaymentPage() {
         </div>
 
         {/* Bank Payment Popup */}
-        <BankPopup
-          show={showBankPopup}
-          onClose={() => {
-            setShowBankPopup(false);
-            setShowReceipt(true);
-          }}
-          amount={total}
-          userData={{ ...userData, id: userId }}
-          registeredClasses={registeredClasses}
-        />
+        {showBankPopup && (
+          <BankPopup
+            show={showBankPopup}
+            onClose={(success) => {
+              setShowBankPopup(false);
+              if (success) {
+                // Show receipt or redirect as needed
+                setShowReceipt(true);
+              }
+            }}
+            amount={total}
+            userData={userData}
+            registeredClasses={registeredClasses}
+            selectedClasses={selectedClasses} // Pass this prop
+            membershipPayment={membershipPayment} // Pass this prop
+            includeMembership={includeMembership} // Pass this prop
+          />
+        )}
 
         {/* Receipt - Display after payment */}
         {showReceipt && (
@@ -682,18 +975,35 @@ export default function PaymentPage() {
                     Chi tiết đơn hàng
                   </h3>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    {registeredClasses.map((cls) => (
-                      <div
-                        key={cls.id}
-                        className="flex justify-between py-2 border-b border-gray-200 last:border-0"
-                      >
-                        <span className="text-gray-700">{cls.name}</span>
+                    {/* Only show selected classes in the receipt */}
+                    {registeredClasses
+                      .filter((cls) => selectedClasses[cls.id])
+                      .map((cls) => (
+                        <div
+                          key={cls.id}
+                          className="flex justify-between py-2 border-b border-gray-200"
+                        >
+                          <span className="text-gray-700">{cls.name}</span>
+                          <span className="font-medium">
+                            {cls.price.toLocaleString()}đ
+                          </span>
+                        </div>
+                      ))}
+
+                    {/* Only show membership if it's included */}
+                    {membershipPayment && includeMembership && (
+                      <div className="flex justify-between py-2 border-b border-gray-200">
+                        <span className="text-gray-700">
+                          {membershipPayment.name ||
+                            `Gói ${membershipPayment.type}`}
+                        </span>
                         <span className="font-medium">
-                          {cls.price.toLocaleString()}đ
+                          {membershipPayment.price.toLocaleString()}đ
                         </span>
                       </div>
-                    ))}
+                    )}
 
+                    {/* Total amount */}
                     <div className="flex justify-between py-3 mt-2 border-t border-gray-300">
                       <span className="font-bold text-gray-900">
                         Tổng cộng:

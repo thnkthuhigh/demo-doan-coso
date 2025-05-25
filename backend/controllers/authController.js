@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import bcrypt from "bcrypt";
 
 export const signup = async (req, res) => {
   try {
@@ -48,54 +49,48 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { identifier, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!identifier || !password) {
-      return res.status(400).json({
-        message: "Vui lòng nhập email/số điện thoại/tên đăng nhập và mật khẩu.",
-      });
-    }
+    // Find user by email
+    const user = await User.findOne({ email });
 
-    const normalizedIdentifier = identifier.trim().toLowerCase();
-
-    const user = await User.findOne({
-      $or: [
-        { email: normalizedIdentifier },
-        { username: normalizedIdentifier },
-        { phone: normalizedIdentifier },
-      ],
-    });
-
+    // If user not found
     if (!user) {
-      return res.status(401).json({ message: "Tài khoản không tồn tại." });
+      return res.status(400).json({ message: "Email không tồn tại" });
     }
 
-    const isMatch = await user.comparePassword(password);
+    // Direct password comparison using bcrypt
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(401).json({ message: "Mật khẩu không đúng." });
+      return res.status(400).json({ message: "Mật khẩu không chính xác" });
     }
 
-    const payload = { userId: user._id, role: user.role };
+    // Generate token
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET || "your-fallback-secret-key",
+      { expiresIn: "7d" }
+    );
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    return res.status(200).json({
+    // Return user info and token
+    res.json({
       token,
       user: {
-        _id: user._id,
+        id: user._id,
         username: user.username,
         email: user.email,
-        phone: user.phone,
-        dob: user.dob,
-        gender: user.gender,
         role: user.role,
+        membership: user.membership,
+        phone: user.phone,
+        gender: user.gender,
+        dob: user.dob,
       },
     });
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({ message: "Đăng nhập thất bại. Lỗi server." });
+    res
+      .status(500)
+      .json({ message: "Đăng nhập thất bại", error: error.message });
   }
 };

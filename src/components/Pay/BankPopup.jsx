@@ -1,5 +1,5 @@
-import React from "react";
-import { motion } from "framer-motion"; // Đảm bảo bạn đã import motion
+import React, { useState } from "react"; // Add useState import
+import { motion } from "framer-motion";
 
 export default function BankPopup({
   show,
@@ -7,7 +7,12 @@ export default function BankPopup({
   amount,
   userData,
   registeredClasses,
+  selectedClasses, // Add this prop
+  membershipPayment, // Add this prop
+  includeMembership, // Add this prop
 }) {
+  const [processing, setProcessing] = useState(false); // Add missing state
+
   if (!show) return null;
 
   const bankInfo = {
@@ -17,15 +22,32 @@ export default function BankPopup({
     content: `GYM-${userData.phone || "PAYMENT"}`,
   };
 
+  // Modify the handlePaymentSubmit function to handle membership
   const handlePaymentSubmit = async () => {
     try {
+      setProcessing(true); // Now this will work
+
       const token = localStorage.getItem("token");
       if (!token) {
         alert("Cần đăng nhập lại!");
+        setProcessing(false);
         return;
       }
 
-      // Lưu thông tin thanh toán chờ xác nhận
+      // Get only the selected class IDs from props instead of window.parent
+      const selectedClassIds = registeredClasses
+        .filter((cls) => selectedClasses[cls.id])
+        .map((cls) => cls.id);
+
+      // Add membership if selected
+      const registrationIds = [...selectedClassIds];
+      if (membershipPayment && includeMembership) {
+        registrationIds.push(membershipPayment.id);
+      }
+
+      console.log("Creating payment with registrationIds:", registrationIds);
+
+      // Create payment with only selected registrations
       const response = await fetch("http://localhost:5000/api/payments", {
         method: "POST",
         headers: {
@@ -33,23 +55,41 @@ export default function BankPopup({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          userId: userData.id,
-          amount: amount,
+          amount,
           method: "Thẻ ngân hàng",
-          registrationIds: registeredClasses.map((cls) => cls.id), // Lưu danh sách ID đăng ký
-          status: "pending", // Trạng thái chờ xác nhận
+          registrationIds,
+          status: "pending",
+          paymentType:
+            registrationIds.length > 1 && membershipPayment
+              ? "membership_and_class"
+              : membershipPayment
+              ? "membership"
+              : "class",
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Không thể tạo thanh toán");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Payment creation failed");
       }
 
-      alert("Thanh toán của bạn đã được ghi nhận và đang chờ xác nhận!");
-      onClose();
+      // Clear pending membership if it was included
+      if (membershipPayment && includeMembership) {
+        localStorage.removeItem("pendingMembership");
+        localStorage.removeItem("pendingPayment");
+      }
+
+      // Show success message
+      alert("Đã ghi nhận thanh toán. Vui lòng chờ admin xác nhận.");
+
+      setTimeout(() => {
+        setProcessing(false);
+        onClose(true); // Pass true to indicate successful payment
+      }, 1500);
     } catch (error) {
-      console.error("Lỗi khi gửi thanh toán:", error);
-      alert("Có lỗi xảy ra. Vui lòng thử lại sau.");
+      console.error("Bank payment error:", error);
+      setProcessing(false);
+      alert("Payment processing failed: " + error.message);
     }
   };
 
@@ -66,6 +106,7 @@ export default function BankPopup({
         transition={{ type: "spring", damping: 20 }}
         className="bg-white rounded-2xl max-w-md w-full shadow-xl my-8"
       >
+        {/* Header section */}
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-4 px-6 sticky top-0 z-10">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold text-white flex items-center">
@@ -232,28 +273,62 @@ export default function BankPopup({
           <div className="flex flex-col space-y-3">
             <button
               onClick={handlePaymentSubmit}
-              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-medium transition-colors shadow-sm flex items-center justify-center"
+              disabled={processing}
+              className={`w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-medium transition-colors shadow-sm flex items-center justify-center ${
+                processing ? "opacity-70 cursor-not-allowed" : ""
+              }`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              Đã chuyển khoản xong
+              {processing ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Đang xử lý...
+                </>
+              ) : (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Đã chuyển khoản xong
+                </>
+              )}
             </button>
 
             <button
               onClick={onClose}
-              className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+              disabled={processing}
+              className={`w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors ${
+                processing ? "opacity-70 cursor-not-allowed" : ""
+              }`}
             >
               Quay lại
             </button>

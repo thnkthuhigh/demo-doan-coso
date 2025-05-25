@@ -38,7 +38,7 @@ export default function NavBar({ user, setUser }) {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
           ? "bg-white/95 backdrop-blur-md shadow-lg py-3"
-          : "bg-transparent py-5"
+          : "bg-gradient-to-r from-purple-900/70 to-blue-900/70 backdrop-blur-md py-5"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -75,14 +75,6 @@ export default function NavBar({ user, setUser }) {
             </NavLink>
 
             <NavLink
-              to="/prices"
-              isActive={isActive("/prices")}
-              isScrolled={isScrolled}
-            >
-              Bảng giá
-            </NavLink>
-
-            <NavLink
               to="/schedule"
               isActive={isActive("/schedule")}
               isScrolled={isScrolled}
@@ -100,42 +92,36 @@ export default function NavBar({ user, setUser }) {
               </NavLink>
             )}
 
-            {/* Admin Dropdown */}
+            <NavLink
+              to="/membership"
+              isActive={isActive("/membership")}
+              isScrolled={isScrolled}
+            >
+              Đăng Ký Thành Viên
+            </NavLink>
+
+            {/* Admin Dropdown - Fixed to properly show on hover */}
             {user?.role === "admin" && (
               <div className="relative group">
-                {/* Thay thế invisible overlay bằng một div nhỏ hơn */}
-                <div className="absolute -inset-2 bg-transparent"></div>
-
                 <button
-                  className={`px-3 py-2 rounded-lg font-medium transition-all 
-                  ${
+                  className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center ${
                     isScrolled
-                      ? "text-gray-700 hover:text-blue-600"
-                      : "text-white/90 hover:text-white"
-                  } 
-                  group-hover:text-blue-600`}
+                      ? "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                      : "text-white/90 hover:text-white hover:bg-white/10"
+                  }`}
                 >
                   Quản lý
                   <span className="ml-1">▼</span>
                 </button>
 
-                <div className="absolute left-0 w-56 top-full">
-                  {/* Invisible bridge giữ nguyên */}
-                  <div className="h-2 w-full"></div>
-
-                  {/* Cập nhật transition cho dropdown content */}
-                  <div
-                    className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden 
-                  transform scale-95 opacity-0 pointer-events-none 
-                  group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto 
-                  transition-all duration-150 ease-in-out origin-top"
-                  >
+                <div className="absolute left-0 w-56 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
+                  <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
                     <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium">
                       Quản lý hệ thống
                     </div>
 
                     <div className="py-2">
-                      <AdminLink to="/ql" icon="calendar">
+                      <AdminLink to="/qllt" icon="calendar">
                         Quản Lý Lịch Tập
                       </AdminLink>
                       <AdminLink to="/qldv" icon="service">
@@ -146,6 +132,9 @@ export default function NavBar({ user, setUser }) {
                       </AdminLink>
                       <AdminLink to="/admin/payments" icon="payment">
                         Quản Lý Thanh Toán
+                      </AdminLink>
+                      <AdminLink to="/admin/memberships" icon="card">
+                        Quản Lý Thành Viên
                       </AdminLink>
                     </div>
                   </div>
@@ -362,12 +351,16 @@ export default function NavBar({ user, setUser }) {
             </MobileNavLink>
           )}
 
+          <MobileNavLink to="/membership" isActive={isActive("/membership")}>
+            Đăng Ký Thành Viên
+          </MobileNavLink>
+
           {user?.role === "admin" && (
             <div className="mt-2">
               <div className="px-3 py-2 text-sm font-medium text-gray-400">
                 Quản lý hệ thống
               </div>
-              <MobileNavLink to="/ql" isAdmin>
+              <MobileNavLink to="/qllt" isAdmin>
                 Quản Lý Lịch Tập
               </MobileNavLink>
               <MobileNavLink to="/qldv" isAdmin>
@@ -378,6 +371,9 @@ export default function NavBar({ user, setUser }) {
               </MobileNavLink>
               <MobileNavLink to="/admin/payments" isAdmin>
                 Quản Lý Thanh Toán
+              </MobileNavLink>
+              <MobileNavLink to="/admin/memberships" isAdmin>
+                Quản Lý Thành Viên
               </MobileNavLink>
             </div>
           )}
@@ -511,6 +507,21 @@ function AdminLink({ children, to, icon }) {
         </svg>
       )}
       {icon === "payment" && (
+        <svg
+          className="mr-3 h-4 w-4 text-gray-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+          />
+        </svg>
+      )}
+      {icon === "card" && (
         <svg
           className="mr-3 h-4 w-4 text-gray-500"
           fill="none"

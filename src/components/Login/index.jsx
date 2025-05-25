@@ -14,40 +14,41 @@ export default function Login({ setUser }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
-
-    if (!identifier || !password) {
-      setError("Vui lòng nhập email/username/số điện thoại và mật khẩu.");
-      setLoading(false);
-      return;
-    }
+    setError("");
 
     try {
-      const { data } = await axios.post(
+      const response = await axios.post(
         "http://localhost:5000/api/auth/login",
-        { identifier, password },
-        { headers: { "Content-Type": "application/json" } }
+        {
+          email: identifier,
+          password,
+        }
       );
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      setUser(data.user);
+      const { token, user } = response.data;
 
-      // Show success animation
-      setLoading(false);
+      // Store token in localStorage
+      localStorage.setItem("token", token);
 
-      // Redirect after successful login with a slight delay for better UX
-      setTimeout(() => {
-        navigate("/");
-      }, 300);
-    } catch (err) {
+      // Store user data in localStorage
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // Update user state in parent component
+      setUser(user);
+
+      // Redirect to home page
+      navigate("/");
+    } catch (error) {
+      console.error("Login error:", error);
+
+      // Display error message from server or generic message
+      setError(
+        error.response?.data?.message ||
+          "Đăng nhập thất bại, vui lòng thử lại sau."
+      );
+    } finally {
       setLoading(false);
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Không thể kết nối đến server. Vui lòng thử lại.");
-      }
     }
   };
 

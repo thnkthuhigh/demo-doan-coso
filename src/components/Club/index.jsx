@@ -2,8 +2,148 @@ import { useState, useEffect } from "react";
 import GymImageGallery from "../Club/Banner";
 import axios from "axios";
 import { motion } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+
+const membershipPlans = [
+  {
+    id: "basic",
+    name: "Gói Cơ Bản",
+    price: 1980000,
+    duration: 30, // days
+    type: "Basic",
+    features: [
+      "Tập luyện tại 01 CLB đã chọn.",
+      "Tham gia Yoga và Group X tại 01 CLB đã chọn.",
+      "1 buổi định hướng luyện tập và tư vấn dinh dưỡng.",
+      "Sử dụng dịch vụ thư giãn (sauna, steambath).",
+      "Nước uống miễn phí.",
+      "Khăn tập thể thao cao cấp.",
+    ],
+    color: "blue",
+    badge: "Phổ biến",
+  },
+  {
+    id: "standard",
+    name: "Gói Cơ Bản Nâng Cao",
+    price: 5400000,
+    duration: 90, // 3 months
+    type: "Standard",
+    features: [
+      "Tập luyện tại 01 CLB đã chọn.",
+      "Tham gia Yoga và Group X tại 01 CLB đã chọn.",
+      "Tự do tập luyện tại tất cả các câu lạc bộ trong hệ thống.",
+      "Không giới hạn thời gian luyện tập.",
+      "Sử dụng dịch vụ thư giãn sau luyện tập (sauna, steambath).",
+      "Khăn tập thể thao cao cấp.",
+      "Hệ thống khóa từ thông minh, bảo mật tối ưu.",
+    ],
+    color: "green",
+    badge: "Tiết kiệm",
+  },
+  {
+    id: "vip",
+    name: "Gói VIP",
+    price: 10800000,
+    duration: 180, // 6 months
+    type: "VIP",
+    features: [
+      "Tự do tập luyện tại tất cả các CLB trong hệ thống.",
+      "Tham gia tất cả các lớp Yoga và Group X tại tất cả các CLB.",
+      "Được dẫn theo 1 người thân đi tập.",
+      "Nước uống miễn phí, khăn tập thể thao cao cấp.",
+      "Ưu tiên đặt chỗ các lớp Yoga và GroupX trước 48 tiếng.",
+    ],
+    color: "amber",
+    popular: true,
+  },
+  {
+    id: "offpeak-basic",
+    name: "Gói Giờ Thấp Điểm",
+    price: 1200000,
+    duration: 30, // days
+    type: "Basic",
+    features: [
+      "Tập luyện tại 01 CLB đã chọn.",
+      "Chỉ được tập từ 10:00 - 16:00 các ngày trong tuần.",
+      "Không được sử dụng vào ngày cuối tuần và ngày lễ.",
+      "1 buổi định hướng luyện tập cơ bản.",
+      "Nước uống miễn phí.",
+    ],
+    color: "blue",
+    badge: "Tiết kiệm",
+    offPeak: true,
+  },
+  {
+    id: "student",
+    name: "Gói Sinh Viên",
+    price: 1500000,
+    duration: 30, // days
+    type: "Basic",
+    features: [
+      "Chỉ áp dụng cho sinh viên (yêu cầu thẻ sinh viên).",
+      "Tập luyện tại 01 CLB đã chọn.",
+      "Tham gia Yoga và Group X cơ bản.",
+      "Được sử dụng vào tất cả các ngày trong tuần.",
+      "Nước uống miễn phí.",
+    ],
+    color: "indigo",
+    badge: "Sinh viên",
+  },
+  {
+    id: "weekend",
+    name: "Gói Cuối Tuần",
+    price: 990000,
+    duration: 30, // days
+    type: "Basic",
+    features: [
+      "Chỉ được sử dụng vào các ngày cuối tuần (T7, CN).",
+      "Tập luyện tại 01 CLB đã chọn.",
+      "Tham gia tất cả các lớp Yoga và Group X trong ngày cuối tuần.",
+      "Không giới hạn thời gian tập luyện vào ngày cuối tuần.",
+      "Nước uống miễn phí.",
+    ],
+    color: "rose",
+    badge: "Cuối tuần",
+  },
+  {
+    id: "family",
+    name: "Gói Gia Đình",
+    price: 3500000,
+    duration: 30, // days
+    type: "Standard",
+    features: [
+      "Dành cho 2 thành viên trong gia đình.",
+      "Tập luyện tại 01 CLB đã chọn.",
+      "Tham gia các lớp Yoga và Group X.",
+      "Sử dụng dịch vụ thư giãn (sauna, steambath).",
+      "Nước uống miễn phí.",
+      "Khăn tập thể thao cao cấp.",
+    ],
+    color: "purple",
+    badge: "Gia đình",
+  },
+  {
+    id: "senior",
+    name: "Gói Người Cao Tuổi",
+    price: 1500000,
+    duration: 30, // days
+    type: "Basic",
+    features: [
+      "Dành cho người trên 55 tuổi.",
+      "Tập luyện tại 01 CLB đã chọn.",
+      "Các lớp tập nhẹ nhàng chuyên biệt.",
+      "Huấn luyện viên có kinh nghiệm với người cao tuổi.",
+      "Thời gian tập không giới hạn.",
+      "Nước uống miễn phí.",
+    ],
+    color: "teal",
+    badge: "Người cao tuổi",
+  },
+];
 
 export default function Club() {
+  const navigate = useNavigate();
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -14,6 +154,16 @@ export default function Club() {
   });
   const [formStatus, setFormStatus] = useState(null);
   const [selectedClub, setSelectedClub] = useState(null);
+  const [showMembershipSection, setShowMembershipSection] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [filterType, setFilterType] = useState("all"); // "all", "regular", "offpeak"
+  const [userId, setUserId] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [membershipLoading, setMembershipLoading] = useState(false);
+  const [membershipMessage, setMembershipMessage] = useState({
+    text: "",
+    type: "",
+  });
 
   useEffect(() => {
     const fetchClubs = async () => {
@@ -28,6 +178,19 @@ export default function Club() {
     };
 
     fetchClubs();
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setUserId(decoded.userId);
+        setIsLoggedIn(true);
+      } catch (error) {
+        console.error("Invalid token:", error);
+      }
+    }
   }, []);
 
   const handleInputChange = (e) => {
@@ -64,6 +227,112 @@ export default function Club() {
 
   const closeClubDetails = () => {
     setSelectedClub(null);
+  };
+
+  const handleSelectPlan = (plan) => {
+    setSelectedPlan(plan);
+  };
+
+  const getFilteredPlans = () => {
+    if (filterType === "all") return membershipPlans;
+    if (filterType === "offpeak")
+      return membershipPlans.filter((plan) => plan.offPeak);
+    return membershipPlans.filter((plan) => !plan.offPeak);
+  };
+
+  const handleRegisterMembership = async () => {
+    if (!selectedPlan || !userId) {
+      setMembershipMessage({
+        text: isLoggedIn
+          ? "Vui lòng chọn gói đăng ký."
+          : "Vui lòng đăng nhập để đăng ký gói tập.",
+        type: "error",
+      });
+      return;
+    }
+
+    setMembershipLoading(true);
+
+    // Tính ngày hết hạn từ ngày hiện tại
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + selectedPlan.duration);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.post(
+        "http://localhost:5000/api/memberships",
+        {
+          userId,
+          type: selectedPlan.type,
+          startDate,
+          endDate,
+          price: selectedPlan.price,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Lưu thông tin membership vào localStorage để trang thanh toán có thể truy cập
+      localStorage.setItem(
+        "pendingMembership",
+        JSON.stringify({
+          id: response.data.membership._id,
+          type: selectedPlan.type,
+          price: selectedPlan.price,
+          name: selectedPlan.name,
+          duration: selectedPlan.duration,
+        })
+      );
+
+      // Tạo thanh toán cho thẻ thành viên
+      await axios.post(
+        "http://localhost:5000/api/payments",
+        {
+          amount: selectedPlan.price,
+          method: "Chuyển khoản",
+          registrationIds: [response.data.membership._id],
+          status: "pending",
+          paymentType: "membership",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      setMembershipMessage({
+        text: "Đăng ký thành công! Vui lòng thanh toán để kích hoạt thẻ.",
+        type: "success",
+      });
+
+      // Chuyển hướng đến trang thanh toán
+      setTimeout(() => {
+        navigate("/payment", { state: { fromMembership: true } });
+      }, 2000);
+    } catch (error) {
+      console.error("Registration error:", error);
+      setMembershipMessage({
+        text:
+          error.response?.data?.message ||
+          "Đăng ký thất bại. Vui lòng thử lại sau.",
+        type: "error",
+      });
+    } finally {
+      setMembershipLoading(false);
+    }
+  };
+
+  // Format price
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("vi-VN").format(price);
   };
 
   // Animation variants
@@ -208,6 +477,235 @@ export default function Club() {
             ))}
           </motion.div>
         )}
+      </div>
+
+      {/* Membership Section */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-16">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl font-bold text-gray-800 mb-4">
+              Đăng Ký Gói Tập
+            </h2>
+            <div className="w-20 h-1.5 bg-blue-600 mx-auto rounded-full"></div>
+            <p className="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
+              Chọn gói tập phù hợp với lịch trình và nhu cầu của bạn. Chúng tôi
+              cung cấp nhiều gói tập đa dạng từ giờ thấp điểm đến các gói dành
+              riêng cho cuối tuần.
+            </p>
+
+            {!showMembershipSection ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="mt-8"
+              >
+                <button
+                  onClick={() => setShowMembershipSection(true)}
+                  className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition duration-300"
+                >
+                  Xem Các Gói Tập
+                </button>
+              </motion.div>
+            ) : (
+              <div className="mt-8 flex justify-center space-x-4">
+                <button
+                  onClick={() => setFilterType("all")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    filterType === "all"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  Tất cả gói tập
+                </button>
+                <button
+                  onClick={() => setFilterType("regular")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    filterType === "regular"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  Gói tập thường
+                </button>
+                <button
+                  onClick={() => setFilterType("offpeak")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    filterType === "offpeak"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  Gói giờ thấp điểm
+                </button>
+              </div>
+            )}
+          </motion.div>
+
+          {showMembershipSection && (
+            <>
+              {membershipMessage.text && (
+                <div
+                  className={`mb-8 p-4 rounded-lg ${
+                    membershipMessage.type === "success"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {membershipMessage.text}
+                </div>
+              )}
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, staggerChildren: 0.1 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
+              >
+                {getFilteredPlans().map((plan) => (
+                  <motion.div
+                    key={plan.id}
+                    variants={itemVariants}
+                    whileHover={{ y: -10 }}
+                    className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 ${
+                      selectedPlan?.id === plan.id
+                        ? `border-${plan.color}-500`
+                        : "border-transparent"
+                    } ${plan.popular ? "transform md:-translate-y-4" : ""}`}
+                  >
+                    {plan.badge && (
+                      <div
+                        className={`bg-${plan.color}-600 text-white text-center py-2 font-medium`}
+                      >
+                        {plan.badge}
+                      </div>
+                    )}
+                    {plan.popular && !plan.badge && (
+                      <div
+                        className={`bg-${plan.color}-600 text-white text-center py-2 font-medium`}
+                      >
+                        Phổ biến nhất
+                      </div>
+                    )}
+                    <div
+                      className={`p-6 bg-gradient-to-r from-${plan.color}-50 to-${plan.color}-100`}
+                    >
+                      <h2
+                        className={`text-2xl font-bold text-${plan.color}-900`}
+                      >
+                        {plan.name}
+                      </h2>
+                      <div className="mt-4 flex items-baseline">
+                        <span className="text-4xl font-extrabold text-gray-900">
+                          {formatPrice(plan.price)}đ
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {plan.duration === 30
+                          ? "1 tháng"
+                          : plan.duration === 90
+                          ? "3 tháng"
+                          : plan.duration === 180
+                          ? "6 tháng"
+                          : `${plan.duration} ngày`}
+                      </p>
+                    </div>
+                    <div className="p-6 space-y-6">
+                      <ul className="space-y-3">
+                        {plan.features.map((feature, index) => (
+                          <li key={index} className="flex items-start">
+                            <svg
+                              className={`h-5 w-5 text-${plan.color}-500 mr-3 mt-0.5 flex-shrink-0`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            <span className="text-gray-700">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        onClick={() => handleSelectPlan(plan)}
+                        className={`w-full py-3 px-6 rounded-xl text-white font-medium transition-colors ${
+                          selectedPlan?.id === plan.id
+                            ? `bg-${plan.color}-600 hover:bg-${plan.color}-700`
+                            : `bg-${plan.color}-500 hover:bg-${plan.color}-600`
+                        }`}
+                      >
+                        {selectedPlan?.id === plan.id
+                          ? "Đã chọn"
+                          : "Chọn gói này"}
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              <div className="text-center mb-12">
+                {isLoggedIn ? (
+                  <button
+                    onClick={handleRegisterMembership}
+                    disabled={!selectedPlan || membershipLoading}
+                    className={`px-8 py-4 rounded-xl text-white font-bold text-lg ${
+                      !selectedPlan || membershipLoading
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    } transition-all shadow-md`}
+                  >
+                    {membershipLoading ? (
+                      <div className="flex items-center justify-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Đang xử lý...
+                      </div>
+                    ) : (
+                      "Đăng ký ngay"
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="px-8 py-4 rounded-xl text-white font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all shadow-md"
+                  >
+                    Đăng nhập để đăng ký
+                  </Link>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Registration Form */}
@@ -651,13 +1149,12 @@ export default function Club() {
                 >
                   Đóng
                 </button>
-                <a
-                  href="#registration-form"
-                  onClick={closeClubDetails}
+                <Link
+                  to="/membership"
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                 >
-                  Đăng Ký Ngay
-                </a>
+                  Đăng Ký Thành Viên
+                </Link>
               </div>
             </div>
           </motion.div>
