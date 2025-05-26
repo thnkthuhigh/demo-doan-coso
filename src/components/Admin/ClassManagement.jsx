@@ -15,6 +15,9 @@ import {
   Filter,
   Search,
   X,
+  Dumbbell, // Thêm import này
+  Save,
+  CheckCircle,
 } from "lucide-react";
 
 export default function ClassManagement() {
@@ -68,11 +71,13 @@ export default function ClassManagement() {
         axios.get("http://localhost:5000/api/services"),
       ]);
 
-      setClasses(classesRes.data);
-      setServices(servicesRes.data);
+      setClasses(classesRes.data || []);
+      setServices(servicesRes.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       showNotification("❌ Không thể tải dữ liệu", "error");
+      setClasses([]);
+      setServices([]);
     } finally {
       setLoading(false);
     }
@@ -83,15 +88,28 @@ export default function ClassManagement() {
     try {
       const token = localStorage.getItem("token");
 
+      if (!token) {
+        showNotification("❌ Vui lòng đăng nhập lại", "error");
+        return;
+      }
+
+      const submitData = {
+        ...formData,
+        serviceId: formData.serviceId, // Gửi serviceId để backend xử lý
+        maxMembers: parseInt(formData.maxMembers),
+        totalSessions: parseInt(formData.totalSessions),
+        price: parseInt(formData.price),
+      };
+
       if (editingClass) {
         await axios.put(
           `http://localhost:5000/api/classes/${editingClass._id}`,
-          formData,
+          submitData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         showNotification("✅ Cập nhật lớp học thành công!");
       } else {
-        await axios.post("http://localhost:5000/api/classes", formData, {
+        await axios.post("http://localhost:5000/api/classes", submitData, {
           headers: { Authorization: `Bearer ${token}` },
         });
         showNotification("✅ Thêm lớp học thành công!");
@@ -148,9 +166,14 @@ export default function ClassManagement() {
   const handleEdit = (classItem) => {
     setFormData({
       ...classItem,
-      serviceId: classItem.service?._id || classItem.serviceId,
-      startDate: new Date(classItem.startDate).toISOString().split("T")[0],
-      endDate: new Date(classItem.endDate).toISOString().split("T")[0],
+      serviceId: classItem.service?._id || classItem.service || "", // Xử lý cả trường hợp populated và không populated
+      startDate: classItem.startDate
+        ? new Date(classItem.startDate).toISOString().split("T")[0]
+        : "",
+      endDate: classItem.endDate
+        ? new Date(classItem.endDate).toISOString().split("T")[0]
+        : "",
+      schedule: classItem.schedule || [],
     });
     setEditingClass(classItem);
     setShowForm(true);
@@ -184,11 +207,13 @@ export default function ClassManagement() {
         `http://localhost:5000/api/classes/${classId}/members`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setClassMembers(response.data);
+      setClassMembers(response.data || []);
       setShowMembersModal(true);
     } catch (error) {
       console.error("Error fetching class members:", error);
       showNotification("❌ Không thể tải danh sách học viên", "error");
+      setClassMembers([]);
+      setShowMembersModal(true);
     }
   };
 
@@ -235,6 +260,7 @@ export default function ClassManagement() {
   };
 
   const showNotification = (message, type = "success") => {
+    // Create notification element
     const notification = document.createElement("div");
     notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out z-50 ${
       type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
@@ -242,9 +268,14 @@ export default function ClassManagement() {
     notification.textContent = message;
     document.body.appendChild(notification);
 
+    // Remove after 3 seconds
     setTimeout(() => {
       notification.classList.add("opacity-0", "translate-y-2");
-      setTimeout(() => document.body.removeChild(notification), 500);
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 500);
     }, 3000);
   };
 
@@ -621,8 +652,9 @@ export default function ClassManagement() {
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
                   >
+                    <Save size={16} className="mr-2" />
                     {editingClass ? "Cập nhật" : "Thêm mới"}
                   </button>
                 </div>
@@ -658,7 +690,7 @@ export default function ClassManagement() {
               <div className="space-y-2 text-sm text-gray-600 mb-4">
                 <div className="flex items-center">
                   <Dumbbell size={16} className="mr-2 text-gray-400" />
-                  <span>{classItem.serviceName}</span>
+                  <span>{classItem.serviceName || "N/A"}</span>
                 </div>
                 <div className="flex items-center">
                   <User size={16} className="mr-2 text-gray-400" />
@@ -667,7 +699,8 @@ export default function ClassManagement() {
                 <div className="flex items-center">
                   <Users size={16} className="mr-2 text-gray-400" />
                   <span>
-                    {classItem.currentMembers}/{classItem.maxMembers} học viên
+                    {classItem.currentMembers || 0}/{classItem.maxMembers} học
+                    viên
                   </span>
                 </div>
                 <div className="flex items-center">
@@ -676,11 +709,11 @@ export default function ClassManagement() {
                 </div>
                 <div className="flex items-center">
                   <DollarSign size={16} className="mr-2 text-gray-400" />
-                  <span>{classItem.price?.toLocaleString()} VND</span>
+                  <span>{classItem.price?.toLocaleString() || 0} VND</span>
                 </div>
                 <div className="flex items-center">
                   <MapPin size={16} className="mr-2 text-gray-400" />
-                  <span>{classItem.location}</span>
+                  <span>{classItem.location || "Phòng tập chính"}</span>
                 </div>
                 <div className="flex items-center">
                   <Clock size={16} className="mr-2 text-gray-400" />
@@ -691,8 +724,13 @@ export default function ClassManagement() {
               <div className="text-xs text-gray-500 mb-4">
                 <p>
                   Thời gian:{" "}
-                  {new Date(classItem.startDate).toLocaleDateString()} -{" "}
-                  {new Date(classItem.endDate).toLocaleDateString()}
+                  {classItem.startDate
+                    ? new Date(classItem.startDate).toLocaleDateString()
+                    : "N/A"}{" "}
+                  -{" "}
+                  {classItem.endDate
+                    ? new Date(classItem.endDate).toLocaleDateString()
+                    : "N/A"}
                 </p>
               </div>
 
@@ -766,7 +804,7 @@ export default function ClassManagement() {
                 <div className="space-y-3">
                   {classMembers.map((member, index) => (
                     <div
-                      key={member._id}
+                      key={member._id || index}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                     >
                       <div>
@@ -780,7 +818,11 @@ export default function ClassManagement() {
                       <div className="text-right text-sm">
                         <p className="text-gray-600">
                           Đăng ký:{" "}
-                          {new Date(member.enrollmentDate).toLocaleDateString()}
+                          {member.enrollmentDate
+                            ? new Date(
+                                member.enrollmentDate
+                              ).toLocaleDateString()
+                            : "N/A"}
                         </p>
                         <p
                           className={`font-medium ${
@@ -789,9 +831,14 @@ export default function ClassManagement() {
                               : "text-orange-600"
                           }`}
                         >
-                          {member.paymentStatus
-                            ? "Đã thanh toán"
-                            : "Chờ thanh toán"}
+                          {member.paymentStatus ? (
+                            <span className="flex items-center">
+                              <CheckCircle size={16} className="mr-1" />
+                              Đã thanh toán
+                            </span>
+                          ) : (
+                            "Chờ thanh toán"
+                          )}
                         </p>
                       </div>
                     </div>

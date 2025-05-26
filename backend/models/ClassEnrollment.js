@@ -42,11 +42,7 @@ const classEnrollmentSchema = new mongoose.Schema(
   }
 );
 
-// Đảm bảo một user chỉ đăng ký một lần cho một lớp
+// Đảm bảo một user chỉ đăng ký một lần cho mỗi lớp
 classEnrollmentSchema.index({ user: 1, class: 1 }, { unique: true });
 
-const ClassEnrollment = mongoose.model(
-  "ClassEnrollment",
-  classEnrollmentSchema
-);
-export default ClassEnrollment;
+export default mongoose.model("ClassEnrollment", classEnrollmentSchema);

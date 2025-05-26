@@ -26,13 +26,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // API routes
 app.use("/api/auth", authRoutes);
-app.use("/api/services", serviceRoutes);
-app.use("/api/clubs", clubRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/memberships", membershipRoutes); // New route
-app.use("/api/images", imageRoutes); // New route
+app.use("/api/services", serviceRoutes);
 app.use("/api/classes", classRoutes);
+app.use("/api/memberships", membershipRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/images", imageRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
 // MongoDB URI and PORT

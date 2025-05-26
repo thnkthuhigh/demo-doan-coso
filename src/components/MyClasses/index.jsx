@@ -1,64 +1,250 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
-import { motion } from "framer-motion"; // Thêm animation
+import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Calendar,
+  Clock,
+  User,
+  DollarSign,
+  MapPin,
+  BookOpen,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  Eye,
+  CreditCard,
+  Users,
+  TrendingUp,
+  Download,
+  Filter,
+  Search,
+  RefreshCw,
+} from "lucide-react";
+import { toast } from "react-toastify";
 
 export default function MyClasses() {
   const navigate = useNavigate();
-  const [registrations, setRegistrations] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [user, setUser] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [attendanceData, setAttendanceData] = useState({});
 
-  // Kiểm tra đăng nhập
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    // Load user data
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) {
       navigate("/login");
       return;
     }
 
     try {
-      const payload = jwtDecode(token);
-      setUserId(payload.userId);
-    } catch {
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
+      fetchUserClasses(userData._id);
+    } catch (error) {
+      console.error("Error loading user:", error);
       navigate("/login");
     }
   }, [navigate]);
 
-  // Lấy danh sách lớp học đã đăng ký
-  useEffect(() => {
-    if (!userId) return;
+  const fetchUserClasses = async (userId, showLoader = true) => {
+    try {
+      if (showLoader) setLoading(true);
+      else setRefreshing(true);
 
-    const fetchRegistrations = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        const response = await fetch(
-          `http://localhost:5000/api/registrations/user/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Không thể lấy danh sách lớp học");
-        }
-
-        const data = await response.json();
-        setRegistrations(data);
-      } catch (error) {
-        console.error("Lỗi khi tải danh sách lớp học:", error);
-      } finally {
-        setLoading(false);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
       }
+
+      const response = await axios.get(
+        `http://localhost:5000/api/classes/user/${userId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setEnrollments(response.data || []);
+
+      // Fetch attendance data for each class
+      if (response.data && response.data.length > 0) {
+        fetchAttendanceData(userId);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách lớp học:", error);
+      toast.error("Không thể tải danh sách lớp học");
+      setEnrollments([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const fetchAttendanceData = async (userId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `http://localhost:5000/api/attendance/user/${userId}/report`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Group attendance by class
+      const attendanceByClass = {};
+      response.data.attendanceRecords?.forEach((record) => {
+        const classId = record.classId?._id;
+        if (!attendanceByClass[classId]) {
+          attendanceByClass[classId] = {
+            total: 0,
+            attended: 0,
+            missed: 0,
+          };
+        }
+        attendanceByClass[classId].total++;
+        if (record.isPresent) {
+          attendanceByClass[classId].attended++;
+        } else {
+          attendanceByClass[classId].missed++;
+        }
+      });
+
+      setAttendanceData(attendanceByClass);
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu điểm danh:", error);
+    }
+  };
+
+  const handleRefresh = () => {
+    if (user?._id) {
+      fetchUserClasses(user._id, false);
+    }
+  };
+
+  const getStatusInfo = (enrollment) => {
+    const classStatus = enrollment.class?.status;
+    const paymentStatus = enrollment.paymentStatus;
+
+    if (!paymentStatus) {
+      return {
+        color: "amber",
+        icon: AlertCircle,
+        text: "Chờ thanh toán",
+        bgColor: "bg-amber-50",
+        borderColor: "border-amber-200",
+        textColor: "text-amber-700",
+      };
+    }
+
+    switch (classStatus) {
+      case "upcoming":
+        return {
+          color: "blue",
+          icon: Clock,
+          text: "Sắp diễn ra",
+          bgColor: "bg-blue-50",
+          borderColor: "border-blue-200",
+          textColor: "text-blue-700",
+        };
+      case "ongoing":
+        return {
+          color: "green",
+          icon: CheckCircle,
+          text: "Đang diễn ra",
+          bgColor: "bg-green-50",
+          borderColor: "border-green-200",
+          textColor: "text-green-700",
+        };
+      case "completed":
+        return {
+          color: "gray",
+          icon: CheckCircle,
+          text: "Hoàn thành",
+          bgColor: "bg-gray-50",
+          borderColor: "border-gray-200",
+          textColor: "text-gray-700",
+        };
+      default:
+        return {
+          color: "gray",
+          icon: XCircle,
+          text: "Không xác định",
+          bgColor: "bg-gray-50",
+          borderColor: "border-gray-200",
+          textColor: "text-gray-700",
+        };
+    }
+  };
+
+  const formatSchedule = (schedule) => {
+    if (!schedule || schedule.length === 0) return "Chưa có lịch";
+
+    const daysOfWeek = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+    return schedule
+      .map((slot) => {
+        const day = daysOfWeek[slot.dayOfWeek] || "N/A";
+        return `${day}: ${slot.startTime || "N/A"}-${slot.endTime || "N/A"}`;
+      })
+      .join(", ");
+  };
+
+  const getAttendanceStats = (classId) => {
+    const data = attendanceData[classId];
+    if (!data || data.total === 0) {
+      return { rate: 0, attended: 0, total: 0 };
+    }
+    return {
+      rate: Math.round((data.attended / data.total) * 100),
+      attended: data.attended,
+      total: data.total,
     };
+  };
 
-    fetchRegistrations();
-  }, [userId]);
+  // Filter enrollments
+  const filteredEnrollments = enrollments.filter((enrollment) => {
+    const matchesSearch =
+      enrollment.class?.className
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      enrollment.class?.serviceName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      enrollment.class?.instructorName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
-  // Animation variants
+    if (!matchesSearch) return false;
+
+    if (filterStatus === "all") return true;
+    if (filterStatus === "paid") return enrollment.paymentStatus;
+    if (filterStatus === "pending") return !enrollment.paymentStatus;
+    if (filterStatus === "ongoing")
+      return enrollment.class?.status === "ongoing";
+    if (filterStatus === "completed")
+      return enrollment.class?.status === "completed";
+    if (filterStatus === "upcoming")
+      return enrollment.class?.status === "upcoming";
+
+    return true;
+  });
+
+  // Statistics
+  const stats = {
+    total: enrollments.length,
+    paid: enrollments.filter((e) => e.paymentStatus).length,
+    pending: enrollments.filter((e) => !e.paymentStatus).length,
+    ongoing: enrollments.filter((e) => e.class?.status === "ongoing").length,
+    completed: enrollments.filter((e) => e.class?.status === "completed")
+      .length,
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -84,19 +270,6 @@ export default function MyClasses() {
     );
   }
 
-  const renderPaymentStatus = (status) => {
-    if (status) {
-      return (
-        <span className="text-emerald-500 font-medium">Đã thanh toán</span>
-      );
-    }
-    return <span className="text-amber-500 font-medium">Chờ xác nhận</span>;
-  };
-
-  // Nhóm các lớp theo trạng thái thanh toán
-  const paidClasses = registrations.filter((reg) => reg.paymentStatus);
-  const pendingClasses = registrations.filter((reg) => !reg.paymentStatus);
-
   return (
     <motion.div
       initial="hidden"
@@ -105,473 +278,515 @@ export default function MyClasses() {
       className="min-h-screen pt-24 pb-16 bg-gradient-to-br from-gray-50 to-gray-100"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <motion.div variants={itemVariants} className="mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            Lớp học đã đăng ký
-          </h1>
-          <p className="text-gray-600 max-w-3xl">
-            Quản lý các lớp học bạn đã đăng ký và theo dõi trạng thái thanh toán
-          </p>
+        {/* Header */}
+        <motion.div variants={itemVariants} className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                Lớp học của tôi
+              </h1>
+              <p className="text-gray-600 max-w-3xl">
+                Quản lý và theo dõi tiến độ học tập của bạn
+              </p>
+            </div>
+            <div className="mt-4 md:mt-0 flex items-center space-x-3">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+                />
+                Làm mới
+              </button>
+              <button
+                onClick={() => navigate("/classes")}
+                className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Đăng ký thêm
+              </button>
+            </div>
+          </div>
         </motion.div>
 
-        {registrations.length === 0 ? (
+        {/* Statistics */}
+        <motion.div
+          variants={itemVariants}
+          className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
+        >
+          <div className="bg-white rounded-lg p-4 shadow-sm border">
+            <div className="text-2xl font-bold text-gray-900">
+              {stats.total}
+            </div>
+            <div className="text-sm text-gray-600">Tổng lớp học</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 shadow-sm border">
+            <div className="text-2xl font-bold text-green-600">
+              {stats.paid}
+            </div>
+            <div className="text-sm text-gray-600">Đã thanh toán</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 shadow-sm border">
+            <div className="text-2xl font-bold text-amber-600">
+              {stats.pending}
+            </div>
+            <div className="text-sm text-gray-600">Chờ thanh toán</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 shadow-sm border">
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.ongoing}
+            </div>
+            <div className="text-sm text-gray-600">Đang học</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 shadow-sm border">
+            <div className="text-2xl font-bold text-gray-600">
+              {stats.completed}
+            </div>
+            <div className="text-sm text-gray-600">Hoàn thành</div>
+          </div>
+        </motion.div>
+
+        {/* Filters */}
+        <motion.div variants={itemVariants} className="mb-6">
+          <div className="bg-white rounded-lg p-4 shadow-sm border">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+              {/* Search */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm lớp học..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Filter */}
+              <div className="flex items-center space-x-2">
+                <Filter className="h-4 w-4 text-gray-400" />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  <option value="all">Tất cả</option>
+                  <option value="paid">Đã thanh toán</option>
+                  <option value="pending">Chờ thanh toán</option>
+                  <option value="ongoing">Đang học</option>
+                  <option value="upcoming">Sắp diễn ra</option>
+                  <option value="completed">Hoàn thành</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Classes Grid */}
+        {filteredEnrollments.length === 0 ? (
           <motion.div
             variants={itemVariants}
-            className="bg-white rounded-xl shadow-md p-10 text-center max-w-xl mx-auto"
+            className="bg-white rounded-xl shadow-md p-10 text-center"
           >
-            <div className="mb-6 flex justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-20 w-20 text-gray-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-            </div>
+            <BookOpen className="h-20 w-20 text-gray-300 mx-auto mb-6" />
             <h2 className="text-xl font-semibold text-gray-800 mb-3">
-              Bạn chưa đăng ký lớp học nào
+              {enrollments.length === 0
+                ? "Bạn chưa đăng ký lớp học nào"
+                : "Không tìm thấy lớp học"}
             </h2>
             <p className="text-gray-600 mb-6">
-              Khám phá các lớp học của chúng tôi và bắt đầu hành trình fitness
-              của bạn ngay hôm nay.
+              {enrollments.length === 0
+                ? "Khám phá các lớp học của chúng tôi và bắt đầu hành trình fitness của bạn."
+                : "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm."}
             </p>
             <button
               className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
               onClick={() => navigate("/classes")}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
+              <BookOpen className="h-5 w-5 mr-2" />
               Đăng ký ngay
             </button>
           </motion.div>
         ) : (
-          <>
-            {/* Các lớp đã thanh toán */}
-            {paidClasses.length > 0 && (
-              <motion.div variants={itemVariants} className="mb-10">
-                <div className="flex items-center mb-5">
-                  <div className="bg-emerald-100 p-2 rounded-lg mr-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6 text-emerald-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Lớp học đã thanh toán{" "}
-                    <span className="text-emerald-500 font-medium">
-                      ({paidClasses.length})
-                    </span>
-                  </h2>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredEnrollments.map((enrollment) => {
+              const statusInfo = getStatusInfo(enrollment);
+              const attendanceStats = getAttendanceStats(enrollment.class?._id);
+              const StatusIcon = statusInfo.icon;
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {paidClasses.map((reg) => (
-                    <motion.div
-                      key={reg._id}
-                      whileHover={{ y: -5 }}
-                      transition={{ duration: 0.2 }}
-                      className="bg-white rounded-xl border border-emerald-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-200"
-                    >
-                      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-white flex items-center justify-between">
-                        <h3 className="font-semibold truncate">
-                          {reg.schedule?.className || "Lớp học"}
-                        </h3>
-                        <span className="bg-white/20 text-xs py-1 px-2 rounded-full">
-                          Đã xác nhận
-                        </span>
-                      </div>
-                      <div className="p-5">
-                        <div className="space-y-3">
-                          <div className="flex items-start">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 text-gray-400 mr-2 mt-0.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-xs text-gray-500">Ngày học</p>
-                              <p className="font-medium text-gray-800">
-                                {new Date(
-                                  reg.schedule?.date
-                                ).toLocaleDateString("vi-VN", {
-                                  weekday: "long",
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                })}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 text-gray-400 mr-2 mt-0.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-xs text-gray-500">Giờ học</p>
-                              <p className="font-medium text-gray-800">
-                                {reg.schedule?.timeStart} -{" "}
-                                {reg.schedule?.timeEnd}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 text-gray-400 mr-2 mt-0.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-xs text-gray-500">Giá</p>
-                              <p className="font-medium text-gray-800">
-                                {reg.schedule?.price?.toLocaleString()}đ
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
-                          <div className="flex items-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 text-emerald-500 mr-1"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            <span className="text-emerald-600 font-medium">
-                              Đã thanh toán
-                            </span>
-                          </div>
-
-                          <button
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                            onClick={() =>
-                              navigate(`/classes/${reg.schedule?._id}`)
-                            }
-                          >
-                            Chi tiết
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {/* Các lớp chờ thanh toán */}
-            {pendingClasses.length > 0 && (
-              <motion.div variants={itemVariants} className="mb-10">
-                <div className="flex items-center mb-5">
-                  <div className="bg-amber-100 p-2 rounded-lg mr-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6 text-amber-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Lớp học chờ thanh toán{" "}
-                    <span className="text-amber-500 font-medium">
-                      ({pendingClasses.length})
-                    </span>
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {pendingClasses.map((reg) => (
-                    <motion.div
-                      key={reg._id}
-                      whileHover={{ y: -5 }}
-                      transition={{ duration: 0.2 }}
-                      className="bg-white rounded-xl border border-amber-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-200"
-                    >
-                      <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 text-white flex items-center justify-between">
-                        <h3 className="font-semibold truncate">
-                          {reg.schedule?.className || "Lớp học"}
-                        </h3>
-                        <span className="bg-white/20 text-xs py-1 px-2 rounded-full">
-                          Chờ thanh toán
-                        </span>
-                      </div>
-                      <div className="p-5">
-                        <div className="space-y-3">
-                          <div className="flex items-start">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 text-gray-400 mr-2 mt-0.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-xs text-gray-500">Ngày học</p>
-                              <p className="font-medium text-gray-800">
-                                {new Date(
-                                  reg.schedule?.date
-                                ).toLocaleDateString("vi-VN", {
-                                  weekday: "long",
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                })}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 text-gray-400 mr-2 mt-0.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-xs text-gray-500">Giờ học</p>
-                              <p className="font-medium text-gray-800">
-                                {reg.schedule?.timeStart} -{" "}
-                                {reg.schedule?.timeEnd}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 text-gray-400 mr-2 mt-0.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-xs text-gray-500">Giá</p>
-                              <p className="font-medium text-gray-800">
-                                {reg.schedule?.price?.toLocaleString()}đ
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
-                          <div className="flex items-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 text-amber-500 mr-1"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            <span className="text-amber-600 font-medium">
-                              Chờ thanh toán
-                            </span>
-                          </div>
-
-                          <button
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                            onClick={() =>
-                              navigate(`/classes/${reg.schedule?._id}`)
-                            }
-                          >
-                            Chi tiết
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
+              return (
                 <motion.div
+                  key={enrollment._id}
                   variants={itemVariants}
-                  className="mt-6 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl overflow-hidden shadow-sm border border-amber-100"
+                  whileHover={{ y: -5 }}
+                  transition={{ duration: 0.2 }}
+                  className={`bg-white rounded-xl shadow-sm border-2 ${statusInfo.borderColor} overflow-hidden hover:shadow-md transition-all duration-200`}
                 >
-                  <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-center">
-                    <div className="mb-4 md:mb-0 text-center md:text-left">
-                      <div className="flex items-center justify-center md:justify-start mb-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6 text-amber-500 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <h3 className="font-bold text-lg text-gray-800">
-                          Thanh toán lớp học
-                        </h3>
+                  {/* Header */}
+                  <div
+                    className={`${statusInfo.bgColor} px-5 py-3 border-b ${statusInfo.borderColor}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-gray-800 truncate">
+                        {enrollment.class?.className || "Lớp học"}
+                      </h3>
+                      <div
+                        className={`flex items-center px-2 py-1 rounded-full ${statusInfo.textColor} bg-white/50`}
+                      >
+                        <StatusIcon className="h-3 w-3 mr-1" />
+                        <span className="text-xs font-medium">
+                          {statusInfo.text}
+                        </span>
                       </div>
-                      <p className="text-gray-600 max-w-md">
-                        Bạn có{" "}
-                        <span className="font-semibold text-amber-600">
-                          {pendingClasses.length} lớp học
-                        </span>{" "}
-                        đang chờ thanh toán. Vui lòng thanh toán để hoàn tất
-                        đăng ký và đảm bảo chỗ học.
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {enrollment.class?.serviceName || "N/A"}
+                    </p>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5">
+                    <div className="space-y-3">
+                      {/* Instructor */}
+                      <div className="flex items-center">
+                        <User className="h-4 w-4 text-gray-400 mr-3" />
+                        <div>
+                          <p className="text-xs text-gray-500">
+                            Huấn luyện viên
+                          </p>
+                          <p className="font-medium text-gray-800">
+                            {enrollment.class?.instructorName || "Chưa có"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Schedule */}
+                      <div className="flex items-start">
+                        <Clock className="h-4 w-4 text-gray-400 mr-3 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-gray-500">Lịch học</p>
+                          <p className="font-medium text-gray-800 text-sm">
+                            {formatSchedule(enrollment.class?.schedule)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 text-gray-400 mr-3" />
+                        <div>
+                          <p className="text-xs text-gray-500">Địa điểm</p>
+                          <p className="font-medium text-gray-800">
+                            {enrollment.class?.location || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Progress */}
+                      <div className="flex items-center">
+                        <TrendingUp className="h-4 w-4 text-gray-400 mr-3" />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="text-xs text-gray-500">Tiến độ học</p>
+                            <span className="text-xs font-medium text-gray-700">
+                              Buổi {enrollment.class?.currentSession || 0}/
+                              {enrollment.class?.totalSessions || 0}
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${
+                                  enrollment.class?.totalSessions > 0
+                                    ? ((enrollment.class?.currentSession || 0) /
+                                        enrollment.class?.totalSessions) *
+                                      100
+                                    : 0
+                                }%`,
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Attendance */}
+                      {attendanceStats.total > 0 && (
+                        <div className="flex items-center">
+                          <CheckCircle className="h-4 w-4 text-gray-400 mr-3" />
+                          <div className="flex-1">
+                            <div className="flex justify-between items-center mb-1">
+                              <p className="text-xs text-gray-500">Điểm danh</p>
+                              <span className="text-xs font-medium text-gray-700">
+                                {attendanceStats.rate}% (
+                                {attendanceStats.attended}/
+                                {attendanceStats.total})
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${attendanceStats.rate}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Price */}
+                      <div className="flex items-center">
+                        <DollarSign className="h-4 w-4 text-gray-400 mr-3" />
+                        <div>
+                          <p className="text-xs text-gray-500">Học phí</p>
+                          <p className="font-bold text-lg text-gray-800">
+                            {enrollment.class?.price?.toLocaleString() || 0}đ
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() =>
+                            navigate(
+                              `/classes/${enrollment.class?._id}/details`
+                            )
+                          }
+                          className="flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Chi tiết
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSelectedClass(enrollment);
+                            setShowDetailModal(true);
+                          }}
+                          className="flex items-center text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+                        >
+                          <BookOpen className="h-4 w-4 mr-1" />
+                          Thông tin
+                        </button>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        {!enrollment.paymentStatus && (
+                          <button
+                            onClick={() => navigate("/payment")}
+                            className="flex items-center px-3 py-1 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors text-sm"
+                          >
+                            <CreditCard className="h-3 w-3 mr-1" />
+                            Thanh toán
+                          </button>
+                        )}
+
+                        <span className="text-xs text-gray-500">
+                          {new Date(
+                            enrollment.enrollmentDate
+                          ).toLocaleDateString("vi-VN")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Detail Modal */}
+        <AnimatePresence>
+          {showDetailModal && selectedClass && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+              onClick={() => setShowDetailModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-6 border-b">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        {selectedClass.class?.className}
+                      </h2>
+                      <p className="text-gray-600">
+                        {selectedClass.class?.serviceName}
                       </p>
                     </div>
                     <button
-                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg transition-colors shadow-sm whitespace-nowrap"
-                      onClick={() => navigate("/payment")}
+                      onClick={() => setShowDetailModal(false)}
+                      className="text-gray-400 hover:text-gray-600"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                      Thanh toán ngay
+                      <XCircle className="h-6 w-6" />
                     </button>
                   </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </>
-        )}
+                </div>
 
-        <motion.div
-          variants={itemVariants}
-          className="flex justify-center mt-8"
-        >
-          <button
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
-            onClick={() => navigate("/classes")}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Đăng ký thêm lớp học
-          </button>
-        </motion.div>
+                <div className="p-6 space-y-6">
+                  {/* Basic Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Thông tin cơ bản
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Huấn luyện viên:
+                          </span>
+                          <span className="font-medium">
+                            {selectedClass.class?.instructorName || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Địa điểm:</span>
+                          <span className="font-medium">
+                            {selectedClass.class?.location || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Học phí:</span>
+                          <span className="font-bold text-lg">
+                            {selectedClass.class?.price?.toLocaleString() || 0}đ
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Trạng thái thanh toán:
+                          </span>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              selectedClass.paymentStatus
+                                ? "bg-green-100 text-green-700"
+                                : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
+                            {selectedClass.paymentStatus
+                              ? "Đã thanh toán"
+                              : "Chờ thanh toán"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Lịch học
+                      </h3>
+                      <div className="space-y-2">
+                        {selectedClass.class?.schedule?.map((slot, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between p-2 bg-gray-50 rounded"
+                          >
+                            <span>
+                              {
+                                ["CN", "T2", "T3", "T4", "T5", "T6", "T7"][
+                                  slot.dayOfWeek
+                                ]
+                              }
+                            </span>
+                            <span>
+                              {slot.startTime} - {slot.endTime}
+                            </span>
+                          </div>
+                        )) || <p className="text-gray-500">Chưa có lịch học</p>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {selectedClass.class?.description && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Mô tả
+                      </h3>
+                      <p className="text-gray-600">
+                        {selectedClass.class.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Requirements */}
+                  {selectedClass.class?.requirements && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Yêu cầu
+                      </h3>
+                      <p className="text-gray-600">
+                        {selectedClass.class.requirements}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Progress */}
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-3">
+                      Tiến độ học tập
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span>Buổi học đã hoàn thành</span>
+                        <span className="font-bold">
+                          {selectedClass.class?.currentSession || 0}/
+                          {selectedClass.class?.totalSessions || 0}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
+                          style={{
+                            width: `${
+                              selectedClass.class?.totalSessions > 0
+                                ? ((selectedClass.class?.currentSession || 0) /
+                                    selectedClass.class?.totalSessions) *
+                                  100
+                                : 0
+                            }%`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <button
+                      onClick={() => navigate("/my-attendance")}
+                      className="flex items-center px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Xem điểm danh
+                    </button>
+
+                    {!selectedClass.paymentStatus && (
+                      <button
+                        onClick={() => navigate("/payment")}
+                        className="flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Thanh toán ngay
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

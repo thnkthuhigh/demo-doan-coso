@@ -2,9 +2,14 @@ import mongoose from "mongoose";
 
 const attendanceSchema = new mongoose.Schema(
   {
-    class: {
+    classId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
+      required: true,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     sessionNumber: {
@@ -15,48 +20,31 @@ const attendanceSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    instructor: {
+    isPresent: {
+      type: Boolean,
+      default: false,
+    },
+    checkinTime: {
+      type: Date,
+    },
+    notes: {
+      type: String,
+      default: "",
+    },
+    markedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    attendees: [
-      {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-        enrollment: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "ClassEnrollment",
-        },
-        attendedAt: {
-          type: Date,
-          default: Date.now,
-        },
-        note: String,
-      },
-    ],
-    totalPresent: {
-      type: Number,
-      default: 0,
-    },
-    totalEnrolled: {
-      type: Number,
-      default: 0,
-    },
-    status: {
-      type: String,
-      enum: ["scheduled", "ongoing", "completed", "cancelled"],
-      default: "scheduled",
-    },
-    notes: String,
   },
   {
     timestamps: true,
   }
 );
 
-attendanceSchema.index({ class: 1, sessionNumber: 1 }, { unique: true });
+// Compound index để tránh duplicate
+attendanceSchema.index(
+  { classId: 1, userId: 1, sessionNumber: 1 },
+  { unique: true }
+);
 
-const Attendance = mongoose.model("Attendance", attendanceSchema);
-export default Attendance;
+export default mongoose.model("Attendance", attendanceSchema);

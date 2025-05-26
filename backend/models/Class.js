@@ -1,20 +1,5 @@
 import mongoose from "mongoose";
 
-const classScheduleSchema = new mongoose.Schema({
-  dayOfWeek: {
-    type: Number, // 0 = Chủ nhật, 1 = Thứ 2, ..., 6 = Thứ 7
-    required: true,
-  },
-  startTime: {
-    type: String, // "HH:mm"
-    required: true,
-  },
-  endTime: {
-    type: String, // "HH:mm"
-    required: true,
-  },
-});
-
 const classSchema = new mongoose.Schema(
   {
     className: {
@@ -29,10 +14,6 @@ const classSchema = new mongoose.Schema(
     serviceName: {
       type: String,
       required: true,
-    },
-    instructor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
     },
     instructorName: {
       type: String,
@@ -51,7 +32,8 @@ const classSchema = new mongoose.Schema(
     },
     totalSessions: {
       type: Number,
-      required: true, // Tổng số buổi tập trong khóa học
+      required: true,
+      default: 12,
     },
     currentSession: {
       type: Number,
@@ -63,27 +45,39 @@ const classSchema = new mongoose.Schema(
     },
     startDate: {
       type: Date,
-      required: true, // Ngày bắt đầu khóa học
+      required: true,
     },
     endDate: {
       type: Date,
-      required: true, // Ngày kết thúc khóa học
+      required: true,
     },
-    schedule: [classScheduleSchema], // Lịch tập hàng tuần
+    schedule: [
+      {
+        dayOfWeek: {
+          type: Number, // 0 = Chủ nhật, 1 = Thứ 2, ..., 6 = Thứ 7
+          required: true,
+        },
+        startTime: {
+          type: String, // "HH:mm"
+          required: true,
+        },
+        endTime: {
+          type: String, // "HH:mm"
+          required: true,
+        },
+      },
+    ],
     status: {
       type: String,
       enum: ["upcoming", "ongoing", "completed", "cancelled"],
       default: "upcoming",
-    },
-    image: {
-      type: String,
     },
     location: {
       type: String,
       default: "Phòng tập chính",
     },
     requirements: {
-      type: String, // Yêu cầu đặc biệt (nếu có)
+      type: String,
     },
   },
   {
@@ -96,9 +90,25 @@ classSchema.virtual("availableSlots").get(function () {
   return this.maxMembers - this.currentMembers;
 });
 
+// Middleware để tự động cập nhật status
+classSchema.pre("save", function (next) {
+  const now = new Date();
+  const startDate = new Date(this.startDate);
+  const endDate = new Date(this.endDate);
+
+  if (now < startDate) {
+    this.status = "upcoming";
+  } else if (now >= startDate && now <= endDate) {
+    this.status = "ongoing";
+  } else if (now > endDate || this.currentSession >= this.totalSessions) {
+    this.status = "completed";
+  }
+
+  next();
+});
+
 // Index để tìm kiếm nhanh
 classSchema.index({ serviceName: 1, status: 1 });
 classSchema.index({ startDate: 1, endDate: 1 });
 
-const Class = mongoose.model("Class", classSchema);
-export default Class;
+export default mongoose.model("Class", classSchema);

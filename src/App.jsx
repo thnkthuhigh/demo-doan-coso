@@ -23,6 +23,7 @@ import AdminLayout from "./components/Admin/AdminLayout";
 import AdminDashboard from "./components/Admin/Dashboard";
 import ViewClasses from "./components/Classes/index";
 import UserClasses from "./components/Classes/UserClasses";
+import ClassDetails from "./components/Classes/ClassDetails";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -71,6 +72,7 @@ function App() {
         <Route path="/user" element={<UserProfile />} />
         <Route path="/classes" element={<ViewClasses />} />
         <Route path="/my-classes" element={<UserClasses />} />
+        <Route path="/classes/:id/details" element={<ClassDetails />} />
 
         {/* Admin routes - tất cả qua dashboard */}
         <Route

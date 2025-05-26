@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import BankPopup from "./BankPopup";
-import { motion } from "framer-motion"; // Đảm bảo bạn đã import motion
+import { motion } from "framer-motion";
 
 export default function PaymentPage() {
   const navigate = useNavigate();
@@ -15,15 +15,12 @@ export default function PaymentPage() {
   const [userId, setUserId] = useState(null);
   const [showBankPopup, setShowBankPopup] = useState(false);
   const [membershipPayment, setMembershipPayment] = useState(null);
-  const [selectedClasses, setSelectedClasses] = useState({}); // Track selected classes for payment
-  const [includeMembership, setIncludeMembership] = useState(true); // State to track if membership is included
+  const [selectedClasses, setSelectedClasses] = useState({});
+  const [includeMembership, setIncludeMembership] = useState(true);
 
   // Thêm custom styling cho navbar khi vào trang Payment
   useEffect(() => {
-    // Thêm class đặc biệt để điều chỉnh màu cho navbar
     document.body.classList.add("payment-page");
-
-    // Cleanup function để xóa class khi rời khỏi trang
     return () => {
       document.body.classList.remove("payment-page");
     };
@@ -63,7 +60,6 @@ export default function PaymentPage() {
     } else {
       // If no membership in localStorage, check if there's one from URL state
       if (location.state?.fromMembership && location.state?.membershipId) {
-        // Fetch the membership details from API
         const fetchMembershipDetails = async () => {
           try {
             const token = localStorage.getItem("token");
@@ -82,7 +78,6 @@ export default function PaymentPage() {
               const membershipData = await response.json();
               console.log("Fetched membership data:", membershipData);
 
-              // Set the membership payment data
               setMembershipPayment({
                 id: membershipData._id,
                 type: membershipData.type,
@@ -106,22 +101,33 @@ export default function PaymentPage() {
     }
   }, [location, userId]);
 
-  // Fetch user info + unpaid registrations
+  // Fetch user info + unpaid class enrollments
   const fetchUnpaidRegistrations = async () => {
     if (!userId) return;
 
     try {
       setLoading(true);
-      const [userRes, regRes] = await Promise.all([
-        fetch(`http://localhost:5000/api/users/${userId}`),
-        fetch(`http://localhost:5000/api/registrations/user/${userId}`),
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const [userRes, enrollmentRes] = await Promise.all([
+        fetch(`http://localhost:5000/api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`http://localhost:5000/api/classes/user/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const userInfo = await userRes.json();
-      const regs = await regRes.json();
+      const enrollments = await enrollmentRes.json();
 
       if (!userRes.ok) throw new Error("User API error");
-      if (!regRes.ok) throw new Error("Registrations API error");
+      if (!enrollmentRes.ok) throw new Error("Enrollments API error");
 
       setUserData({
         name: userInfo.username,
@@ -130,24 +136,24 @@ export default function PaymentPage() {
       });
 
       // Chỉ lấy các đăng ký chưa thanh toán
-      const unpaidRegs = regs.filter((reg) => !reg.paymentStatus);
-
-      // Loại bỏ trùng lịch học theo schedule._id
-      const uniqueUnpaid = unpaidRegs.filter(
-        (reg, idx, arr) =>
-          idx === arr.findIndex((r) => r.schedule._id === reg.schedule._id)
+      const unpaidEnrollments = enrollments.filter(
+        (enrollment) => !enrollment.paymentStatus
       );
 
       setRegisteredClasses(
-        uniqueUnpaid.map((reg) => ({
-          id: reg._id,
-          scheduleId: reg.schedule._id,
-          name: reg.schedule.className,
-          price: reg.schedule.price,
+        unpaidEnrollments.map((enrollment) => ({
+          id: enrollment._id,
+          classId: enrollment.class._id,
+          name: enrollment.class.className,
+          price: enrollment.class.price,
+          serviceName: enrollment.class.serviceName,
+          instructorName: enrollment.class.instructorName,
+          schedule: enrollment.class.schedule,
         }))
       );
     } catch (e) {
       console.error("Load error:", e);
+      setRegisteredClasses([]);
     } finally {
       setLoading(false);
     }
@@ -157,8 +163,8 @@ export default function PaymentPage() {
     fetchUnpaidRegistrations();
   }, [userId]);
 
-  // Hàm xóa đăng ký lớp học - kiểm tra lại code này
-  const handleDeleteRegistration = async (registrationId) => {
+  // Hàm xóa đăng ký lớp học - sử dụng ClassEnrollment ID
+  const handleDeleteRegistration = async (enrollmentId) => {
     if (!confirm("Bạn có chắc muốn xóa đăng ký lớp học này?")) {
       return;
     }
@@ -172,8 +178,9 @@ export default function PaymentPage() {
         return;
       }
 
+      // Gọi API xóa ClassEnrollment
       const response = await fetch(
-        `http://localhost:5000/api/registrations/${registrationId}`,
+        `http://localhost:5000/api/classes/enrollment/${enrollmentId}`,
         {
           method: "DELETE",
           headers: {
@@ -190,8 +197,14 @@ export default function PaymentPage() {
 
       // Cập nhật lại danh sách lớp học sau khi xóa
       setRegisteredClasses(
-        registeredClasses.filter((cls) => cls.id !== registrationId)
+        registeredClasses.filter((cls) => cls.id !== enrollmentId)
       );
+
+      // Cập nhật selectedClasses
+      const newSelectedClasses = { ...selectedClasses };
+      delete newSelectedClasses[enrollmentId];
+      setSelectedClasses(newSelectedClasses);
+
       alert("Đã xóa đăng ký lớp học thành công!");
     } catch (error) {
       console.error("Lỗi khi xóa đăng ký:", error);
@@ -216,7 +229,7 @@ export default function PaymentPage() {
     visible: { y: 0, opacity: 1 },
   };
 
-  // Add this effect to initialize selected classes
+  // Initialize selected classes
   useEffect(() => {
     if (registeredClasses.length > 0) {
       const initialSelectedState = {};
@@ -234,10 +247,6 @@ export default function PaymentPage() {
       [classId]: !selectedClasses[classId],
     };
     setSelectedClasses(newState);
-
-    // Tính toán lại tổng tiền khi trạng thái chọn lớp học thay đổi
-    const newTotal = calculateTotal(newState);
-    // setTotal(newTotal); // Nếu bạn có state total riêng, nếu không thì có thể tính toán trực tiếp khi cần hiển thị
   };
 
   // Hàm tính toán tổng tiền dựa trên trạng thái đã chọn của các lớp học
@@ -283,7 +292,6 @@ export default function PaymentPage() {
     if (selectedMethod === "Thẻ ngân hàng") {
       setShowBankPopup(true);
     } else {
-      // Xử lý thanh toán trực tiếp với các phương thức khác
       handleDirectPayment();
     }
   };
@@ -298,12 +306,12 @@ export default function PaymentPage() {
         return;
       }
 
-      // IMPORTANT: Get only the selected class IDs
+      // Lấy các ClassEnrollment ID đã chọn
       const selectedClassIds = registeredClasses
         .filter((cls) => selectedClasses[cls.id])
         .map((cls) => cls.id);
 
-      // If nothing is selected to pay, show an alert
+      // Kiểm tra có item nào được chọn không
       if (
         selectedClassIds.length === 0 &&
         (!membershipPayment || !includeMembership)
@@ -312,18 +320,15 @@ export default function PaymentPage() {
         return;
       }
 
-      // Create a new payment with ONLY the selected items
+      // Tạo danh sách registrationIds
       const registrationIds = [...selectedClassIds];
 
-      // Add membership ID to registrationIds if it exists AND is selected
+      // Thêm membership ID nếu có và được chọn
       if (membershipPayment && includeMembership) {
         registrationIds.push(membershipPayment.id);
       }
 
-      // Make sure the payment method matches one of the valid enum values in the backend
-      let paymentMethod = selectedMethod;
-
-      // Determine the payment type
+      // Xác định payment type
       let paymentType = "class";
       if (
         membershipPayment &&
@@ -337,7 +342,7 @@ export default function PaymentPage() {
           : "membership";
       }
 
-      // Create the payment with only the selected registrations
+      // Tạo payment với các ClassEnrollment đã chọn
       const response = await fetch("http://localhost:5000/api/payments", {
         method: "POST",
         headers: {
@@ -346,8 +351,8 @@ export default function PaymentPage() {
         },
         body: JSON.stringify({
           amount: total,
-          method: paymentMethod,
-          registrationIds: registrationIds, // Only includes selected items
+          method: selectedMethod,
+          registrationIds: registrationIds,
           status: "pending",
           paymentType: paymentType,
         }),
@@ -358,7 +363,7 @@ export default function PaymentPage() {
         throw new Error(errorData.message || "Thanh toán lỗi");
       }
 
-      // Clear pending membership from localStorage after payment is created
+      // Clear pending membership sau khi tạo payment thành công
       if (membershipPayment && includeMembership) {
         localStorage.removeItem("pendingMembership");
         localStorage.removeItem("pendingPayment");
@@ -509,7 +514,6 @@ export default function PaymentPage() {
 
               <div className="p-6">
                 {registeredClasses.length === 0 && !membershipPayment ? (
-                  // Show "no items" message only when there are truly no items to pay for
                   <div className="py-10 text-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -530,7 +534,7 @@ export default function PaymentPage() {
                     </p>
                     <div className="flex justify-center space-x-3">
                       <button
-                        onClick={() => navigate("/schedule")}
+                        onClick={() => navigate("/classes")}
                         className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
                       >
                         Tìm lớp học
@@ -544,7 +548,6 @@ export default function PaymentPage() {
                     </div>
                   </div>
                 ) : (
-                  // Show payment items - either classes, membership, or both
                   <div className="space-y-4">
                     {/* Classes section */}
                     {registeredClasses.length > 0 && (
@@ -554,7 +557,6 @@ export default function PaymentPage() {
                             Lớp học đã đăng ký
                           </h3>
 
-                          {/* Add select all toggle button */}
                           <button
                             onClick={() => {
                               const newSelectedState = {};
@@ -567,9 +569,6 @@ export default function PaymentPage() {
                               });
 
                               setSelectedClasses(newSelectedState);
-                              // Tính toán lại tổng tiền khi chọn/bỏ chọn tất cả
-                              const newTotal = calculateTotal(newSelectedState);
-                              // setTotal(newTotal); // Nếu bạn có state total riêng
                             }}
                             className="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition-colors"
                           >
@@ -602,7 +601,11 @@ export default function PaymentPage() {
                                   {cls.name}
                                 </label>
                                 <p className="text-sm text-gray-500">
-                                  Mã lớp: {cls.scheduleId.slice(-6)}
+                                  {cls.serviceName} - HLV:{" "}
+                                  {cls.instructorName || "Chưa có"}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  Mã đăng ký: {cls.id.slice(-6)}
                                 </p>
                               </div>
                             </div>
@@ -817,16 +820,15 @@ export default function PaymentPage() {
             onClose={(success) => {
               setShowBankPopup(false);
               if (success) {
-                // Show receipt or redirect as needed
                 setShowReceipt(true);
               }
             }}
             amount={total}
             userData={userData}
             registeredClasses={registeredClasses}
-            selectedClasses={selectedClasses} // Pass this prop
-            membershipPayment={membershipPayment} // Pass this prop
-            includeMembership={includeMembership} // Pass this prop
+            selectedClasses={selectedClasses}
+            membershipPayment={membershipPayment}
+            includeMembership={includeMembership}
           />
         )}
 
@@ -975,7 +977,7 @@ export default function PaymentPage() {
                     Chi tiết đơn hàng
                   </h3>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    {/* Only show selected classes in the receipt */}
+                    {/* Chỉ hiển thị các lớp học đã chọn */}
                     {registeredClasses
                       .filter((cls) => selectedClasses[cls.id])
                       .map((cls) => (
@@ -990,7 +992,7 @@ export default function PaymentPage() {
                         </div>
                       ))}
 
-                    {/* Only show membership if it's included */}
+                    {/* Chỉ hiển thị membership nếu được chọn */}
                     {membershipPayment && includeMembership && (
                       <div className="flex justify-between py-2 border-b border-gray-200">
                         <span className="text-gray-700">
@@ -1003,7 +1005,7 @@ export default function PaymentPage() {
                       </div>
                     )}
 
-                    {/* Total amount */}
+                    {/* Tổng cộng */}
                     <div className="flex justify-between py-3 mt-2 border-t border-gray-300">
                       <span className="font-bold text-gray-900">
                         Tổng cộng:
