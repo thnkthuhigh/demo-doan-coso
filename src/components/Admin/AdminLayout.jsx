@@ -35,11 +35,7 @@ const AdminLayout = ({ children }) => {
   }, [navigate]);
 
   // Pass through any props to children (particularly activeModule and setActiveModule)
-  return (
-    <div className="min-h-screen pt-16 flex">
-      {React.cloneElement(children, { AdminNav })}
-    </div>
-  );
+  return <div className="min-h-screen bg-gray-100 pt-16">{children}</div>;
 };
 
 export default AdminLayout;

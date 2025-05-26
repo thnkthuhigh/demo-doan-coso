@@ -6,16 +6,19 @@ import {
   Dumbbell,
   Building,
   TrendingUp,
-  ImageIcon, // Change this from Image to ImageIcon
+  ImageIcon,
+  ClipboardList,
 } from "lucide-react";
+import AdminNav from "../AdminNav";
 import ImageManager from "../ImageManager";
 import PaymentManagement from "../PaymentManagement";
 import MembershipManagement from "../MembershipManagement";
-import ManageScheduleAdmin from "../qllt";
 import AdminServiceManager from "../qldv";
 import AdminClubManager from "../qlclb";
+import ClassManagement from "../ClassManagement";
+import AttendanceManagement from "../AttendanceManagement";
 
-const AdminDashboard = ({ AdminNav }) => {
+const AdminDashboard = () => {
   const [activeModule, setActiveModule] = useState("dashboard");
 
   // Render content based on active module
@@ -27,27 +30,29 @@ const AdminDashboard = ({ AdminNav }) => {
         return <PaymentManagement />;
       case "memberships":
         return <MembershipManagement />;
-      case "schedule":
-        return <ManageScheduleAdmin />;
       case "services":
         return <AdminServiceManager />;
       case "clubs":
         return <AdminClubManager />;
+      case "classes":
+        return <ClassManagement />;
+      case "attendance":
+        return <AttendanceManagement />;
       case "stats":
         return <StatsPlaceholder />;
       case "dashboard":
       default:
-        return <DashboardHome setActiveModule={setActiveModule} />; // Pass the function down
+        return <DashboardHome setActiveModule={setActiveModule} />;
     }
   };
 
   return (
-    <>
+    <div className="flex">
       <AdminNav activeModule={activeModule} setActiveModule={setActiveModule} />
       <main className="flex-1 ml-64 p-6">
         <div className="max-w-7xl mx-auto">{renderContent()}</div>
       </main>
-    </>
+    </div>
   );
 };
 
@@ -61,7 +66,7 @@ const DashboardHome = ({ setActiveModule }) => {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="Tổng người dùng"
           value="256"
@@ -77,11 +82,18 @@ const DashboardHome = ({ setActiveModule }) => {
           color="green"
         />
         <StatCard
-          title="Lớp học trong tuần"
+          title="Lớp học hoạt động"
           value="32"
           change="+4"
           icon={<Calendar className="h-7 w-7" />}
           color="purple"
+        />
+        <StatCard
+          title="Thành viên mới"
+          value="18"
+          change="+6"
+          icon={<Users className="h-7 w-7" />}
+          color="amber"
         />
       </div>
 
@@ -92,9 +104,15 @@ const DashboardHome = ({ setActiveModule }) => {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           <QuickAction
-            title="Hình ảnh"
-            icon={<ImageIcon className="h-6 w-6" />} // Change Image to ImageIcon
-            onClick={() => setActiveModule("images")}
+            title="Quản lý lớp học"
+            icon={<Calendar className="h-6 w-6" />}
+            onClick={() => setActiveModule("classes")}
+            color="purple"
+          />
+          <QuickAction
+            title="Điểm danh"
+            icon={<ClipboardList className="h-6 w-6" />}
+            onClick={() => setActiveModule("attendance")}
             color="blue"
           />
           <QuickAction
@@ -104,10 +122,10 @@ const DashboardHome = ({ setActiveModule }) => {
             color="green"
           />
           <QuickAction
-            title="Lịch tập"
-            icon={<Calendar className="h-6 w-6" />}
-            onClick={() => setActiveModule("schedule")}
-            color="purple"
+            title="Thành viên"
+            icon={<Users className="h-6 w-6" />}
+            onClick={() => setActiveModule("memberships")}
+            color="indigo"
           />
           <QuickAction
             title="Dịch vụ"
@@ -120,6 +138,12 @@ const DashboardHome = ({ setActiveModule }) => {
             icon={<Building className="h-6 w-6" />}
             onClick={() => setActiveModule("clubs")}
             color="amber"
+          />
+          <QuickAction
+            title="Hình ảnh"
+            icon={<ImageIcon className="h-6 w-6" />}
+            onClick={() => setActiveModule("images")}
+            color="blue"
           />
           <QuickAction
             title="Thống kê"
@@ -138,10 +162,10 @@ const DashboardHome = ({ setActiveModule }) => {
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-100">
             <ActivityItem
-              title="Nguyễn Văn A đã đăng ký thành viên mới"
+              title="Lớp Yoga buổi sáng vừa được tạo"
               time="15 phút trước"
-              icon={<Users className="h-5 w-5" />}
-              color="blue"
+              icon={<Calendar className="h-5 w-5" />}
+              color="purple"
             />
             <ActivityItem
               title="Thanh toán mới: 1.500.000 VND"
@@ -150,22 +174,22 @@ const DashboardHome = ({ setActiveModule }) => {
               color="green"
             />
             <ActivityItem
-              title="Lớp Yoga buổi sáng đã đầy"
+              title="5 học viên mới đăng ký lớp Boxing"
               time="2 giờ trước"
-              icon={<Calendar className="h-5 w-5" />}
-              color="purple"
+              icon={<Users className="h-5 w-5" />}
+              color="blue"
             />
             <ActivityItem
-              title="Dịch vụ PT cá nhân được cập nhật"
+              title="Buổi tập Zumba đã điểm danh đầy đủ"
               time="Hôm qua"
-              icon={<Dumbbell className="h-5 w-5" />}
-              color="pink"
+              icon={<ClipboardList className="h-5 w-5" />}
+              color="amber"
             />
             <ActivityItem
               title="CLB Quận 3 báo cáo doanh số"
               time="2 ngày trước"
               icon={<Building className="h-5 w-5" />}
-              color="amber"
+              color="pink"
             />
           </div>
         </div>
@@ -226,7 +250,7 @@ const QuickAction = ({ title, icon, onClick, color }) => {
       className={`flex flex-col items-center justify-center p-4 rounded-xl transition-colors ${colorClasses[color]}`}
     >
       <div className="mb-2">{icon}</div>
-      <span className="text-sm font-medium">{title}</span>
+      <span className="text-sm font-medium text-center">{title}</span>
     </button>
   );
 };

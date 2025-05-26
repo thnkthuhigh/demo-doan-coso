@@ -1,8 +1,6 @@
 import Payment from "../models/Payment.js";
 import mongoose from "mongoose";
-import ClassRegistration from "../models/ClassRegistration.js"; // Changed from Registration to ClassRegistration
 import Membership from "../models/Membership.js";
-import Schedule from "../models/Schedule.js";
 
 // Create a new payment
 export const createPayment = async (req, res) => {
