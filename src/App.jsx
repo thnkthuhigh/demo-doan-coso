@@ -13,7 +13,6 @@ import Footer from "./components/Global/Fot";
 import Club from "./components/Club/index";
 import ServicePage from "./components/Services/ServicePage";
 import ServiceDetail from "./components/Services/ServiceDetail";
-// import PricingPage from "./components/Price"; // Comment out as we're only using MembershipPage
 import ViewSchedulePage from "./components/Schedule";
 import ManageSchedule from "./components/Manage";
 import ManageScheduleAdmin from "./components/Admin/qllt";
@@ -26,6 +25,9 @@ import UserPaidClasses from "./components/UserPaidClasses";
 import PaymentManagement from "./components/Admin/PaymentManagement";
 import MembershipPage from "./components/Membership";
 import MembershipManagement from "./components/Admin/MembershipManagement";
+import ImageManager from "./components/Admin/ImageManager";
+import AdminLayout from "./components/Admin/AdminLayout";
+import AdminDashboard from "./components/Admin/Dashboard";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -33,7 +35,9 @@ function App() {
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      console.log("App loaded with user:", parsedUser);
+      setUser(parsedUser);
     }
   }, []);
 
@@ -41,6 +45,7 @@ function App() {
     <Router>
       <NavBar user={user} setUser={setUser} />
       <Routes>
+        {/* Main routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login setUser={setUser} />} />
         <Route path="/sign-up" element={<SignUp />} />
@@ -59,26 +64,20 @@ function App() {
         <Route path="/my-schedule" element={<UserPaidClasses />} />
         <Route path="/my-classes" element={<UserPaidClasses />} />
 
-        {/* Admin routes - instead of conditional rendering, use the element for conditional access */}
+        {/* Single admin route with all functionality in Dashboard */}
         <Route
-          path="/admin/payments"
+          path="/admin/*"
           element={
-            user?.role === "admin" ? (
-              <PaymentManagement />
-            ) : (
-              <Navigate to="/" replace />
-            )
+            <AdminLayout>
+              <AdminDashboard />
+            </AdminLayout>
           }
         />
+
+        {/* Default admin route - redirect to dashboard */}
         <Route
-          path="/admin/memberships"
-          element={
-            user?.role === "admin" ? (
-              <MembershipManagement />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
+          path="/admin"
+          element={<Navigate to="/admin/dashboard" replace />}
         />
       </Routes>
       <Footer />

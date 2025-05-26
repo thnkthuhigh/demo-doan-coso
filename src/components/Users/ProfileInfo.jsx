@@ -1,15 +1,6 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Pencil,
-  Save,
-  X,
-  User,
-  Mail,
-  Phone,
-  Calendar,
-  MapPin,
-} from "lucide-react";
+import { User, Upload, X } from "lucide-react";
 
 function ProfileInfo({
   user,
@@ -20,9 +11,79 @@ function ProfileInfo({
   handleSave,
   setForm,
   setPreviewUrl,
+  previewUrl,
   setAvatar,
+  avatar,
   cardVariants,
 }) {
+  const fileInputRef = useRef(null);
+
+  // Add debug logging to track avatar data
+  useEffect(() => {
+    if (user?.avatar) {
+      console.log("ProfileInfo received user avatar:", user.avatar);
+    }
+  }, [user]);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log("Selected file:", file.name);
+      setAvatar(file);
+      // Create a URL for preview
+      const fileReader = new FileReader();
+      fileReader.onload = () => {
+        setPreviewUrl(fileReader.result);
+      };
+      fileReader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    setPreviewUrl("");
+    setAvatar(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Log the user object whenever it changes
+  useEffect(() => {
+    console.log("User object updated:", user);
+  }, [user]);
+
+  // Log the form state whenever it changes
+  useEffect(() => {
+    console.log("Form state updated:", form);
+  }, [form]);
+
+  // Log the editMode state whenever it changes
+  useEffect(() => {
+    console.log("Edit mode changed:", editMode);
+  }, [editMode]);
+
+  // Log the previewUrl state whenever it changes
+  useEffect(() => {
+    console.log("Preview URL changed:", previewUrl);
+  }, [previewUrl]);
+
+  // Log the avatar state whenever it changes
+  useEffect(() => {
+    console.log("Avatar state changed:", avatar);
+  }, [avatar]);
+
+  // Check if the avatar URL is valid and the image loads correctly
+  useEffect(() => {
+    if (user?.avatar?.url) {
+      console.log("Avatar URL from user object:", user.avatar.url);
+      // Test if the image is accessible by creating a temporary image
+      const testImg = new Image();
+      testImg.onload = () => console.log("Avatar image loaded successfully");
+      testImg.onerror = () => console.error("Failed to load avatar image");
+      testImg.src = user.avatar.url;
+    }
+  }, [user]);
+
   return (
     <motion.div
       key="profile-info"
@@ -32,6 +93,7 @@ function ProfileInfo({
       exit="exit"
       className="bg-white rounded-xl shadow-md overflow-hidden"
     >
+      {/* Header section */}
       <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
         <h3 className="text-lg font-semibold text-gray-900">
           Thông tin cá nhân
@@ -66,7 +128,7 @@ function ProfileInfo({
                   ...user,
                   dob: user.dob ? user.dob.split("T")[0] : "",
                 });
-                setPreviewUrl(user.avatar || "");
+                setPreviewUrl(""); // Reset preview URL instead of setting it to user.avatar
                 setAvatar(null);
               }}
               className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700"
@@ -98,6 +160,78 @@ function ProfileInfo({
       </div>
 
       <div className="p-6">
+        {/* Avatar upload section */}
+        <div className="mb-6 flex flex-col items-center">
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 mb-2">
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Avatar preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : user?.avatar?.url ? (
+                <img
+                  src={user.avatar.url}
+                  alt="User avatar"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error("Failed to load avatar:", user.avatar.url);
+                    e.target.onerror = null;
+                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      user.username || "User"
+                    )}&background=6d28d9&color=fff&size=100`;
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-purple-100 text-purple-500">
+                  <User size={32} />
+                </div>
+              )}
+            </div>
+
+            {editMode && (
+              <div className="absolute bottom-0 right-0 flex space-x-1">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  className="bg-purple-600 text-white p-1 rounded-full shadow hover:bg-purple-700"
+                >
+                  <Upload size={16} />
+                </button>
+
+                {(previewUrl || user.avatar?.url) && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    className="bg-red-500 text-white p-1 rounded-full shadow hover:bg-red-600"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {editMode && (
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          )}
+
+          {/* Display avatar URL for debugging */}
+          {user?.avatar?.url && (
+            <div className="mt-1 text-xs text-gray-400 max-w-[240px] truncate">
+              {user.avatar.url}
+            </div>
+          )}
+        </div>
+
+        {/* Rest of the form fields */}
         <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-6">
           {/* Full Name Field - New */}
           <div className="sm:col-span-2">

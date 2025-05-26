@@ -3,7 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
 import { motion } from "framer-motion";
 
-const ProfileSidebar = ({ user, previewUrl, section, setSection, editMode, handleAvatarChange, cardVariants }) => {
+const ProfileSidebar = ({
+  user,
+  previewUrl,
+  section,
+  setSection,
+  editMode,
+  handleAvatarChange,
+  cardVariants,
+}) => {
   const navigate = useNavigate();
 
   return (
@@ -17,18 +25,44 @@ const ProfileSidebar = ({ user, previewUrl, section, setSection, editMode, handl
         <div className="absolute -bottom-16 left-0 right-0 flex justify-center">
           <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-white shadow-lg">
             {previewUrl ? (
+              // Show preview image when changing avatar
               <img
                 src={previewUrl}
-                alt="Avatar"
+                alt="Avatar preview"
                 className="w-full h-full object-cover"
               />
+            ) : user?.avatar?.url ? (
+              // Show existing user avatar from profile
+              <img
+                src={user.avatar.url}
+                alt="User avatar"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error(
+                    "Failed to load sidebar avatar:",
+                    user.avatar.url
+                  );
+                  e.target.onerror = null;
+                  // Replace with fallback user icon
+                  e.target.style.display = "none";
+                  e.target.parentElement.innerHTML = `
+                    <div class="w-full h-full flex items-center justify-center bg-purple-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                    </div>
+                  `;
+                }}
+              />
             ) : (
+              // Fallback when no avatar is available
               <div className="w-full h-full flex items-center justify-center bg-purple-100">
                 <User size={48} className="text-purple-500" />
               </div>
             )}
             {editMode && (
-              <label className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 cursor-pointer">
+              <label className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 cursor-pointer hover:bg-opacity-60 transition-all">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-8 w-8 text-white"
@@ -45,7 +79,7 @@ const ProfileSidebar = ({ user, previewUrl, section, setSection, editMode, handl
                 <input
                   type="file"
                   accept="image/*"
-                  className="opacity-0 absolute inset-0"
+                  className="opacity-0 absolute inset-0 cursor-pointer"
                   onChange={handleAvatarChange}
                 />
               </label>
@@ -60,6 +94,7 @@ const ProfileSidebar = ({ user, previewUrl, section, setSection, editMode, handl
         </h3>
         <p className="text-purple-600 text-center mb-6">{user.email}</p>
 
+        {/* Rest of your sidebar code */}
         <div className="space-y-3">
           <button
             onClick={() => setSection("profile")}

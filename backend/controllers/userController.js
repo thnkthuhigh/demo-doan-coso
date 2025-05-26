@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select(
-      "username email gender dob phone fullName address"
+      "username email gender dob phone fullName address avatar role"
     );
     if (!user) {
       return res.status(404).json({ message: "Không tìm thấy user." });
@@ -42,7 +42,7 @@ export const updateUserById = async (req, res) => {
 
     // Trả về dữ liệu đã cập nhật (không bao gồm password)
     const updatedUser = await User.findById(user._id).select(
-      "username email phone dob gender fullName address"
+      "username email phone dob gender fullName address avatar role"
     );
 
     res.json(updatedUser);

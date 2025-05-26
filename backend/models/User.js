@@ -56,6 +56,10 @@ const userSchema = new mongoose.Schema(
         type: Date,
       },
     },
+    avatar: {
+      public_id: String,
+      url: String,
+    },
   },
   { timestamps: true }
 );

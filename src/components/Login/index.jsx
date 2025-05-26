@@ -27,6 +27,7 @@ export default function Login({ setUser }) {
         }
       );
 
+      // Get the token and basic user info
       const { token, user } = response.data;
 
       // Store token in localStorage
@@ -35,8 +36,24 @@ export default function Login({ setUser }) {
       // Store user data in localStorage
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Update user state in parent component
-      setUser(user);
+      // Now fetch the complete user profile to ensure we have all details including avatar
+      try {
+        const userResponse = await axios.get(
+          `http://localhost:5000/api/users/${user._id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // Update with complete user data
+        const fullUserData = userResponse.data;
+        localStorage.setItem("user", JSON.stringify(fullUserData));
+        setUser(fullUserData);
+      } catch (profileError) {
+        console.error("Error fetching complete profile:", profileError);
+        // Continue with basic user data if detailed fetch fails
+        setUser(user);
+      }
 
       // Redirect to home page
       navigate("/");

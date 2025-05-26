@@ -7,7 +7,7 @@ const Toast = ({ message, type = "error", onClose, duration = 5000 }) => {
       const timer = setTimeout(() => {
         onClose();
       }, duration);
-      
+
       return () => clearTimeout(timer);
     }
   }, [message, onClose, duration]);

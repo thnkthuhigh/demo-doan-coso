@@ -12,6 +12,7 @@ import userRoutes from "./routes/userRoutes.js";
 import registrationRoutes from "./routes/registrationRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import membershipRoutes from "./routes/membershipRoutes.js"; // New import
+import imageRoutes from "./routes/imageRoutes.js"; // New import
 // Load environment variables
 dotenv.config({ path: "./backend/.env" });
 
@@ -31,6 +32,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/registrations", registrationRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/memberships", membershipRoutes); // New route
+app.use("/api/images", imageRoutes); // New route
 
 // MongoDB URI and PORT
 const PORT = process.env.PORT || 5000;

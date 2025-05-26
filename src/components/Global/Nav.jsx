@@ -100,48 +100,6 @@ export default function NavBar({ user, setUser }) {
               Đăng Ký Thành Viên
             </NavLink>
 
-            {/* Admin Dropdown - Fixed to properly show on hover */}
-            {user?.role === "admin" && (
-              <div className="relative group">
-                <button
-                  className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center ${
-                    isScrolled
-                      ? "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                      : "text-white/90 hover:text-white hover:bg-white/10"
-                  }`}
-                >
-                  Quản lý
-                  <span className="ml-1">▼</span>
-                </button>
-
-                <div className="absolute left-0 w-56 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
-                  <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
-                    <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium">
-                      Quản lý hệ thống
-                    </div>
-
-                    <div className="py-2">
-                      <AdminLink to="/qllt" icon="calendar">
-                        Quản Lý Lịch Tập
-                      </AdminLink>
-                      <AdminLink to="/qldv" icon="service">
-                        Quản Lý Dịch Vụ
-                      </AdminLink>
-                      <AdminLink to="/qlclb" icon="building">
-                        Quản Lý CLB
-                      </AdminLink>
-                      <AdminLink to="/admin/payments" icon="payment">
-                        Quản Lý Thanh Toán
-                      </AdminLink>
-                      <AdminLink to="/admin/memberships" icon="card">
-                        Quản Lý Thành Viên
-                      </AdminLink>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <NavLink
               to="/payment"
               isActive={isActive("/payment")}
@@ -171,11 +129,40 @@ export default function NavBar({ user, setUser }) {
                   aria-expanded={userMenuOpen}
                   aria-haspopup="true"
                 >
-                  <span className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                    {user.username.charAt(0).toUpperCase()}
-                  </span>
+                  {user?.avatar?.url ? (
+                    <img
+                      src={user.avatar.url}
+                      alt="Avatar"
+                      className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
+                      onError={(e) => {
+                        console.error(
+                          "Nav: Failed to load avatar:",
+                          user.avatar.url
+                        );
+                        e.target.onerror = null;
+                        e.target.style.display = "none";
+                        // Make sure the fallback is displayed
+                        const parent = e.target.parentElement;
+                        let fallback = parent.querySelector(".avatar-fallback");
+                        if (!fallback) {
+                          fallback = document.createElement("span");
+                          fallback.className =
+                            "avatar-fallback w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold";
+                          fallback.textContent =
+                            user?.username?.charAt(0).toUpperCase() || "U";
+                          parent.appendChild(fallback);
+                        } else {
+                          fallback.style.display = "flex";
+                        }
+                      }}
+                    />
+                  ) : (
+                    <span className="avatar-fallback w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                      {user?.username?.charAt(0).toUpperCase() || "U"}
+                    </span>
+                  )}
                   <span className="font-medium hidden sm:block">
-                    {user.username}
+                    {user?.username}
                   </span>
                   <span className="text-xs">▼</span>
                 </button>
@@ -213,6 +200,43 @@ export default function NavBar({ user, setUser }) {
                         </svg>
                         Hồ sơ cá nhân
                       </Link>
+
+                      {user?.role === "admin" && (
+                        <>
+                          <Link
+                            to="/admin/dashboard"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <svg
+                              className="mr-2 h-4 w-4 text-gray-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+                              />
+                            </svg>
+                            Dashboard
+                          </Link>
+                        </>
+                      )}
+
                       <Link
                         to="/user/settings"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -356,26 +380,23 @@ export default function NavBar({ user, setUser }) {
           </MobileNavLink>
 
           {user?.role === "admin" && (
-            <div className="mt-2">
-              <div className="px-3 py-2 text-sm font-medium text-gray-400">
-                Quản lý hệ thống
-              </div>
-              <MobileNavLink to="/qllt" isAdmin>
-                Quản Lý Lịch Tập
+            <>
+              <MobileNavLink
+                to="/admin/dashboard"
+                isActive={isActive("/admin/dashboard")}
+              >
+                Dashboard
               </MobileNavLink>
-              <MobileNavLink to="/qldv" isAdmin>
-                Quản Lý Dịch Vụ
+              <MobileNavLink to="/qllt" isActive={isActive("/qllt")} isAdmin>
+                Quản lý lịch tập
               </MobileNavLink>
-              <MobileNavLink to="/qlclb" isAdmin>
-                Quản Lý CLB
+              <MobileNavLink to="/qldv" isActive={isActive("/qldv")} isAdmin>
+                Quản lý dịch vụ
               </MobileNavLink>
-              <MobileNavLink to="/admin/payments" isAdmin>
-                Quản Lý Thanh Toán
+              <MobileNavLink to="/qlclb" isActive={isActive("/qlclb")} isAdmin>
+                Quản lý CLB
               </MobileNavLink>
-              <MobileNavLink to="/admin/memberships" isAdmin>
-                Quản Lý Thành Viên
-              </MobileNavLink>
-            </div>
+            </>
           )}
 
           <MobileNavLink to="/payment" isActive={isActive("/payment")}>
@@ -386,9 +407,30 @@ export default function NavBar({ user, setUser }) {
             {user ? (
               <>
                 <div className="flex items-center px-3 py-2 text-sm">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
+                  {user?.avatar?.url ? (
+                    <img
+                      src={user.avatar.url}
+                      alt="Mobile avatar"
+                      className="w-8 h-8 rounded-full object-cover mr-3 border border-gray-200 shadow-sm"
+                      onError={(e) => {
+                        console.error("Mobile: Failed to load avatar");
+                        e.target.onerror = null;
+                        e.target.style.display = "none";
+                        // Create fallback avatar with initials
+                        const fallback = document.createElement("div");
+                        fallback.className =
+                          "w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold mr-3";
+                        fallback.textContent = user.username
+                          .charAt(0)
+                          .toUpperCase();
+                        e.target.parentNode.insertBefore(fallback, e.target);
+                      }}
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                      {user.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="font-medium text-gray-900">
                     {user.username}
                   </div>

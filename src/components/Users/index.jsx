@@ -3,6 +3,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
 
 // Import components
 import ProfileSidebar from "./ProfileSidebar";
@@ -42,6 +43,8 @@ const UserProfile = () => {
           }
         );
 
+        console.log("Fetched user data:", res.data);
+
         // Add simulated membership data for testing
         const userData = {
           ...res.data,
@@ -57,18 +60,24 @@ const UserProfile = () => {
           },
         };
 
+        // Set user data in state
         setUser(userData);
+
+        // Set form data
         setForm({
           ...userData,
           dob: userData.dob ? userData.dob.split("T")[0] : "",
         });
 
-        if (userData.avatar) {
-          setPreviewUrl(userData.avatar);
-        }
+        // IMPORTANT: Only set previewUrl if we're uploading a new image
+        // Otherwise, let the component handle displaying the existing avatar
+        // Do NOT set previewUrl to userData.avatar here as it's an object not a string
+
+        // Update user in localStorage to ensure Nav component has latest data
+        localStorage.setItem("user", JSON.stringify(userData));
       } catch (err) {
         console.error("Lỗi khi lấy thông tin:", err);
-        alert("Không thể tải thông tin người dùng.");
+        toast.error("Không thể tải thông tin người dùng.");
       } finally {
         setLoading(false);
       }
@@ -97,42 +106,85 @@ const UserProfile = () => {
     }
   };
 
+  // Update the handleSave function
   const handleSave = async () => {
-    const token = localStorage.getItem("token");
     try {
-      let data = form;
+      setLoading(true);
+      const token = localStorage.getItem("token");
+
+      // Update user info
+      const response = await axios.put(
+        `http://localhost:5000/api/users/${user._id}`,
+        {
+          username: form.username,
+          email: form.email,
+          phone: form.phone,
+          dob: form.dob,
+          gender: form.gender,
+          fullName: form.fullName,
+          address: form.address,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Get updated user information
+      let updatedUser = response.data;
+
+      // Preserve avatar if not changing it
+      if (!avatar && user.avatar) {
+        updatedUser.avatar = user.avatar;
+      }
+
+      // Upload avatar if changed
       if (avatar) {
         const formData = new FormData();
-        Object.entries(form).forEach(([key, value]) => {
-          formData.append(key, value);
-        });
         formData.append("avatar", avatar);
-        data = formData;
+
+        try {
+          const avatarResponse = await axios.post(
+            `http://localhost:5000/api/images/avatar/${user._id}`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+
+          console.log("Avatar upload response:", avatarResponse.data);
+
+          // Update user with avatar info
+          updatedUser = {
+            ...updatedUser,
+            avatar: avatarResponse.data.avatar,
+          };
+        } catch (avatarError) {
+          console.error("Error uploading avatar:", avatarError);
+          toast.error("Cập nhật ảnh đại diện thất bại");
+        }
       }
 
-      await axios.put(`http://localhost:5000/api/users/${user._id}`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": avatar ? "multipart/form-data" : "application/json",
-        },
-      });
+      console.log("Final updated user:", updatedUser);
 
-      setUser({ ...form, avatar: previewUrl });
+      // Update both local state and localStorage
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
       setEditMode(false);
       setAvatar(null);
+      setPreviewUrl("");
 
-      const notification = document.getElementById("notification");
-      if (notification) {
-        notification.classList.remove("opacity-0");
-        notification.classList.add("opacity-100");
-        setTimeout(() => {
-          notification.classList.remove("opacity-100");
-          notification.classList.add("opacity-0");
-        }, 3000);
-      }
-    } catch (err) {
-      console.error("Lỗi cập nhật:", err);
-      alert("Cập nhật thất bại.");
+      toast.success("Cập nhật thông tin thành công");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error(
+        error.response?.data?.message || "Cập nhật thông tin thất bại"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -247,7 +299,9 @@ const UserProfile = () => {
                   handleSave={handleSave}
                   setForm={setForm}
                   setPreviewUrl={setPreviewUrl}
+                  previewUrl={previewUrl}
                   setAvatar={setAvatar}
+                  avatar={avatar}
                   cardVariants={cardVariants}
                 />
               ) : section === "membership" ? (
