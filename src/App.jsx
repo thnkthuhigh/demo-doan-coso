@@ -13,33 +13,47 @@ import Footer from "./components/Global/Fot";
 import Club from "./components/Club/index";
 import ServicePage from "./components/Services/ServicePage";
 import ServiceDetail from "./components/Services/ServiceDetail";
-import ViewSchedulePage from "./components/Schedule";
-import ManageSchedule from "./components/Manage";
-import ManageScheduleAdmin from "./components/Admin/qllt";
 import PaymentPage from "./components/Pay/index";
 import BillPage from "./components/Pay/bill";
 import AdminClubManager from "./components/Admin/qlclb";
 import AdminServiceManager from "./components/Admin/qldv";
 import UserProfile from "./components/Users";
-import UserPaidClasses from "./components/UserPaidClasses";
-import PaymentManagement from "./components/Admin/PaymentManagement";
 import MembershipPage from "./components/Membership";
-import MembershipManagement from "./components/Admin/MembershipManagement";
-import ImageManager from "./components/Admin/ImageManager";
 import AdminLayout from "./components/Admin/AdminLayout";
 import AdminDashboard from "./components/Admin/Dashboard";
+import ViewClasses from "./components/Classes/index";
+import UserClasses from "./components/Classes/UserClasses";
+import ClassDetails from "./components/Classes/ClassDetails";
 
 function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      console.log("App loaded with user:", parsedUser);
-      setUser(parsedUser);
+    // Safely access localStorage
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        console.log("App loaded with user:", parsedUser);
+        setUser(parsedUser);
+      }
+    } catch (error) {
+      console.error("Error accessing localStorage:", error);
+      // Clear invalid data
+      localStorage.removeItem("user");
+    } finally {
+      setLoading(false);
     }
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <Router>
@@ -53,18 +67,14 @@ function App() {
         <Route path="/services" element={<ServicePage />} />
         <Route path="/services/:id" element={<ServiceDetail />} />
         <Route path="/membership" element={<MembershipPage />} />
-        <Route path="/schedule" element={<ViewSchedulePage />} />
-        <Route path="/manage" element={<ManageSchedule />} />
-        <Route path="/qllt" element={<ManageScheduleAdmin />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/bill" element={<BillPage />} />
-        <Route path="/qlclb" element={<AdminClubManager />} />
-        <Route path="/qldv" element={<AdminServiceManager />} />
         <Route path="/user" element={<UserProfile />} />
-        <Route path="/my-schedule" element={<UserPaidClasses />} />
-        <Route path="/my-classes" element={<UserPaidClasses />} />
+        <Route path="/classes" element={<ViewClasses />} />
+        <Route path="/my-classes" element={<UserClasses />} />
+        <Route path="/classes/:id/details" element={<ClassDetails />} />
 
-        {/* Single admin route with all functionality in Dashboard */}
+        {/* Admin routes - tất cả qua dashboard */}
         <Route
           path="/admin/*"
           element={
@@ -74,11 +84,12 @@ function App() {
           }
         />
 
-        {/* Default admin route - redirect to dashboard */}
-        <Route
-          path="/admin"
-          element={<Navigate to="/admin/dashboard" replace />}
-        />
+        {/* Standalone admin routes (legacy) */}
+        <Route path="/qlclb" element={<AdminClubManager />} />
+        <Route path="/qldv" element={<AdminServiceManager />} />
+
+        {/* Default admin route */}
+        <Route path="/admin" element={<Navigate to="/admin" replace />} />
       </Routes>
       <Footer />
     </Router>

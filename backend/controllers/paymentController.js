@@ -1,788 +1,396 @@
 import Payment from "../models/Payment.js";
-import mongoose from "mongoose";
-import ClassRegistration from "../models/ClassRegistration.js"; // Changed from Registration to ClassRegistration
+import ClassEnrollment from "../models/ClassEnrollment.js";
 import Membership from "../models/Membership.js";
-import Schedule from "../models/Schedule.js";
+import Class from "../models/Class.js";
 
-// Create a new payment
 export const createPayment = async (req, res) => {
   try {
-    // Log request body for debugging
-    console.log("Payment request data:", req.body);
+    const { amount, method, registrationIds, paymentType = "class" } = req.body;
+    const userId = req.user._id;
 
-    // Get data from request body
-    const { amount, method, registrationIds, status, paymentType } = req.body;
-
-    // Use the userId from the request object (set by the auth middleware)
-    const userId = req.userId;
-
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
-
-    // Validate required fields
-    if (!amount) {
-      return res.status(400).json({ message: "Amount is required" });
-    }
-
-    if (
-      !registrationIds ||
-      !Array.isArray(registrationIds) ||
-      registrationIds.length === 0
-    ) {
-      return res.status(400).json({ message: "Registration IDs are required" });
-    }
-
-    // Validate each registration ID - for each ID, check if it's a valid class registration OR membership
-    for (const regId of registrationIds) {
-      try {
-        // First try to find it as a class registration
-        const classReg = await ClassRegistration.findById(regId);
-        if (classReg) {
-          // Validate that this registration belongs to the current user
-          if (classReg.user.toString() !== userId) {
-            return res.status(403).json({
-              message: "You are not authorized to pay for this registration",
-            });
-          }
-          continue; // Skip to next ID after successful validation
-        }
-
-        // If not a class registration, try as a membership
-        const membership = await Membership.findById(regId);
-        if (membership) {
-          // Validate that this membership belongs to the current user
-          if (membership.user.toString() !== userId) {
-            return res.status(403).json({
-              message: "You are not authorized to pay for this membership",
-            });
-          }
-          continue; // Skip to next ID after successful validation
-        }
-
-        // If we get here, the ID is neither a valid class registration nor membership
-        return res.status(400).json({
-          message: `Invalid registration ID: ${regId}. Not found in class registrations or memberships.`,
-        });
-      } catch (err) {
-        console.error(`Error validating registration ID ${regId}:`, err);
-        return res.status(400).json({
-          message: `Invalid registration ID format: ${regId}`,
-        });
-      }
-    }
-
-    // Create payment record
-    const payment = new Payment({
-      user: userId,
+    console.log("Creating payment:", {
       amount,
       method,
       registrationIds,
-      status: status || "pending",
-      paymentType: paymentType || "class",
+      paymentType,
+      userId,
     });
 
-    // Save payment
-    const savedPayment = await payment.save();
-
-    // If we're saving a membership payment, also update the pending payment reference
-    if (
-      paymentType === "membership" ||
-      paymentType === "membership_upgrade" ||
-      paymentType === "membership_and_class"
-    ) {
-      // Find membership IDs in the payment
-      const membershipIds = [];
-      for (const regId of registrationIds) {
-        const membership = await Membership.findById(regId);
-        if (membership) {
-          membershipIds.push(regId);
-
-          // Update the membership with pending payment reference
-          membership.pendingPaymentId = savedPayment._id;
-          await membership.save();
-        }
-      }
-
-      console.log(
-        `Updated ${membershipIds.length} memberships with pending payment reference`
-      );
+    // Validate registrationIds
+    if (!registrationIds || registrationIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Không có mục nào để thanh toán" });
     }
 
-    res.status(201).json(savedPayment);
+    // Tạo payment record
+    const payment = new Payment({
+      user: userId,
+      amount: parseInt(amount),
+      method,
+      registrationIds,
+      paymentType,
+      status: "pending",
+      createdAt: new Date(),
+    });
+
+    await payment.save();
+
+    res.status(201).json({
+      message: "Tạo yêu cầu thanh toán thành công",
+      payment,
+    });
   } catch (error) {
     console.error("Error creating payment:", error);
-    res.status(500).json({
-      message: "Could not create payment",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Lỗi server khi tạo thanh toán" });
   }
 };
 
-// Get all payments
 export const getPayments = async (req, res) => {
   try {
-    const userId = req.userId;
-
-    // Find payments for the current user
+    const userId = req.user._id;
     const payments = await Payment.find({ user: userId }).sort({
       createdAt: -1,
     });
 
-    res.status(200).json(payments);
+    res.json(payments);
   } catch (error) {
-    console.error("Error getting payments:", error);
-    res.status(500).json({
-      message: "Cannot fetch payments",
-      error: error.message,
-    });
+    console.error("Error fetching payments:", error);
+    res.status(500).json({ message: "Lỗi server" });
   }
 };
 
-// Get all payments (admin)
 export const getAllPayments = async (req, res) => {
   try {
-    // Admin endpoint to get all payments
-    const payments = await Payment.find()
-      .sort({ createdAt: -1 })
-      .populate("user", "username email");
+    const payments = await Payment.find({})
+      .populate({
+        path: "user",
+        select: "username email",
+      })
+      .sort({ createdAt: -1 });
 
-    res.status(200).json(payments);
+    res.json(payments);
   } catch (error) {
-    console.error("Error getting all payments:", error);
-    res.status(500).json({
-      message: "Cannot fetch payments",
-      error: error.message,
-    });
+    console.error("Error fetching all payments:", error);
+    res.status(500).json({ message: "Lỗi server" });
   }
 };
 
-// Update the approvePayment function
 export const approvePayment = async (req, res) => {
   try {
     const { paymentId } = req.params;
+    const { registrationIds } = req.body;
 
-    console.log(`Approving payment ${paymentId}`);
-
-    // 1. Find the payment
-    const payment = await Payment.findById(paymentId);
-
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
-    }
-
-    if (payment.status === "completed") {
-      return res.status(400).json({ message: "Payment already processed" });
-    }
-
-    // Verify payment contents before processing
-    const paymentVerification = await verifyPaymentContents(payment);
-    console.log("Payment verification results:", paymentVerification);
-
-    if (!paymentVerification.valid) {
-      console.warn(
-        "Payment contains invalid items:",
-        paymentVerification.invalidItems
-      );
-    }
-
-    // Log the registration IDs that we're about to update
-    console.log(`Processing payment for user: ${payment.user}`);
-    console.log(`Payment type: ${payment.paymentType}`);
-    console.log(`Payment amount: ${payment.amount}`);
     console.log(
-      `Registration IDs to update: ${payment.registrationIds.length} items`
+      "Approving payment:",
+      paymentId,
+      "with registrations:",
+      registrationIds
     );
-    console.log(payment.registrationIds);
 
-    // Update payment status
+    // Tìm payment
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return res.status(404).json({ message: "Không tìm thấy thanh toán" });
+    }
+
+    // Cập nhật trạng thái payment
     payment.status = "completed";
     payment.completedAt = new Date();
+    payment.approvedBy = req.user.username || req.user._id;
     await payment.save();
 
-    // 2. Update ONLY the registrations in the payment's registrationIds
-    let updatedCount = 0;
-    let failedCount = 0;
-
-    if (payment.registrationIds && payment.registrationIds.length > 0) {
-      // For each registration ID, update its payment status
-      for (const regId of payment.registrationIds) {
+    // Cập nhật paymentStatus cho các ClassEnrollment
+    if (registrationIds && registrationIds.length > 0) {
+      for (const regId of registrationIds) {
         try {
-          // First try to find it as a class registration
-          const registration = await ClassRegistration.findById(regId);
-          if (registration) {
-            console.log(
-              `✓ Updating class registration ${regId} payment status (${registration.schedule})`
-            );
-            registration.paymentStatus = true;
-            await registration.save();
-            updatedCount++;
-            continue; // Skip to next ID after successful update
-          }
+          // Kiểm tra xem regId là ClassEnrollment hay Membership
+          const classEnrollment = await ClassEnrollment.findById(regId);
 
-          // If not a class registration, try as a membership
-          const membership = await Membership.findById(regId);
-          if (membership) {
-            console.log(
-              `✓ Updating membership ${regId} payment status for user ${membership.user}`
-            );
-            membership.paymentStatus = true;
-            // If it was pending_payment, change to active
-            if (membership.status === "pending_payment") {
+          if (classEnrollment) {
+            // Cập nhật trạng thái thanh toán cho ClassEnrollment
+            classEnrollment.paymentStatus = true;
+            await classEnrollment.save();
+            console.log("Updated ClassEnrollment:", regId);
+          } else {
+            // Kiểm tra xem có phải Membership không
+            const membership = await Membership.findById(regId);
+            if (membership) {
+              membership.paymentStatus = true;
               membership.status = "active";
-              console.log(
-                `  Changed membership status from pending_payment to active`
-              );
+              await membership.save();
+              console.log("Updated Membership:", regId);
+            } else {
+              console.log("Registration not found:", regId);
             }
-            await membership.save();
-            updatedCount++;
-            continue;
           }
-
-          console.log(
-            `✗ Could not find registration or membership with ID: ${regId}`
-          );
-          failedCount++;
-        } catch (err) {
-          console.error(
-            `✗ Error updating registration/membership ${regId}:`,
-            err
-          );
-          failedCount++;
+        } catch (error) {
+          console.error("Error updating registration:", regId, error);
         }
       }
     }
 
-    console.log(
-      `Payment approval complete - Updated: ${updatedCount}, Failed: ${failedCount}`
-    );
-
-    res.status(200).json({
-      message: "Payment approved successfully",
+    res.json({
+      message: "Xác nhận thanh toán thành công",
       payment,
-      stats: {
-        totalItems: payment.registrationIds.length,
-        updatedCount,
-        failedCount,
-      },
     });
   } catch (error) {
     console.error("Error approving payment:", error);
-    res.status(500).json({
-      message: "Could not approve payment",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Lỗi server khi xác nhận thanh toán" });
   }
 };
 
-// Add or update the getPaymentDetails function
-
-export const getPaymentDetails = async (req, res) => {
-  try {
-    const { paymentId } = req.params;
-
-    // Find the payment
-    const payment = await Payment.findById(paymentId).populate(
-      "user",
-      "username email"
-    );
-
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
-    }
-
-    // Prepare result container
-    const result = {
-      paymentId: payment._id,
-      items: [],
-      totalItems: payment.registrationIds.length,
-      totalAmount: payment.amount,
-    };
-
-    // Process each registration ID
-    for (const regId of payment.registrationIds) {
-      try {
-        // Try to find as class registration first
-        let classReg = await ClassRegistration.findById(regId)
-          .populate("schedule", "className day time price")
-          .populate("user", "username email");
-
-        if (classReg) {
-          result.items.push({
-            id: regId,
-            type: "class",
-            name: classReg.schedule?.className || "Lớp học",
-            scheduleInfo: classReg.schedule?.time
-              ? `${classReg.schedule.day} ${classReg.schedule.time}`
-              : undefined,
-            price: classReg.schedule?.price || 0,
-            userId: classReg.user?._id,
-          });
-          continue;
-        }
-
-        // If not found, try as membership
-        let membership = await Membership.findById(regId).populate(
-          "user",
-          "username email"
-        );
-
-        if (membership) {
-          // Format membership type for better display
-          let membershipName = "Gói ";
-          switch (membership.type) {
-            case "basic":
-              membershipName += "Cơ bản";
-              break;
-            case "standard":
-              membershipName += "Tiêu chuẩn";
-              break;
-            case "premium":
-              membershipName += "Cao cấp";
-              break;
-            case "vip":
-              membershipName += "VIP";
-              break;
-            default:
-              membershipName += membership.type;
-          }
-
-          result.items.push({
-            id: regId,
-            type: "membership",
-            name: membershipName,
-            duration: membership.endDate
-              ? `Hết hạn: ${new Date(membership.endDate).toLocaleDateString(
-                  "vi-VN"
-                )}`
-              : undefined,
-            price: membership.price || 0,
-            userId: membership.user?._id,
-          });
-          continue;
-        }
-
-        // If neither, add as unknown
-        result.items.push({
-          id: regId,
-          type: "unknown",
-          name: `ID: ${regId.substring(regId.length - 6)}`,
-          price: 0,
-        });
-      } catch (err) {
-        console.error(`Error processing registration ID ${regId}:`, err);
-        result.items.push({
-          id: regId,
-          type: "error",
-          name: `Lỗi xử lý ID: ${regId.substring(regId.length - 6)}`,
-          price: 0,
-        });
-      }
-    }
-
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("Error getting payment details:", error);
-    res.status(500).json({
-      message: "Không thể lấy chi tiết thanh toán",
-      error: error.message,
-    });
-  }
-};
-
-// Cancel payment
-export const cancelPayment = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const { paymentId } = req.params;
-
-    // Find the payment
-    const payment = await Payment.findById(paymentId).session(session);
-
-    if (!payment) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(404).json({ message: "Payment not found" });
-    }
-
-    if (payment.status === "completed") {
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(400)
-        .json({ message: "Cannot cancel completed payment" });
-    }
-
-    // Update payment status
-    payment.status = "cancelled";
-    await payment.save({ session });
-
-    // Process all registration IDs
-    const { registrationIds } = payment;
-
-    for (const regId of registrationIds) {
-      // Check if this is a membership payment
-      const membership = await Membership.findById(regId).session(session);
-
-      if (membership) {
-        // If payment was for a membership, update its status
-        if (membership.status === "pending_payment") {
-          membership.status = "cancelled";
-          await membership.save({ session });
-        }
-      }
-
-      // Add other registration types handling here if needed
-    }
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(200).json({
-      message: "Payment cancelled successfully",
-      payment,
-    });
-  } catch (error) {
-    console.error("Error cancelling payment:", error);
-    await session.abortTransaction();
-    session.endSession();
-
-    res.status(500).json({
-      message: "Cannot cancel payment",
-      error: error.message,
-    });
-  }
-};
-
-// Add/update the getPendingPayments function
-
-// Get pending payments (Admin only)
-export const getPendingPayments = async (req, res) => {
-  try {
-    console.log("Fetching pending payments");
-
-    // Find all payments with status "pending"
-    const pendingPayments = await Payment.find({ status: "pending" })
-      .sort({ createdAt: -1 })
-      .populate("user", "username email");
-
-    console.log(`Found ${pendingPayments.length} pending payments`);
-
-    res.status(200).json(pendingPayments);
-  } catch (error) {
-    console.error("Error getting pending payments:", error);
-    res.status(500).json({
-      message: "Cannot fetch pending payments",
-      error: error.message,
-    });
-  }
-};
-
-// Add the rejectPayment function
 export const rejectPayment = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const { paymentId } = req.params;
-    const { reason } = req.body;
+    const { rejectionReason } = req.body;
 
-    // Find the payment
-    const payment = await Payment.findById(paymentId).session(session);
-
+    const payment = await Payment.findById(paymentId);
     if (!payment) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(404).json({ message: "Payment not found" });
+      return res.status(404).json({ message: "Không tìm thấy thanh toán" });
     }
 
-    if (payment.status === "completed") {
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(400)
-        .json({ message: "Cannot reject completed payment" });
-    }
-
-    // Update payment status and add rejection reason
     payment.status = "cancelled";
-    payment.rejectionReason = reason || "Rejected by admin";
-    await payment.save({ session });
+    payment.rejectionReason = rejectionReason || "Admin từ chối thanh toán";
+    await payment.save();
 
-    // Process all registration IDs
-    const { registrationIds } = payment;
-
-    for (const regId of registrationIds) {
-      // Check if this is a membership payment
-      const membership = await Membership.findById(regId).session(session);
-
-      if (membership) {
-        // If payment was for a membership, update its status
-        if (membership.status === "pending_payment") {
-          membership.status = "cancelled";
-          membership.statusNote = reason || "Payment rejected by admin";
-          await membership.save({ session });
-        }
-      }
-
-      // Check if this is a class registration
-      const registration = await ClassRegistration.findById(regId).session(
-        session
-      );
-      if (registration) {
-        // Add a note about the rejection reason
-        registration.notes = registration.notes || [];
-        registration.notes.push({
-          text: `Payment rejected: ${reason || "No reason provided"}`,
-          date: new Date(),
-        });
-        await registration.save({ session });
-      }
-    }
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(200).json({
-      message: "Payment rejected successfully",
+    res.json({
+      message: "Từ chối thanh toán thành công",
       payment,
     });
   } catch (error) {
     console.error("Error rejecting payment:", error);
-    await session.abortTransaction();
-    session.endSession();
-
-    res.status(500).json({
-      message: "Cannot reject payment",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Lỗi server khi từ chối thanh toán" });
   }
 };
 
-// Add this new controller function
-
-// Update payment to add class registrations
-export const updatePayment = async (req, res) => {
+export const cancelPayment = async (req, res) => {
   try {
     const { paymentId } = req.params;
-    const { amount, additionalRegistrationIds, paymentType } = req.body;
-    const userId = req.userId;
+    const userId = req.user._id;
 
-    // Verify payment belongs to the user
     const payment = await Payment.findById(paymentId);
     if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
+      return res.status(404).json({ message: "Không tìm thấy thanh toán" });
     }
 
-    if (payment.user.toString() !== userId) {
+    // Kiểm tra quyền
+    if (
+      payment.user.toString() !== userId.toString() &&
+      req.user.role !== "admin"
+    ) {
       return res
         .status(403)
-        .json({ message: "Unauthorized access to payment" });
+        .json({ message: "Không có quyền hủy thanh toán này" });
     }
 
+    // Chỉ có thể hủy thanh toán đang pending
     if (payment.status !== "pending") {
       return res
         .status(400)
-        .json({ message: "Cannot update a non-pending payment" });
+        .json({ message: "Chỉ có thể hủy thanh toán đang chờ xử lý" });
     }
 
-    // Update the payment with additional registrations
-    if (additionalRegistrationIds && additionalRegistrationIds.length > 0) {
-      // Add only unique registration IDs
-      const uniqueRegIds = [
-        ...new Set([
-          ...payment.registrationIds.map((id) => id.toString()),
-          ...additionalRegistrationIds,
-        ]),
-      ];
-
-      payment.registrationIds = uniqueRegIds;
-    }
-
-    // Update amount if provided
-    if (amount) {
-      payment.amount = amount;
-    }
-
-    // Update payment type if provided
-    if (paymentType) {
-      payment.paymentType = paymentType;
-    }
-
-    // Save the updated payment
+    payment.status = "cancelled";
     await payment.save();
 
-    res.status(200).json({
-      message: "Payment updated successfully",
+    res.json({
+      message: "Hủy thanh toán thành công",
       payment,
     });
   } catch (error) {
-    console.error("Error updating payment:", error);
-    res.status(500).json({
-      message: "Cannot update payment",
-      error: error.message,
-    });
+    console.error("Error cancelling payment:", error);
+    res.status(500).json({ message: "Lỗi server khi hủy thanh toán" });
   }
 };
 
-// Add this function to validate payment contents before approval
+export const getPendingPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find({ status: "pending" })
+      .populate({
+        path: "user",
+        select: "username email",
+      })
+      .sort({ createdAt: -1 });
 
-// Utility function to verify payment contents
-const verifyPaymentContents = async (payment) => {
-  const results = {
-    valid: true,
-    details: [],
-    invalidItems: [],
-  };
-
-  for (const regId of payment.registrationIds) {
-    // Check if it's a valid class registration
-    const registration = await ClassRegistration.findById(regId);
-    if (registration) {
-      results.details.push({
-        type: "class",
-        id: regId,
-        valid: true,
-        userId: registration.user,
-      });
-      continue;
-    }
-
-    // Check if it's a valid membership
-    const membership = await Membership.findById(regId);
-    if (membership) {
-      results.details.push({
-        type: "membership",
-        id: regId,
-        valid: true,
-        userId: membership.user,
-      });
-      continue;
-    }
-
-    // If we get here, the item is invalid
-    results.valid = false;
-    results.invalidItems.push(regId);
-    results.details.push({
-      type: "unknown",
-      id: regId,
-      valid: false,
-      userId: null,
-    });
+    res.json(payments);
+  } catch (error) {
+    console.error("Error fetching pending payments:", error);
+    res.status(500).json({ message: "Lỗi server" });
   }
-
-  return results;
 };
 
-// Add these controller functions
-
-// Get rejected payments
 export const getRejectedPayments = async (req, res) => {
   try {
-    // Find payments with status "cancelled"
-    const rejectedPayments = await Payment.find({ status: "cancelled" })
-      .sort({ updatedAt: -1 })
-      .populate("user", "username email");
+    const payments = await Payment.find({ status: "cancelled" })
+      .populate({
+        path: "user",
+        select: "username email",
+      })
+      .sort({ createdAt: -1 });
 
-    res.status(200).json(rejectedPayments);
+    res.json(payments);
   } catch (error) {
-    console.error("Error getting rejected payments:", error);
-    res.status(500).json({
-      message: "Cannot fetch rejected payments",
-      error: error.message,
-    });
+    console.error("Error fetching rejected payments:", error);
+    res.status(500).json({ message: "Lỗi server" });
   }
 };
 
-// Delete payment permanently
+export const getCompletedPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find({ status: "completed" })
+      .populate({
+        path: "user",
+        select: "username email",
+      })
+      .sort({ createdAt: -1 });
+
+    res.json(payments);
+  } catch (error) {
+    console.error("Error fetching completed payments:", error);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
+export const updatePayment = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+    const updateData = req.body;
+
+    const payment = await Payment.findByIdAndUpdate(paymentId, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!payment) {
+      return res.status(404).json({ message: "Không tìm thấy thanh toán" });
+    }
+
+    res.json(payment);
+  } catch (error) {
+    console.error("Error updating payment:", error);
+    res.status(500).json({ message: "Lỗi server khi cập nhật thanh toán" });
+  }
+};
+
 export const deletePayment = async (req, res) => {
   try {
     const { paymentId } = req.params;
 
-    // Find the payment first to make sure it exists
-    const payment = await Payment.findById(paymentId);
+    const payment = await Payment.findByIdAndDelete(paymentId);
     if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
+      return res.status(404).json({ message: "Không tìm thấy thanh toán" });
     }
 
-    // Only allow deleting rejected payments
-    if (payment.status !== "cancelled") {
-      return res.status(400).json({
-        message: "Only rejected payments can be deleted",
-      });
-    }
-
-    // Delete the payment
-    await Payment.findByIdAndDelete(paymentId);
-
-    res.status(200).json({ message: "Payment deleted successfully" });
+    res.json({ message: "Xóa thanh toán thành công" });
   } catch (error) {
     console.error("Error deleting payment:", error);
-    res.status(500).json({
-      message: "Could not delete payment",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Lỗi server khi xóa thanh toán" });
   }
 };
 
-// Add this controller function
-
-// Get completed payments
-export const getCompletedPayments = async (req, res) => {
-  try {
-    // Find payments with status "completed"
-    const completedPayments = await Payment.find({ status: "completed" })
-      .sort({ completedAt: -1 })
-      .populate("user", "username email");
-
-    res.status(200).json(completedPayments);
-  } catch (error) {
-    console.error("Error getting completed payments:", error);
-    res.status(500).json({
-      message: "Cannot fetch completed payments",
-      error: error.message,
-    });
-  }
-};
-
-// Add an endpoint to update payment status
 export const updatePaymentStatus = async (req, res) => {
   try {
     const { paymentId } = req.params;
     const { status } = req.body;
 
-    // Validate the requested status
-    if (!["pending", "completed", "cancelled"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
-    }
+    const payment = await Payment.findByIdAndUpdate(
+      paymentId,
+      { status },
+      { new: true, runValidators: true }
+    );
 
-    // Find the payment
-    const payment = await Payment.findById(paymentId);
     if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
+      return res.status(404).json({ message: "Không tìm thấy thanh toán" });
     }
 
-    // Update the payment status
-    payment.status = status;
-
-    // If changing to completed, set completedAt
-    if (status === "completed" && !payment.completedAt) {
-      payment.completedAt = new Date();
-    }
-
-    await payment.save();
-
-    res.status(200).json({
-      message: "Payment status updated successfully",
-      payment,
-    });
+    res.json(payment);
   } catch (error) {
     console.error("Error updating payment status:", error);
-    res.status(500).json({
-      message: "Could not update payment status",
-      error: error.message,
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi cập nhật trạng thái thanh toán" });
+  }
+};
+
+export const getPaymentDetails = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    const payment = await Payment.findById(paymentId).populate({
+      path: "user",
+      select: "username email",
     });
+
+    if (!payment) {
+      return res.status(404).json({ message: "Không tìm thấy thanh toán" });
+    }
+
+    const items = [];
+    let totalAmount = 0;
+
+    // Xử lý từng registrationId
+    for (const regId of payment.registrationIds) {
+      try {
+        // Kiểm tra ClassEnrollment trước
+        const classEnrollment = await ClassEnrollment.findById(regId).populate({
+          path: "class",
+          select: "className serviceName price schedule",
+        });
+
+        if (classEnrollment) {
+          items.push({
+            id: regId,
+            type: "class",
+            name: classEnrollment.class?.className || "Lớp học",
+            price: classEnrollment.class?.price || 0,
+            scheduleInfo: classEnrollment.class?.serviceName || "N/A",
+          });
+          totalAmount += classEnrollment.class?.price || 0;
+          continue;
+        }
+
+        // Kiểm tra Membership
+        const membership = await Membership.findById(regId);
+        if (membership) {
+          items.push({
+            id: regId,
+            type: "membership",
+            name: `Gói ${membership.type}`,
+            price: membership.price || 0,
+            duration: membership.duration
+              ? `${membership.duration} ngày`
+              : "30 ngày",
+          });
+          totalAmount += membership.price || 0;
+          continue;
+        }
+
+        // Nếu không tìm thấy
+        items.push({
+          id: regId,
+          type: "error",
+          name: "Không tìm thấy",
+          price: 0,
+        });
+      } catch (error) {
+        console.error("Error processing registration:", regId, error);
+        items.push({
+          id: regId,
+          type: "error",
+          name: "Lỗi khi tải",
+          price: 0,
+        });
+      }
+    }
+
+    res.json({
+      items,
+      totalItems: items.length,
+      totalAmount: payment.amount || totalAmount,
+    });
+  } catch (error) {
+    console.error("Error fetching payment details:", error);
+    res.status(500).json({ message: "Lỗi server" });
   }
 };

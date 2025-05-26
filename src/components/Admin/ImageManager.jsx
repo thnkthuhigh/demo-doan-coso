@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Trash2, Upload, Search, RefreshCcw, X } from "lucide-react";
+import {
+  Trash2,
+  Upload,
+  Search,
+  RefreshCcw,
+  X,
+  Eye,
+  Download,
+} from "lucide-react";
 import { toast } from "react-toastify";
 
 const ImageManager = () => {
@@ -10,11 +18,12 @@ const ImageManager = () => {
   const [uploading, setUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [totalCount, setTotalCount] = useState(0);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is admin
     const checkAdminAuth = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -24,8 +33,6 @@ const ImageManager = () => {
           return;
         }
 
-        // You can add an API endpoint to verify admin status
-        // For now, we'll proceed with fetching images
         fetchImages();
       } catch (error) {
         console.error("Auth error:", error);
@@ -36,19 +43,34 @@ const ImageManager = () => {
     checkAdminAuth();
   }, [navigate]);
 
-  const fetchImages = async () => {
+  const fetchImages = async (cursor = null) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
 
+      const params = new URLSearchParams();
+      params.append("max_results", "20");
+      if (cursor) {
+        params.append("next_cursor", cursor);
+      }
+
       const response = await axios.get(
-        "http://localhost:5000/api/images/admin/all",
+        `http://localhost:5000/api/images/?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      setImages(response.data.images || []);
+      const newImages = response.data.images || [];
+
+      if (cursor) {
+        setImages((prev) => [...prev, ...newImages]);
+      } else {
+        setImages(newImages);
+      }
+
+      setNextCursor(response.data.next_cursor);
+      setTotalCount(response.data.total_count || newImages.length);
     } catch (error) {
       console.error("Error fetching images:", error);
       if (error.response?.status === 403) {
@@ -66,6 +88,11 @@ const ImageManager = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File quá lớn. Kích thước tối đa là 10MB");
+      return;
+    }
+
     try {
       setUploading(true);
       const token = localStorage.getItem("token");
@@ -74,7 +101,7 @@ const ImageManager = () => {
       formData.append("image", file);
 
       const response = await axios.post(
-        "http://localhost:5000/api/images/admin/upload",
+        "http://localhost:5000/api/images/upload",
         formData,
         {
           headers: {
@@ -84,10 +111,21 @@ const ImageManager = () => {
         }
       );
 
-      setImages([...images, response.data.image]);
+      const newImage = {
+        publicId: response.data.publicId,
+        filename: response.data.filename,
+        url: response.data.imageUrl,
+        size: response.data.size,
+        width: response.data.width,
+        height: response.data.height,
+        format: response.data.format,
+        uploadDate: new Date().toISOString(),
+      };
+
+      setImages([newImage, ...images]);
+      setTotalCount((prev) => prev + 1);
       toast.success("Tải lên ảnh thành công");
 
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -100,14 +138,23 @@ const ImageManager = () => {
   };
 
   const handleDeleteImage = async (publicId) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa ảnh này?")) {
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
+      const encodedPublicId = encodeURIComponent(publicId);
 
-      await axios.delete(`http://localhost:5000/api/images/admin/${publicId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `http://localhost:5000/api/images/${encodedPublicId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      setImages(images.filter((img) => img.public_id !== publicId));
+      setImages(images.filter((img) => img.publicId !== publicId));
+      setTotalCount((prev) => prev - 1);
       setSelectedImage(null);
       toast.success("Xóa ảnh thành công");
     } catch (error) {
@@ -116,8 +163,26 @@ const ImageManager = () => {
     }
   };
 
-  const filteredImages = images.filter((img) =>
-    img.public_id?.toLowerCase().includes(searchTerm.toLowerCase())
+  const handleLoadMore = () => {
+    if (nextCursor && !loading) {
+      fetchImages(nextCursor);
+    }
+  };
+
+  const handleDownloadImage = (imageUrl, filename) => {
+    const link = document.createElement("a");
+    link.href = imageUrl;
+    link.download = filename || "image";
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filteredImages = images.filter(
+    (img) =>
+      img.filename?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      img.publicId?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -127,6 +192,9 @@ const ImageManager = () => {
           <h1 className="text-3xl font-bold text-gray-900">Quản lý hình ảnh</h1>
           <p className="mt-2 text-gray-600">
             Quản lý tất cả hình ảnh trên hệ thống
+          </p>
+          <p className="text-sm text-gray-500">
+            Tổng cộng: {totalCount} ảnh | Đang hiển thị: {images.length} ảnh
           </p>
         </div>
 
@@ -140,7 +208,7 @@ const ImageManager = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm kiếm hình ảnh..."
+              placeholder="Tìm kiếm theo tên file hoặc ID..."
               className="pl-10 w-full rounded-lg border border-gray-300 py-2 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             {searchTerm && (
@@ -155,7 +223,7 @@ const ImageManager = () => {
 
           <div className="flex gap-2">
             <button
-              onClick={fetchImages}
+              onClick={() => fetchImages()}
               disabled={loading}
               className="flex items-center py-2 px-4 bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
             >
@@ -164,9 +232,9 @@ const ImageManager = () => {
             </button>
 
             <button
-              onClick={() => fileInputRef.current.click()}
+              onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="flex items-center py-2 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="flex items-center py-2 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
             >
               <Upload size={18} className="mr-2" />
               <span>{uploading ? "Đang tải lên..." : "Tải lên ảnh"}</span>
@@ -182,48 +250,116 @@ const ImageManager = () => {
         </div>
 
         {/* Image grid */}
-        {loading ? (
+        {loading && images.length === 0 ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {filteredImages.map((image) => (
-              <div
-                key={image.public_id}
-                className={`relative group rounded-lg overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow ${
-                  selectedImage?.public_id === image.public_id
-                    ? "ring-2 ring-purple-500"
-                    : ""
-                }`}
-                onClick={() => setSelectedImage(image)}
-              >
-                <div className="aspect-w-1 aspect-h-1">
-                  <img
-                    src={image.url}
-                    alt={image.public_id}
-                    className="w-full h-full object-cover"
-                  />
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {filteredImages.map((image, index) => (
+                <div
+                  key={image.publicId || index}
+                  className={`relative group rounded-lg overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow cursor-pointer ${
+                    selectedImage?.publicId === image.publicId
+                      ? "ring-2 ring-purple-500"
+                      : ""
+                  }`}
+                  onClick={() => setSelectedImage(image)}
+                >
+                  <div className="aspect-square">
+                    <img
+                      src={image.url}
+                      alt={image.filename}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://via.placeholder.com/400x400?text=Error+Loading+Image";
+                      }}
+                    />
+                  </div>
+
+                  {/* Hover overlay with actions */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedImage(image);
+                        }}
+                        className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+                        title="Xem chi tiết"
+                      >
+                        <Eye size={16} />
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadImage(image.url, image.filename);
+                        }}
+                        className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+                        title="Tải xuống"
+                      >
+                        <Download size={16} />
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteImage(image.publicId);
+                        }}
+                        className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                        title="Xóa"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Image info */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent text-white text-xs p-2">
+                    <div className="truncate">{image.filename}</div>
+                    <div className="flex justify-between items-center text-gray-300">
+                      <span>{image.format?.toUpperCase()}</span>
+                      <span>{Math.round(image.size / 1024)} KB</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteImage(image.public_id);
-                    }}
-                    className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+              ))}
+            </div>
+
+            {/* Load more button */}
+            {nextCursor && (
+              <div className="mt-8 text-center">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loading}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                >
+                  {loading ? "Đang tải..." : "Tải thêm ảnh"}
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
 
         {filteredImages.length === 0 && !loading && (
           <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-            <p className="text-gray-500">Không tìm thấy hình ảnh nào</p>
+            <Upload size={48} className="mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-500 mb-4">
+              {searchTerm
+                ? "Không tìm thấy hình ảnh phù hợp"
+                : "Chưa có hình ảnh nào"}
+            </p>
+            {!searchTerm && (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Tải lên ảnh đầu tiên
+              </button>
+            )}
           </div>
         )}
 
@@ -234,12 +370,12 @@ const ImageManager = () => {
             onClick={() => setSelectedImage(null)}
           >
             <div
-              className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-auto"
+              className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4 border-b flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900 truncate">
-                  {selectedImage.public_id}
+                  {selectedImage.filename}
                 </h3>
                 <button
                   onClick={() => setSelectedImage(null)}
@@ -248,45 +384,99 @@ const ImageManager = () => {
                   <X size={20} />
                 </button>
               </div>
+
               <div className="p-4">
                 <img
                   src={selectedImage.url}
-                  alt={selectedImage.public_id}
-                  className="w-full h-auto max-h-[60vh] object-contain mx-auto"
+                  alt={selectedImage.filename}
+                  className="w-full h-auto max-h-[60vh] object-contain mx-auto rounded-lg"
                 />
-                <div className="mt-4 space-y-2">
-                  <div className="flex">
-                    <span className="font-medium w-24">ID:</span>
-                    <span className="text-gray-600 break-all">
-                      {selectedImage.public_id}
-                    </span>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-24">URL:</span>
-                    <span className="text-gray-600 break-all">
-                      {selectedImage.url}
-                    </span>
-                  </div>
-                  {selectedImage.format && (
-                    <div className="flex">
-                      <span className="font-medium w-24">Format:</span>
-                      <span className="text-gray-600">
-                        {selectedImage.format}
-                      </span>
+
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-gray-900">
+                      Thông tin cơ bản
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex">
+                        <span className="font-medium w-24">Filename:</span>
+                        <span className="text-gray-600 break-all">
+                          {selectedImage.filename}
+                        </span>
+                      </div>
+                      <div className="flex">
+                        <span className="font-medium w-24">Public ID:</span>
+                        <span className="text-gray-600 break-all">
+                          {selectedImage.publicId}
+                        </span>
+                      </div>
+                      <div className="flex">
+                        <span className="font-medium w-24">Format:</span>
+                        <span className="text-gray-600">
+                          {selectedImage.format?.toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex">
+                        <span className="font-medium w-24">Size:</span>
+                        <span className="text-gray-600">
+                          {Math.round(selectedImage.size / 1024)} KB (
+                          {selectedImage.size} bytes)
+                        </span>
+                      </div>
+                      <div className="flex">
+                        <span className="font-medium w-24">Dimensions:</span>
+                        <span className="text-gray-600">
+                          {selectedImage.width} × {selectedImage.height}
+                        </span>
+                      </div>
+                      <div className="flex">
+                        <span className="font-medium w-24">Uploaded:</span>
+                        <span className="text-gray-600">
+                          {new Date(selectedImage.uploadDate).toLocaleString()}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                  {selectedImage.bytes && (
-                    <div className="flex">
-                      <span className="font-medium w-24">Size:</span>
-                      <span className="text-gray-600">
-                        {Math.round(selectedImage.bytes / 1024)} KB
-                      </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-gray-900">URL</h4>
+                    <div className="p-3 bg-gray-100 rounded-lg">
+                      <input
+                        type="text"
+                        value={selectedImage.url}
+                        readOnly
+                        className="w-full bg-transparent text-sm text-gray-600 border-none outline-none"
+                        onClick={(e) => e.target.select()}
+                      />
                     </div>
-                  )}
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedImage.url);
+                        toast.success("Đã copy URL vào clipboard");
+                      }}
+                      className="text-sm text-purple-600 hover:text-purple-700"
+                    >
+                      Copy URL
+                    </button>
+                  </div>
                 </div>
-                <div className="mt-6 flex justify-end">
+
+                <div className="mt-6 flex justify-between">
                   <button
-                    onClick={() => handleDeleteImage(selectedImage.public_id)}
+                    onClick={() =>
+                      handleDownloadImage(
+                        selectedImage.url,
+                        selectedImage.filename
+                      )
+                    }
+                    className="flex items-center py-2 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    <Download size={18} className="mr-2" />
+                    <span>Tải xuống</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteImage(selectedImage.publicId)}
                     className="flex items-center py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                   >
                     <Trash2 size={18} className="mr-2" />

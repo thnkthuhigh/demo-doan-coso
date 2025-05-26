@@ -75,8 +75,8 @@ export default function NavBar({ user, setUser }) {
             </NavLink>
 
             <NavLink
-              to="/schedule"
-              isActive={isActive("/schedule")}
+              to="/classes"
+              isActive={isActive("/classes")}
               isScrolled={isScrolled}
             >
               Lịch tập
@@ -84,8 +84,8 @@ export default function NavBar({ user, setUser }) {
 
             {user && (
               <NavLink
-                to="/my-schedule"
-                isActive={isActive("/my-schedule")}
+                to="/my-classes"
+                isActive={isActive("/my-classes")}
                 isScrolled={isScrolled}
               >
                 Lịch của tôi
@@ -362,15 +362,12 @@ export default function NavBar({ user, setUser }) {
           <MobileNavLink to="/prices" isActive={isActive("/prices")}>
             Bảng giá
           </MobileNavLink>
-          <MobileNavLink to="/schedule" isActive={isActive("/schedule")}>
+          <MobileNavLink to="/classes" isActive={isActive("/classes")}>
             Lịch tập
           </MobileNavLink>
 
           {user && (
-            <MobileNavLink
-              to="/my-schedule"
-              isActive={isActive("/my-schedule")}
-            >
+            <MobileNavLink to="/my-classes" isActive={isActive("/my-classes")}>
               Lịch của tôi
             </MobileNavLink>
           )}

@@ -1,59 +1,72 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 import {
   Calendar,
   Clock,
   User,
-  DollarSign,
   MapPin,
   BookOpen,
   CheckCircle,
-  AlertCircle,
   XCircle,
   Eye,
   CreditCard,
-  Users,
   TrendingUp,
-  Download,
+  AlertTriangle,
+  Users,
   Filter,
   Search,
   RefreshCw,
+  BarChart3,
+  Target,
+  Award,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
-export default function MyClasses() {
+export default function UserClasses() {
   const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [user, setUser] = useState(null);
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [userId, setUserId] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [attendanceData, setAttendanceData] = useState({});
 
-  useEffect(() => {
-    // Load user data
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      navigate("/login");
-      return;
-    }
+  const statusOptions = [
+    { value: "all", label: "Tất cả" },
+    { value: "paid", label: "Đã thanh toán" },
+    { value: "pending", label: "Chờ thanh toán" },
+    { value: "upcoming", label: "Sắp diễn ra" },
+    { value: "ongoing", label: "Đang học" },
+    { value: "completed", label: "Hoàn thành" },
+  ];
 
-    try {
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-      fetchUserClasses(userData._id);
-    } catch (error) {
-      console.error("Error loading user:", error);
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        const id = parsedUser._id || parsedUser.id;
+        if (id) {
+          setUserId(id);
+          fetchUserClasses(id);
+        } else {
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        navigate("/login");
+      }
+    } else {
       navigate("/login");
     }
   }, [navigate]);
 
-  const fetchUserClasses = async (userId, showLoader = true) => {
+  const fetchUserClasses = async (uid, showLoader = true) => {
     try {
       if (showLoader) setLoading(true);
       else setRefreshing(true);
@@ -65,7 +78,7 @@ export default function MyClasses() {
       }
 
       const response = await axios.get(
-        `http://localhost:5000/api/classes/user/${userId}`,
+        `http://localhost:5000/api/classes/user/${uid}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -75,11 +88,16 @@ export default function MyClasses() {
 
       // Fetch attendance data for each class
       if (response.data && response.data.length > 0) {
-        fetchAttendanceData(userId);
+        fetchAttendanceData(uid);
       }
     } catch (error) {
-      console.error("Lỗi khi tải danh sách lớp học:", error);
-      toast.error("Không thể tải danh sách lớp học");
+      console.error("Lỗi khi lấy lớp học của user:", error);
+      if (error.response?.status === 401) {
+        toast.error("Phiên đăng nhập đã hết hạn");
+        navigate("/login");
+      } else {
+        toast.error("Không thể tải danh sách lớp học");
+      }
       setEnrollments([]);
     } finally {
       setLoading(false);
@@ -87,11 +105,11 @@ export default function MyClasses() {
     }
   };
 
-  const fetchAttendanceData = async (userId) => {
+  const fetchAttendanceData = async (uid) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5000/api/attendance/user/${userId}/report`,
+        `http://localhost:5000/api/attendance/user/${uid}/report`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -100,7 +118,7 @@ export default function MyClasses() {
       // Group attendance by class
       const attendanceByClass = {};
       response.data.attendanceRecords?.forEach((record) => {
-        const classId = record.classId?._id;
+        const classId = record.classId?._id || record.classId;
         if (!attendanceByClass[classId]) {
           attendanceByClass[classId] = {
             total: 0,
@@ -123,8 +141,8 @@ export default function MyClasses() {
   };
 
   const handleRefresh = () => {
-    if (user?._id) {
-      fetchUserClasses(user._id, false);
+    if (userId) {
+      fetchUserClasses(userId, false);
     }
   };
 
@@ -135,7 +153,7 @@ export default function MyClasses() {
     if (!paymentStatus) {
       return {
         color: "amber",
-        icon: AlertCircle,
+        icon: AlertTriangle,
         text: "Chờ thanh toán",
         bgColor: "bg-amber-50",
         borderColor: "border-amber-200",
@@ -165,7 +183,7 @@ export default function MyClasses() {
       case "completed":
         return {
           color: "gray",
-          icon: CheckCircle,
+          icon: Award,
           text: "Hoàn thành",
           bgColor: "bg-gray-50",
           borderColor: "border-gray-200",
@@ -205,6 +223,12 @@ export default function MyClasses() {
       attended: data.attended,
       total: data.total,
     };
+  };
+
+  const getProgressPercent = (enrollment) => {
+    const currentSession = enrollment.class?.currentSession || 0;
+    const totalSessions = enrollment.class?.totalSessions || 0;
+    return totalSessions > 0 ? (currentSession / totalSessions) * 100 : 0;
   };
 
   // Filter enrollments
@@ -286,7 +310,7 @@ export default function MyClasses() {
                 Lớp học của tôi
               </h1>
               <p className="text-gray-600 max-w-3xl">
-                Quản lý và theo dõi tiến độ học tập của bạn
+                Theo dõi tiến độ và quản lý các lớp học bạn đã đăng ký
               </p>
             </div>
             <div className="mt-4 md:mt-0 flex items-center space-x-3">
@@ -317,34 +341,59 @@ export default function MyClasses() {
           className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
         >
           <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="text-2xl font-bold text-gray-900">
-              {stats.total}
+            <div className="flex items-center">
+              <BarChart3 className="h-8 w-8 text-gray-600 mr-3" />
+              <div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {stats.total}
+                </div>
+                <div className="text-sm text-gray-600">Tổng lớp học</div>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">Tổng lớp học</div>
           </div>
           <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="text-2xl font-bold text-green-600">
-              {stats.paid}
+            <div className="flex items-center">
+              <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
+              <div>
+                <div className="text-2xl font-bold text-green-600">
+                  {stats.paid}
+                </div>
+                <div className="text-sm text-gray-600">Đã thanh toán</div>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">Đã thanh toán</div>
           </div>
           <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="text-2xl font-bold text-amber-600">
-              {stats.pending}
+            <div className="flex items-center">
+              <AlertTriangle className="h-8 w-8 text-amber-600 mr-3" />
+              <div>
+                <div className="text-2xl font-bold text-amber-600">
+                  {stats.pending}
+                </div>
+                <div className="text-sm text-gray-600">Chờ thanh toán</div>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">Chờ thanh toán</div>
           </div>
           <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="text-2xl font-bold text-blue-600">
-              {stats.ongoing}
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-blue-600 mr-3" />
+              <div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {stats.ongoing}
+                </div>
+                <div className="text-sm text-gray-600">Đang học</div>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">Đang học</div>
           </div>
           <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="text-2xl font-bold text-gray-600">
-              {stats.completed}
+            <div className="flex items-center">
+              <Award className="h-8 w-8 text-purple-600 mr-3" />
+              <div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {stats.completed}
+                </div>
+                <div className="text-sm text-gray-600">Hoàn thành</div>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">Hoàn thành</div>
           </div>
         </motion.div>
 
@@ -372,12 +421,11 @@ export default function MyClasses() {
                   onChange={(e) => setFilterStatus(e.target.value)}
                   className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
-                  <option value="all">Tất cả</option>
-                  <option value="paid">Đã thanh toán</option>
-                  <option value="pending">Chờ thanh toán</option>
-                  <option value="ongoing">Đang học</option>
-                  <option value="upcoming">Sắp diễn ra</option>
-                  <option value="completed">Hoàn thành</option>
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -414,6 +462,7 @@ export default function MyClasses() {
             {filteredEnrollments.map((enrollment) => {
               const statusInfo = getStatusInfo(enrollment);
               const attendanceStats = getAttendanceStats(enrollment.class?._id);
+              const progressPercent = getProgressPercent(enrollment);
               const StatusIcon = statusInfo.icon;
 
               return (
@@ -491,22 +540,14 @@ export default function MyClasses() {
                           <div className="flex justify-between items-center mb-1">
                             <p className="text-xs text-gray-500">Tiến độ học</p>
                             <span className="text-xs font-medium text-gray-700">
-                              Buổi {enrollment.class?.currentSession || 0}/
+                              {enrollment.class?.currentSession || 0}/
                               {enrollment.class?.totalSessions || 0}
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
                               className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                              style={{
-                                width: `${
-                                  enrollment.class?.totalSessions > 0
-                                    ? ((enrollment.class?.currentSession || 0) /
-                                        enrollment.class?.totalSessions) *
-                                      100
-                                    : 0
-                                }%`,
-                              }}
+                              style={{ width: `${progressPercent}%` }}
                             ></div>
                           </div>
                         </div>
@@ -535,57 +576,59 @@ export default function MyClasses() {
                         </div>
                       )}
 
-                      {/* Price */}
-                      <div className="flex items-center">
-                        <DollarSign className="h-4 w-4 text-gray-400 mr-3" />
-                        <div>
-                          <p className="text-xs text-gray-500">Học phí</p>
-                          <p className="font-bold text-lg text-gray-800">
-                            {enrollment.class?.price?.toLocaleString() || 0}đ
-                          </p>
+                      {/* Remaining Sessions */}
+                      {enrollment.remainingSessions !== undefined && (
+                        <div className="bg-blue-50 rounded-lg p-3">
+                          <div className="flex items-center">
+                            <Target className="h-4 w-4 text-blue-600 mr-2" />
+                            <span className="text-sm font-medium text-blue-800">
+                              Còn lại: {enrollment.remainingSessions} buổi
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Actions */}
-                    <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
+                    <div className="mt-5 pt-4 border-t border-gray-100 space-y-3">
+                      <div className="flex items-center justify-between">
                         <button
                           onClick={() =>
                             navigate(
                               `/classes/${enrollment.class?._id}/details`
                             )
                           }
-                          className="flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm"
+                          className="flex items-center text-indigo-600 hover:text-indigo-700 font-medium text-sm"
                         >
                           <Eye className="h-4 w-4 mr-1" />
-                          Chi tiết
+                          Xem chi tiết
                         </button>
 
                         <button
                           onClick={() => {
-                            setSelectedClass(enrollment);
+                            setSelectedEnrollment(enrollment);
                             setShowDetailModal(true);
                           }}
-                          className="flex items-center text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+                          className="flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm"
                         >
-                          <BookOpen className="h-4 w-4 mr-1" />
-                          Thông tin
+                          <BarChart3 className="h-4 w-4 mr-1" />
+                          Thống kê
                         </button>
                       </div>
 
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between">
                         {!enrollment.paymentStatus && (
                           <button
                             onClick={() => navigate("/payment")}
-                            className="flex items-center px-3 py-1 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors text-sm"
+                            className="flex items-center px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
                           >
-                            <CreditCard className="h-3 w-3 mr-1" />
+                            <CreditCard className="h-4 w-4 mr-1" />
                             Thanh toán
                           </button>
                         )}
 
                         <span className="text-xs text-gray-500">
+                          Đăng ký:{" "}
                           {new Date(
                             enrollment.enrollmentDate
                           ).toLocaleDateString("vi-VN")}
@@ -601,7 +644,7 @@ export default function MyClasses() {
 
         {/* Detail Modal */}
         <AnimatePresence>
-          {showDetailModal && selectedClass && (
+          {showDetailModal && selectedEnrollment && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -620,10 +663,10 @@ export default function MyClasses() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900">
-                        {selectedClass.class?.className}
+                        {selectedEnrollment.class?.className}
                       </h2>
                       <p className="text-gray-600">
-                        {selectedClass.class?.serviceName}
+                        {selectedEnrollment.class?.serviceName}
                       </p>
                     </div>
                     <button
@@ -635,46 +678,82 @@ export default function MyClasses() {
                   </div>
                 </div>
 
-                <div className="p-6 space-y-6">
-                  {/* Basic Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6">
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-xl font-bold text-blue-600">
+                        {selectedEnrollment.class?.currentSession || 0}
+                      </div>
+                      <div className="text-xs text-gray-600">Buổi đã học</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-xl font-bold text-gray-600">
+                        {selectedEnrollment.class?.totalSessions || 0}
+                      </div>
+                      <div className="text-xs text-gray-600">Tổng buổi</div>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-xl font-bold text-green-600">
+                        {
+                          getAttendanceStats(selectedEnrollment.class?._id)
+                            .attended
+                        }
+                      </div>
+                      <div className="text-xs text-gray-600">Đã tham gia</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <div className="text-xl font-bold text-purple-600">
+                        {getAttendanceStats(selectedEnrollment.class?._id).rate}
+                        %
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        Tỷ lệ tham gia
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Class Info */}
+                  <div className="space-y-4">
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">
-                        Thông tin cơ bản
+                      <h3 className="font-semibold text-gray-900 mb-2">
+                        Thông tin lớp học
                       </h3>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-500">
                             Huấn luyện viên:
                           </span>
-                          <span className="font-medium">
-                            {selectedClass.class?.instructorName || "N/A"}
+                          <span className="ml-2 font-medium">
+                            {selectedEnrollment.class?.instructorName || "N/A"}
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Địa điểm:</span>
-                          <span className="font-medium">
-                            {selectedClass.class?.location || "N/A"}
+                        <div>
+                          <span className="text-gray-500">Địa điểm:</span>
+                          <span className="ml-2 font-medium">
+                            {selectedEnrollment.class?.location || "N/A"}
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Học phí:</span>
-                          <span className="font-bold text-lg">
-                            {selectedClass.class?.price?.toLocaleString() || 0}đ
+                        <div>
+                          <span className="text-gray-500">Học phí:</span>
+                          <span className="ml-2 font-bold text-green-600">
+                            {selectedEnrollment.class?.price?.toLocaleString() ||
+                              0}
+                            đ
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">
+                        <div>
+                          <span className="text-gray-500">
                             Trạng thái thanh toán:
                           </span>
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              selectedClass.paymentStatus
+                            className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                              selectedEnrollment.paymentStatus
                                 ? "bg-green-100 text-green-700"
                                 : "bg-amber-100 text-amber-700"
                             }`}
                           >
-                            {selectedClass.paymentStatus
+                            {selectedEnrollment.paymentStatus
                               ? "Đã thanh toán"
                               : "Chờ thanh toán"}
                           </span>
@@ -682,97 +761,50 @@ export default function MyClasses() {
                       </div>
                     </div>
 
+                    {/* Schedule */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">
+                      <h3 className="font-semibold text-gray-900 mb-2">
                         Lịch học
                       </h3>
-                      <div className="space-y-2">
-                        {selectedClass.class?.schedule?.map((slot, index) => (
+                      <p className="text-gray-600">
+                        {formatSchedule(selectedEnrollment.class?.schedule)}
+                      </p>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-2">
+                        Tiến độ học tập
+                      </h3>
+                      <div className="bg-gray-100 rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span>Buổi học đã hoàn thành</span>
+                          <span className="font-bold">
+                            {selectedEnrollment.class?.currentSession || 0}/
+                            {selectedEnrollment.class?.totalSessions || 0}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
                           <div
-                            key={index}
-                            className="flex justify-between p-2 bg-gray-50 rounded"
-                          >
-                            <span>
-                              {
-                                ["CN", "T2", "T3", "T4", "T5", "T6", "T7"][
-                                  slot.dayOfWeek
-                                ]
-                              }
-                            </span>
-                            <span>
-                              {slot.startTime} - {slot.endTime}
-                            </span>
-                          </div>
-                        )) || <p className="text-gray-500">Chưa có lịch học</p>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  {selectedClass.class?.description && (
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">
-                        Mô tả
-                      </h3>
-                      <p className="text-gray-600">
-                        {selectedClass.class.description}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Requirements */}
-                  {selectedClass.class?.requirements && (
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">
-                        Yêu cầu
-                      </h3>
-                      <p className="text-gray-600">
-                        {selectedClass.class.requirements}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Progress */}
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-3">
-                      Tiến độ học tập
-                    </h3>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span>Buổi học đã hoàn thành</span>
-                        <span className="font-bold">
-                          {selectedClass.class?.currentSession || 0}/
-                          {selectedClass.class?.totalSessions || 0}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
-                          style={{
-                            width: `${
-                              selectedClass.class?.totalSessions > 0
-                                ? ((selectedClass.class?.currentSession || 0) /
-                                    selectedClass.class?.totalSessions) *
-                                  100
-                                : 0
-                            }%`,
-                          }}
-                        ></div>
+                            className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${getProgressPercent(
+                                selectedEnrollment
+                              )}%`,
+                            }}
+                          ></div>
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                          {getProgressPercent(selectedEnrollment).toFixed(1)}%
+                          hoàn thành
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex justify-between items-center pt-4 border-t">
-                    <button
-                      onClick={() => navigate("/my-attendance")}
-                      className="flex items-center px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Xem điểm danh
-                    </button>
-
-                    {!selectedClass.paymentStatus && (
+                  <div className="flex justify-between items-center mt-6 pt-4 border-t">
+                    {!selectedEnrollment.paymentStatus && (
                       <button
                         onClick={() => navigate("/payment")}
                         className="flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
