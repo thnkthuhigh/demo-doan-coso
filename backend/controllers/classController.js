@@ -527,3 +527,31 @@ export const deleteEnrollment = async (req, res) => {
     });
   }
 };
+
+// Lấy danh sách lớp học - chỉ admin
+export const getClasses = async (req, res) => {
+  try {
+    let classes = await Class.find().sort({ createdAt: -1 });
+
+    // Cập nhật thông tin currentMembers chỉ tính học viên đã thanh toán
+    const classesWithMembers = await Promise.all(
+      classes.map(async (classItem) => {
+        const paidMembersCount = await ClassEnrollment.countDocuments({
+          class: classItem._id,
+          paymentStatus: true, // Chỉ đếm học viên đã thanh toán
+        });
+
+        // Cập nhật trạng thái lớp học
+        const updatedClass = updateClassStatus(classItem.toObject());
+        updatedClass.currentMembers = paidMembersCount;
+
+        return updatedClass;
+      })
+    );
+
+    res.json(classesWithMembers);
+  } catch (error) {
+    console.error("Error fetching classes:", error);
+    res.status(500).json({ message: "Lỗi server khi lấy danh sách lớp học" });
+  }
+};

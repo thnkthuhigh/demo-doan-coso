@@ -1,25 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, User, LogOut, Settings, Crown, Shield } from "lucide-react";
 
 export default function NavBar({ user, setUser }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Kiểm tra đường dẫn hiện tại để highlight menu item active
   const isActive = (path) => {
-    return location.pathname === path ? true : false;
+    return location.pathname === path;
   };
 
   // Xử lý scroll để thay đổi style của navbar
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 50);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -30,570 +28,307 @@ export default function NavBar({ user, setUser }) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
-    window.location.href = "/login";
+    setUserMenuOpen(false);
+    navigate("/");
   };
 
+  const navLinks = [
+    { name: "Trang chủ", path: "/" },
+    { name: "CLB", path: "/club" },
+    { name: "Dịch vụ", path: "/services" },
+    { name: "Lớp học", path: "/classes" },
+    { name: "Lịch của tôi", path: "/my-classes" },
+    { name: "Thẻ thành viên", path: "/membership" },
+  ];
+
+  // Cập nhật phần render chính
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-white/95 backdrop-blur-md shadow-lg py-3"
-          : "bg-gradient-to-r from-purple-900/70 to-blue-900/70 backdrop-blur-md py-5"
+      className={`navbar-fixed transition-all duration-500 ${
+        isScrolled ? "navbar-scrolled py-3" : "navbar-transparent py-5"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-3 group">
             <div
-              className={`text-2xl font-extrabold ${
-                isScrolled ? "text-blue-900" : "text-white"
+              className={`w-12 h-12 bg-gradient-luxury rounded-lg flex items-center justify-center transform group-hover:scale-105 transition-all duration-300 ${
+                isScrolled ? "shadow-vintage" : "shadow-golden"
               }`}
             >
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                TMN GYM
+              <Crown className="h-7 w-7 text-white" />
+            </div>
+            <div className="flex flex-col">
+              <span
+                className={`vintage-heading text-2xl font-bold transition-colors duration-300 nav-text`}
+              >
+                Royal Fitness
+              </span>
+              <span
+                className={`vintage-sans text-xs font-medium tracking-wider nav-text-secondary`}
+              >
+                LUXURY GYM CLUB
               </span>
             </div>
           </Link>
 
-          {/* Desktop Menu */}
-          <nav className="hidden md:flex items-center space-x-1">
-            <NavLink
-              to="/club"
-              isActive={isActive("/club")}
-              isScrolled={isScrolled}
-            >
-              CLB
-            </NavLink>
-
-            <NavLink
-              to="/services"
-              isActive={isActive("/services")}
-              isScrolled={isScrolled}
-            >
-              Dịch vụ
-            </NavLink>
-
-            <NavLink
-              to="/classes"
-              isActive={isActive("/classes")}
-              isScrolled={isScrolled}
-            >
-              Lịch tập
-            </NavLink>
-
-            {user && (
-              <NavLink
-                to="/my-classes"
-                isActive={isActive("/my-classes")}
-                isScrolled={isScrolled}
-              >
-                Lịch của tôi
-              </NavLink>
-            )}
-
-            <NavLink
-              to="/membership"
-              isActive={isActive("/membership")}
-              isScrolled={isScrolled}
-            >
-              Đăng Ký Thành Viên
-            </NavLink>
-
-            <NavLink
-              to="/payment"
-              isActive={isActive("/payment")}
-              isScrolled={isScrolled}
-            >
-              Thanh toán
-            </NavLink>
-
-            {/* User Authentication */}
-            {user ? (
-              <div className="relative group ml-2">
-                <button
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full 
-                  ${
-                    isScrolled
-                      ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                      : "bg-white/10 backdrop-blur-sm text-white hover:bg-white/20"
-                  }
-                  transition-all`}
-                  onClick={(e) => {
-                    if (window.innerWidth < 1024) {
-                      e.preventDefault();
-                      setUserMenuOpen(!userMenuOpen);
-                    }
-                  }}
-                  onMouseEnter={() => setUserMenuOpen(true)}
-                  aria-expanded={userMenuOpen}
-                  aria-haspopup="true"
-                >
-                  {user?.avatar?.url ? (
-                    <img
-                      src={user.avatar.url}
-                      alt="Avatar"
-                      className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
-                      onError={(e) => {
-                        console.error(
-                          "Nav: Failed to load avatar:",
-                          user.avatar.url
-                        );
-                        e.target.onerror = null;
-                        e.target.style.display = "none";
-                        // Make sure the fallback is displayed
-                        const parent = e.target.parentElement;
-                        let fallback = parent.querySelector(".avatar-fallback");
-                        if (!fallback) {
-                          fallback = document.createElement("span");
-                          fallback.className =
-                            "avatar-fallback w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold";
-                          fallback.textContent =
-                            user?.username?.charAt(0).toUpperCase() || "U";
-                          parent.appendChild(fallback);
-                        } else {
-                          fallback.style.display = "flex";
-                        }
-                      }}
-                    />
-                  ) : (
-                    <span className="avatar-fallback w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {user?.username?.charAt(0).toUpperCase() || "U"}
-                    </span>
-                  )}
-                  <span className="font-medium hidden sm:block">
-                    {user?.username}
-                  </span>
-                  <span className="text-xs">▼</span>
-                </button>
-
-                <div
-                  className="absolute right-0 w-48 top-full z-50"
-                  onMouseLeave={() => setUserMenuOpen(false)}
-                >
-                  <div
-                    className={`mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden 
-                      transform transition-all duration-150 ease-in-out origin-top-right
-                      ${
-                        userMenuOpen
-                          ? "scale-100 opacity-100 pointer-events-auto"
-                          : "scale-95 opacity-0 pointer-events-none"
-                      }`}
-                  >
-                    <div className="py-2 border-b border-gray-100">
-                      <Link
-                        to="/user"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <svg
-                          className="mr-2 h-4 w-4 text-gray-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                        Hồ sơ cá nhân
-                      </Link>
-
-                      {user?.role === "admin" && (
-                        <>
-                          <Link
-                            to="/admin/dashboard"
-                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                          >
-                            <svg
-                              className="mr-2 h-4 w-4 text-gray-500"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
-                              />
-                            </svg>
-                            Dashboard
-                          </Link>
-                        </>
-                      )}
-
-                      <Link
-                        to="/user/settings"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <svg
-                          className="mr-2 h-4 w-4 text-gray-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
-                        Cài đặt
-                      </Link>
-                    </div>
-
-                    <div className="py-1">
-                      <button
-                        onClick={handleLogout}
-                        className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <svg
-                          className="mr-2 h-4 w-4 text-red-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                          />
-                        </svg>
-                        Đăng xuất
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-2">
+            {navLinks.map((link) => (
               <Link
-                to="/login"
-                className={`px-5 py-2 rounded-full font-medium transition-all ${
-                  isScrolled
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-white text-blue-700 hover:bg-blue-50"
+                key={link.name}
+                to={link.path}
+                className={`vintage-sans px-4 py-2 rounded-lg font-medium transition-all duration-300 relative group ${
+                  isActive(link.path)
+                    ? isScrolled
+                      ? "text-vintage-primary bg-vintage-warm"
+                      : "text-vintage-gold bg-white/15 shadow-golden"
+                    : isScrolled
+                    ? "text-vintage-neutral hover:text-vintage-primary hover:bg-vintage-warm"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
                 }`}
               >
-                Đăng nhập
+                {link.name}
+                <span
+                  className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-vintage-gold transition-all duration-300 group-hover:w-3/4 ${
+                    isActive(link.path) ? "w-3/4" : ""
+                  }`}
+                ></span>
               </Link>
-            )}
+            ))}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? (
-              <svg
-                className={`h-6 w-6 ${
-                  isScrolled ? "text-gray-900" : "text-white"
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            ) : (
-              <svg
-                className={`h-6 w-6 ${
-                  isScrolled ? "text-gray-900" : "text-white"
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      <div
-        className={`md:hidden transition-all duration-300 ease-in-out ${
-          mobileMenuOpen
-            ? "max-h-screen opacity-100"
-            : "max-h-0 opacity-0 overflow-hidden"
-        }`}
-      >
-        <div className="px-4 pt-2 pb-4 bg-white shadow-lg">
-          <MobileNavLink to="/club" isActive={isActive("/club")}>
-            CLB
-          </MobileNavLink>
-          <MobileNavLink to="/services" isActive={isActive("/services")}>
-            Dịch vụ
-          </MobileNavLink>
-          <MobileNavLink to="/prices" isActive={isActive("/prices")}>
-            Bảng giá
-          </MobileNavLink>
-          <MobileNavLink to="/classes" isActive={isActive("/classes")}>
-            Lịch tập
-          </MobileNavLink>
-
-          {user && (
-            <MobileNavLink to="/my-classes" isActive={isActive("/my-classes")}>
-              Lịch của tôi
-            </MobileNavLink>
-          )}
-
-          <MobileNavLink to="/membership" isActive={isActive("/membership")}>
-            Đăng Ký Thành Viên
-          </MobileNavLink>
-
-          {user?.role === "admin" && (
-            <>
-              <MobileNavLink
-                to="/admin/dashboard"
-                isActive={isActive("/admin/dashboard")}
-              >
-                Dashboard
-              </MobileNavLink>
-              <MobileNavLink to="/qllt" isActive={isActive("/qllt")} isAdmin>
-                Quản lý lịch tập
-              </MobileNavLink>
-              <MobileNavLink to="/qldv" isActive={isActive("/qldv")} isAdmin>
-                Quản lý dịch vụ
-              </MobileNavLink>
-              <MobileNavLink to="/qlclb" isActive={isActive("/qlclb")} isAdmin>
-                Quản lý CLB
-              </MobileNavLink>
-            </>
-          )}
-
-          <MobileNavLink to="/payment" isActive={isActive("/payment")}>
-            Thanh toán
-          </MobileNavLink>
-
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          {/* User Menu / Auth Buttons */}
+          <div className="flex items-center space-x-4">
             {user ? (
               <>
-                <div className="flex items-center px-3 py-2 text-sm">
-                  {user?.avatar?.url ? (
-                    <img
-                      src={user.avatar.url}
-                      alt="Mobile avatar"
-                      className="w-8 h-8 rounded-full object-cover mr-3 border border-gray-200 shadow-sm"
-                      onError={(e) => {
-                        console.error("Mobile: Failed to load avatar");
-                        e.target.onerror = null;
-                        e.target.style.display = "none";
-                        // Create fallback avatar with initials
-                        const fallback = document.createElement("div");
-                        fallback.className =
-                          "w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold mr-3";
-                        fallback.textContent = user.username
-                          .charAt(0)
-                          .toUpperCase();
-                        e.target.parentNode.insertBefore(fallback, e.target);
-                      }}
-                    />
-                  ) : (
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                      {user.username.charAt(0).toUpperCase()}
+                {/* User Menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className={`flex items-center space-x-3 px-4 py-2 rounded-full transition-all duration-300 group ${
+                      isScrolled
+                        ? "bg-vintage-warm border border-vintage-primary/20 hover:border-vintage-primary/40"
+                        : "bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20"
+                    }`}
+                  >
+                    <div className="w-10 h-10 bg-gradient-luxury rounded-full flex items-center justify-center shadow-soft group-hover:shadow-vintage transition-all duration-300">
+                      <User className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="hidden md:block text-left">
+                      <div
+                        className={`vintage-sans font-medium text-sm ${
+                          isScrolled ? "text-vintage-dark" : "text-white"
+                        }`}
+                      >
+                        {user.username}
+                      </div>
+                      <div
+                        className={`vintage-sans text-xs ${
+                          isScrolled
+                            ? "text-vintage-neutral"
+                            : "text-vintage-cream opacity-80"
+                        }`}
+                      >
+                        {user.role === "admin" ? "Quản trị viên" : "Thành viên"}
+                      </div>
+                    </div>
+                    <svg
+                      className={`w-4 h-4 transform transition-transform duration-200 ${
+                        userMenuOpen ? "rotate-180" : ""
+                      } ${
+                        isScrolled
+                          ? "text-vintage-neutral"
+                          : "text-vintage-cream"
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-3 w-56 vintage-card border border-vintage-primary/20 shadow-elegant z-50">
+                      <div className="py-2">
+                        <Link
+                          to="/user"
+                          className="flex items-center px-4 py-3 vintage-sans text-vintage-dark hover:bg-vintage-warm transition-colors duration-200"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <User className="h-4 w-4 mr-3 text-vintage-primary" />
+                          Thông tin cá nhân
+                        </Link>
+
+                        {user.role === "admin" && (
+                          <Link
+                            to="/admin"
+                            className="flex items-center px-4 py-3 vintage-sans text-vintage-dark hover:bg-vintage-warm transition-colors duration-200"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            <Settings className="h-4 w-4 mr-3 text-vintage-primary" />
+                            Dashboard
+                          </Link>
+                        )}
+
+                        <div className="vintage-divider my-2"></div>
+
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center w-full px-4 py-3 vintage-sans text-red-600 hover:bg-red-50 transition-colors duration-200"
+                        >
+                          <LogOut className="h-4 w-4 mr-3" />
+                          Đăng xuất
+                        </button>
+                      </div>
                     </div>
                   )}
-                  <div className="font-medium text-gray-900">
-                    {user.username}
-                  </div>
                 </div>
-                <Link
-                  to="/user"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Hồ sơ cá nhân
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <svg
-                    className="mr-2 h-4 w-4 text-red-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                    />
-                  </svg>
-                  Đăng xuất
-                </button>
               </>
             ) : (
-              <Link
-                to="/login"
-                className="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-              >
-                Đăng nhập / Đăng ký
-              </Link>
+              <div className="flex items-center space-x-3">
+                <Link to="/login">
+                  <button
+                    className={`btn-vintage-secondary px-6 py-2 rounded-lg vintage-sans font-medium transition-all duration-300 ${
+                      !isScrolled
+                        ? "border-white text-white hover:bg-white hover:text-vintage-dark"
+                        : ""
+                    }`}
+                  >
+                    Đăng nhập
+                  </button>
+                </Link>
+                <Link to="/sign-up">
+                  <button className="btn-vintage-primary px-6 py-2 rounded-lg vintage-sans font-medium">
+                    Đăng ký
+                  </button>
+                </Link>
+              </div>
             )}
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className={`lg:hidden p-2 rounded-lg transition-colors duration-200 ${
+                isScrolled
+                  ? "text-vintage-neutral hover:text-vintage-dark hover:bg-vintage-warm"
+                  : "text-vintage-cream hover:text-white hover:bg-white/10"
+              }`}
+            >
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation với z-index cao */}
+      {mobileMenuOpen && (
+        <div className="mobile-menu lg:hidden bg-white shadow-vintage border-t border-vintage-primary/20">
+          <div className="px-4 py-6 space-y-2">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className={`block px-4 py-3 rounded-lg vintage-sans font-medium transition-colors duration-200 ${
+                  isActive(link.path)
+                    ? "bg-vintage-warm text-vintage-primary"
+                    : "text-vintage-dark hover:bg-vintage-warm hover:text-vintage-primary"
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.name}
+              </Link>
+            ))}
+
+            {user && (
+              <Link
+                to="/my-classes"
+                className={`block px-4 py-3 rounded-lg vintage-sans font-medium transition-colors duration-200 ${
+                  isActive("/my-classes")
+                    ? "bg-vintage-warm text-vintage-primary"
+                    : "text-vintage-dark hover:bg-vintage-warm hover:text-vintage-primary"
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Lịch của tôi
+              </Link>
+            )}
+
+            {/* Mobile User Menu */}
+            {user ? (
+              <div className="pt-4 border-t border-vintage-primary/20 space-y-2">
+                <div className="flex items-center px-4 py-2">
+                  <div className="w-10 h-10 bg-gradient-luxury rounded-full flex items-center justify-center mr-3">
+                    <User className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="vintage-sans font-medium text-vintage-dark">
+                      {user.username}
+                    </div>
+                    <div className="vintage-sans text-sm text-vintage-neutral">
+                      {user.role === "admin" ? "Quản trị viên" : "Thành viên"}
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  to="/user"
+                  className="block px-4 py-3 vintage-sans text-vintage-dark hover:bg-vintage-warm transition-colors duration-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Thông tin cá nhân
+                </Link>
+
+                {user.role === "admin" && (
+                  <Link
+                    to="/admin"
+                    className="block px-4 py-3 vintage-sans text-vintage-dark hover:bg-vintage-warm transition-colors duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                )}
+
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-3 vintage-sans text-red-600 hover:bg-red-50 transition-colors duration-200"
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            ) : (
+              <div className="pt-4 border-t border-vintage-primary/20 space-y-3">
+                <Link
+                  to="/login"
+                  className="block w-full text-center py-3 btn-vintage-secondary rounded-lg vintage-sans font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to="/sign-up"
+                  className="block w-full text-center py-3 btn-vintage-primary rounded-lg vintage-sans font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Đăng ký
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
-  );
-}
-
-// Component cho Desktop Nav Links
-function NavLink({ children, to, isActive, isScrolled }) {
-  return (
-    <Link
-      to={to}
-      className={`px-3 py-2 rounded-lg font-medium transition-all ${
-        isActive
-          ? isScrolled
-            ? "text-blue-600 bg-blue-50"
-            : "text-white bg-white/20"
-          : isScrolled
-          ? "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-          : "text-white/90 hover:text-white hover:bg-white/10"
-      }`}
-    >
-      {children}
-    </Link>
-  );
-}
-
-// Component cho Admin Dropdown Links
-function AdminLink({ children, to, icon }) {
-  return (
-    <Link
-      to={to}
-      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-    >
-      {icon === "calendar" && (
-        <svg
-          className="mr-3 h-4 w-4 text-gray-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-      )}
-      {icon === "service" && (
-        <svg
-          className="mr-3 h-4 w-4 text-gray-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-          />
-        </svg>
-      )}
-      {icon === "building" && (
-        <svg
-          className="mr-3 h-4 w-4 text-gray-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-          />
-        </svg>
-      )}
-      {icon === "payment" && (
-        <svg
-          className="mr-3 h-4 w-4 text-gray-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-        </svg>
-      )}
-      {icon === "card" && (
-        <svg
-          className="mr-3 h-4 w-4 text-gray-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-        </svg>
-      )}
-      {children}
-    </Link>
-  );
-}
-
-// Component cho Mobile Nav Links
-function MobileNavLink({ children, to, isActive, isAdmin }) {
-  return (
-    <Link
-      to={to}
-      className={`block px-3 py-2 rounded-md ${
-        isActive
-          ? "bg-blue-50 text-blue-600 font-medium"
-          : isAdmin
-          ? "text-gray-600 pl-6 text-sm hover:bg-gray-50"
-          : "text-gray-700 hover:bg-gray-50"
-      }`}
-    >
-      {children}
-    </Link>
   );
 }

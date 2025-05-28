@@ -2,8 +2,34 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
-import GymImageGallery from "../Club/Banner";
-import RegistrationForm from "../Common/RegistrationForm";
+import {
+  VintageContainer,
+  VintageSection,
+  VintageHero,
+  VintageCard,
+  VintageHeading,
+  VintageText,
+  VintageButton,
+  VintageGrid,
+  VintageDivider,
+} from "../Templates/VintageLayout";
+import {
+  Crown,
+  ArrowRight,
+  Shield,
+  Clock,
+  Users,
+  Star,
+  Sparkles,
+  Target,
+  Heart,
+  Award,
+  CheckCircle,
+  MapPin, // Thêm MapPin vào import
+  Dumbbell,
+  Activity,
+  Zap,
+} from "lucide-react";
 
 export default function ServicePage() {
   const [services, setServices] = useState([]);
@@ -18,6 +44,36 @@ export default function ServicePage() {
         setServices(res.data);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách dịch vụ:", error);
+        // Fallback data nếu API lỗi
+        setServices([
+          {
+            id: 1,
+            name: "Personal Training",
+            description:
+              "Huấn luyện cá nhân với chương trình tập luyện được thiết kế riêng cho bạn",
+            image:
+              "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+            price: "500000",
+          },
+          {
+            id: 2,
+            name: "Group Classes",
+            description:
+              "Các lớp học nhóm đa dạng: Yoga, Zumba, Cardio và nhiều hơn nữa",
+            image:
+              "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800",
+            price: "200000",
+          },
+          {
+            id: 3,
+            name: "Nutrition Consulting",
+            description:
+              "Tư vấn dinh dưỡng chuyên nghiệp để tối ưu hóa kết quả tập luyện",
+            image:
+              "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800",
+            price: "300000",
+          },
+        ]);
       } finally {
         setLoading(false);
       }
@@ -36,261 +92,416 @@ export default function ServicePage() {
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 30, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.5, ease: "easeOut" },
+      transition: { duration: 0.6, ease: "easeOut" },
     },
   };
 
+  const features = [
+    {
+      icon: <Shield className="h-8 w-8" />,
+      title: "Chất lượng hàng đầu",
+      description:
+        "Cam kết mang đến dịch vụ tốt nhất với đội ngũ chuyên gia hàng đầu trong ngành thể hình và chăm sóc sức khỏe",
+    },
+    {
+      icon: <Clock className="h-8 w-8" />,
+      title: "Tiết kiệm thời gian",
+      description:
+        "Quy trình đơn giản, hiệu quả giúp bạn tiết kiệm thời gian tối đa và tập trung vào mục tiêu sức khỏe của mình",
+    },
+    {
+      icon: <Users className="h-8 w-8" />,
+      title: "Hỗ trợ chuyên nghiệp",
+      description:
+        "Đội ngũ tư vấn viên luôn sẵn sàng hỗ trợ bạn 24/7, giải đáp mọi thắc mắc và đồng hành cùng bạn trên hành trình",
+    },
+  ];
+
+  const premiumFeatures = [
+    {
+      icon: <Dumbbell className="h-6 w-6" />,
+      title: "Trang thiết bị hiện đại",
+      description: "Máy tập nhập khẩu từ các thương hiệu hàng đầu thế giới",
+    },
+    {
+      icon: <Activity className="h-6 w-6" />,
+      title: "Chương trình cá nhân hóa",
+      description: "Lộ trình tập luyện được thiết kế riêng cho từng cá nhân",
+    },
+    {
+      icon: <Zap className="h-6 w-6" />,
+      title: "Kết quả nhanh chóng",
+      description:
+        "Phương pháp khoa học giúp đạt mục tiêu trong thời gian ngắn",
+    },
+  ];
+
   return (
-    <div className="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen pb-20">
-      {/* Hero Banner */}
-      <div className="relative h-[70vh] overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-purple-900/80 z-10"></div>
-        <div className="absolute inset-0">
-          <GymImageGallery />
-        </div>
-        <div className="absolute inset-0 z-20 flex items-center justify-center">
-          <motion.div
-            className="text-center max-w-4xl px-6"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+    <div className="bg-vintage-cream min-h-screen">
+      {/* Hero Section */}
+      <VintageHero
+        title="Dịch Vụ Hàng Đầu"
+        subtitle="Chăm Sóc Bạn Từ Tâm - Thay Đổi Từ Hình Thể Đến Cuộc Sống! Khám phá các dịch vụ cao cấp được thiết kế đặc biệt cho sức khỏe và vóc dáng của bạn."
+        backgroundImage="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920"
+        overlay="vintage"
+      >
+        <div className="flex flex-col sm:flex-row gap-6 justify-center">
+          <VintageButton
+            variant="gold"
+            size="lg"
+            onClick={() =>
+              document
+                .getElementById("services-section")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="group"
           >
-            <h1 className="text-5xl sm:text-6xl font-extrabold text-white uppercase tracking-wide mb-4 drop-shadow-lg">
-              Dịch Vụ Hàng Đầu
-            </h1>
-            <p className="text-2xl sm:text-3xl text-white/90 italic font-light">
-              "Chăm Sóc Bạn Từ Tâm - Thay Đổi Từ Hình Thể Đến Cuộc Sống!"
-            </p>
-          </motion.div>
+            <Sparkles className="mr-2 h-5 w-5" />
+            <span>Khám phá ngay</span>
+            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          </VintageButton>
+          <Link to="/membership">
+            <VintageButton
+              variant="secondary"
+              size="lg"
+              className="group border-white text-white hover:bg-white hover:text-vintage-dark"
+            >
+              <Crown className="mr-2 h-5 w-5" />
+              <span>Đăng ký thành viên</span>
+            </VintageButton>
+          </Link>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-gray-50 to-transparent z-10"></div>
-      </div>
+      </VintageHero>
 
-      {/* Content Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-30">
-        {/* Tiêu đề phần - Di chuyển xuống để không bị chồng lên banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-center mb-16 mt-8"
-        >
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">
-            Khám Phá Các Dịch Vụ Của Chúng Tôi
-          </h2>
-          <div className="w-24 h-1.5 bg-blue-600 mx-auto rounded-full"></div>
-          <p className="mt-6 text-gray-600 max-w-2xl mx-auto">
-            Chúng tôi cung cấp các dịch vụ chất lượng cao, được thiết kế riêng
-            để đáp ứng mọi nhu cầu về thể hình và sức khỏe của bạn
-          </p>
-        </motion.div>
-
-        {/* Danh sách dịch vụ */}
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-gray-600 text-lg font-medium">
-                Đang tải dịch vụ...
-              </span>
-            </div>
+      {/* Services Section */}
+      <VintageSection background="warm" id="services-section">
+        <VintageContainer>
+          <div className="text-center mb-16">
+            <VintageHeading level={2} className="mb-6" ornament>
+              Khám Phá Các Dịch Vụ Của Chúng Tôi
+            </VintageHeading>
+            <VintageDivider />
+            <VintageText variant="lead" className="max-w-3xl mx-auto">
+              Chúng tôi cung cấp các dịch vụ chất lượng cao, được thiết kế riêng
+              để đáp ứng mọi nhu cầu về thể hình và sức khỏe của bạn
+            </VintageText>
           </div>
-        ) : (
-          <motion.section
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-24"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {services.map((service, index) => (
-              <motion.div
-                key={index}
-                variants={itemVariants}
-                whileHover={{ y: -10 }}
-                className="h-full"
-                onClick={() => setSelectedService(service.name)}
-              >
-                <Link
-                  to={`/services/${service.id || service._id}`}
-                  className="hover:no-underline block h-full"
+
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <VintageCard className="p-8 text-center">
+                <div className="w-12 h-12 border-4 border-vintage-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <VintageText
+                  variant="body"
+                  className="text-vintage-neutral font-medium"
                 >
-                  <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300 h-full flex flex-col">
-                    <div className="overflow-hidden h-64">
-                      <img
-                        src={service.image}
-                        alt={service.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="p-6 space-y-4 flex-grow">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-2xl font-bold text-gray-800">
-                          {service.name}
-                        </h3>
-                        <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs px-3 py-1 rounded-full">
-                          Hot
-                        </span>
-                      </div>
-                      <p className="text-gray-600 text-sm line-clamp-3">
-                        {service.description}
-                      </p>
-                    </div>
-                    <div className="p-6 pt-0">
-                      <div className="flex justify-between items-center">
-                        <div className="text-blue-600 font-bold group-hover:underline flex items-center">
-                          Chi tiết
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                        </div>
-                        {service.price && (
-                          <div className="bg-blue-50 text-blue-800 px-3 py-1 rounded-lg font-medium">
-                            {typeof service.price === "number"
-                              ? service.price.toLocaleString("vi-VN") + " đ"
-                              : service.price}
+                  Đang tải dịch vụ...
+                </VintageText>
+              </VintageCard>
+            </div>
+          ) : (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <VintageGrid cols={{ sm: 1, md: 2, lg: 3 }} gap={8}>
+                {services.map((service, index) => (
+                  <motion.div
+                    key={index}
+                    variants={itemVariants}
+                    whileHover={{ y: -8 }}
+                    className="h-full group"
+                  >
+                    <Link
+                      to={`/services/detail/${service.id || service._id}`}
+                      className="hover:no-underline block h-full"
+                    >
+                      <VintageCard className="h-full flex flex-col overflow-hidden group-hover:shadow-elegant transition-all duration-500">
+                        <div className="relative overflow-hidden h-64">
+                          <img
+                            src={service.image}
+                            alt={service.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
+
+                          {/* Overlay với gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-vintage-dark/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                          {/* Hot Badge */}
+                          <div className="absolute top-4 right-4">
+                            <div className="bg-vintage-gold text-vintage-dark px-3 py-1 rounded-full text-xs font-bold vintage-sans flex items-center shadow-golden">
+                              <Star className="h-3 w-3 mr-1 fill-current" />
+                              Hot
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
+
+                          {/* Hover Icon */}
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <div className="w-16 h-16 bg-vintage-gold rounded-full flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300 delay-100 shadow-golden">
+                              <ArrowRight className="h-6 w-6 text-vintage-dark" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-6 space-y-4 flex-grow flex flex-col">
+                          <div className="flex items-center justify-between">
+                            <VintageHeading
+                              level={4}
+                              className="group-hover:text-vintage-primary transition-colors"
+                            >
+                              {service.name}
+                            </VintageHeading>
+                          </div>
+
+                          <VintageText
+                            variant="body"
+                            className="flex-grow line-clamp-3"
+                          >
+                            {service.description}
+                          </VintageText>
+
+                          <div className="flex justify-between items-center pt-4 border-t border-vintage-primary/20">
+                            <div className="text-vintage-primary font-bold group-hover:text-vintage-gold transition-colors flex items-center vintage-sans">
+                              <span>Chi tiết</span>
+                              <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                            </div>
+
+                            {service.price && (
+                              <div className="bg-vintage-warm text-vintage-primary px-3 py-1 rounded-lg font-medium vintage-sans text-sm">
+                                {typeof service.price === "number"
+                                  ? service.price.toLocaleString("vi-VN") + " đ"
+                                  : service.price}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </VintageCard>
+                    </Link>
+                  </motion.div>
+                ))}
+              </VintageGrid>
+            </motion.div>
+          )}
+        </VintageContainer>
+      </VintageSection>
+
+      {/* Features Section - Tại sao chọn chúng tôi */}
+      <VintageSection className="why-choose-section">
+        <VintageContainer>
+          <div className="why-choose-content">
+            <div className="text-center mb-16">
+              <VintageHeading
+                level={2}
+                className="mb-6 text-vintage-dark"
+                ornament
+              >
+                Tại Sao Chọn Dịch Vụ Của Chúng Tôi?
+              </VintageHeading>
+              <VintageText
+                variant="lead"
+                className="max-w-3xl mx-auto text-vintage-neutral"
+              >
+                Chúng tôi cam kết mang đến trải nghiệm tuyệt vời nhất cho khách
+                hàng với những ưu điểm vượt trội
+              </VintageText>
+            </div>
+
+            <VintageGrid cols={{ sm: 1, md: 3 }} gap={8}>
+              {features.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  variants={itemVariants}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="feature-card-enhanced"
+                >
+                  <div className="feature-icon text-4xl mb-4">
+                    {feature.icon}
                   </div>
+                  <VintageHeading level={4} className="feature-title">
+                    {feature.title}
+                  </VintageHeading>
+                  <VintageText className="feature-description">
+                    {feature.description}
+                  </VintageText>
+                </motion.div>
+              ))}
+            </VintageGrid>
+          </div>
+        </VintageContainer>
+      </VintageSection>
+
+      {/* Premium Experience Section - Trải nghiệm đẳng cấp */}
+      <VintageSection className="premium-experience-section">
+        <VintageContainer>
+          <div className="premium-experience-content">
+            <div className="premium-text-content">
+              <VintageHeading
+                level={2}
+                className="mb-6 text-vintage-dark"
+                ornament
+              >
+                Trải Nghiệm Dịch Vụ Đẳng Cấp
+              </VintageHeading>
+              <VintageText variant="lead" className="mb-8 text-vintage-neutral">
+                Khám phá không gian sang trọng với trang thiết bị hiện đại và
+                dịch vụ chăm sóc khách hàng tận tình
+              </VintageText>
+
+              <div className="space-y-6">
+                {premiumFeatures.map((feature, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -30 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="flex items-start space-x-4"
+                  >
+                    <div className="flex-shrink-0 w-12 h-12 bg-vintage-gold rounded-lg flex items-center justify-center text-vintage-dark">
+                      {feature.icon}
+                    </div>
+                    <div>
+                      <VintageHeading
+                        level={5}
+                        className="mb-2 text-vintage-dark"
+                      >
+                        {feature.title}
+                      </VintageHeading>
+                      <VintageText
+                        variant="body"
+                        className="text-vintage-neutral"
+                      >
+                        {feature.description}
+                      </VintageText>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="mt-8">
+                <Link to="/club">
+                  <VintageButton variant="primary" size="lg" className="group">
+                    <span>Tham quan cơ sở</span>
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </VintageButton>
                 </Link>
-              </motion.div>
-            ))}
-          </motion.section>
-        )}
-
-        {/* Form đăng ký dịch vụ - Sử dụng component chung */}
-        <motion.div
-          className="max-w-4xl mx-auto"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          id="registration-form"
-        >
-          <div className="text-center mb-8">
-            <h3 className="text-3xl font-bold text-gray-800 mb-4">
-              Đăng Ký Dịch Vụ
-            </h3>
-            <div className="w-16 h-1 bg-blue-600 mx-auto rounded-full"></div>
-            <p className="mt-4 text-gray-600">
-              Điền thông tin để nhận tư vấn và ưu đãi đặc biệt
-            </p>
-          </div>
-
-          <RegistrationForm
-            services={services}
-            selectedService={selectedService}
-            formType="service"
-          />
-        </motion.div>
-
-        {/* Thông tin bổ sung */}
-        <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-24 text-center"
-        >
-          <h3 className="text-2xl font-semibold text-gray-800 mb-6">
-            Tại sao chọn dịch vụ của chúng tôi?
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 hover:-translate-y-1 transform transition-transform">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  ></path>
-                </svg>
               </div>
-              <h4 className="text-xl font-semibold mb-3">
-                Chất lượng hàng đầu
-              </h4>
-              <p className="text-gray-600">
-                Cam kết mang đến dịch vụ tốt nhất với đội ngũ chuyên gia hàng
-                đầu trong ngành thể hình và chăm sóc sức khỏe
-              </p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 hover:-translate-y-1 transform transition-transform">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
-              </div>
-              <h4 className="text-xl font-semibold mb-3">
-                Tiết kiệm thời gian
-              </h4>
-              <p className="text-gray-600">
-                Quy trình đơn giản, hiệu quả giúp bạn tiết kiệm thời gian tối đa
-                và tập trung vào mục tiêu sức khỏe của mình
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 hover:-translate-y-1 transform transition-transform">
-              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  ></path>
-                </svg>
-              </div>
-              <h4 className="text-xl font-semibold mb-3">
-                Hỗ trợ chuyên nghiệp
-              </h4>
-              <p className="text-gray-600">
-                Đội ngũ tư vấn viên luôn sẵn sàng hỗ trợ bạn 24/7, giải đáp mọi
-                thắc mắc và đồng hành cùng bạn trên hành trình
-              </p>
+            <div className="premium-image-container">
+              <img
+                src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800"
+                alt="Premium Experience"
+                className="premium-image"
+              />
+              <div className="premium-image-overlay"></div>
             </div>
           </div>
-        </motion.section>
-      </div>
+        </VintageContainer>
+      </VintageSection>
+
+      {/* Stats Section - Những con số ấn tượng */}
+      <VintageSection className="stats-section">
+        <VintageContainer>
+          <div className="stats-content text-center">
+            <VintageHeading level={2} className="stats-title mb-6" ornament>
+              Những Con Số Ấn Tượng
+            </VintageHeading>
+            <VintageText
+              variant="lead"
+              className="stats-subtitle max-w-3xl mx-auto"
+            >
+              Minh chứng cho chất lượng dịch vụ và sự tin tưởng của khách hàng
+            </VintageText>
+
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+            >
+              <VintageGrid cols={{ sm: 2, md: 4 }} gap={6}>
+                {[
+                  {
+                    number: "50K+",
+                    label: "Thành viên",
+                    icon: <Users className="h-8 w-8" />,
+                  },
+                  {
+                    number: "15+",
+                    label: "Chi nhánh",
+                    icon: <MapPin className="h-8 w-8" />,
+                  },
+                  {
+                    number: "100+",
+                    label: "HLV chuyên nghiệp",
+                    icon: <Award className="h-8 w-8" />,
+                  },
+                  {
+                    number: "5★",
+                    label: "Đánh giá trung bình",
+                    icon: <Star className="h-8 w-8" />,
+                  },
+                ].map((stat, index) => (
+                  <motion.div
+                    key={index}
+                    variants={itemVariants}
+                    className="stat-card"
+                  >
+                    <div className="stat-icon">{stat.icon}</div>
+                    <div className="stat-number">{stat.number}</div>
+                    <div className="stat-label">{stat.label}</div>
+                  </motion.div>
+                ))}
+              </VintageGrid>
+            </motion.div>
+          </div>
+        </VintageContainer>
+      </VintageSection>
+
+      {/* CTA Section */}
+      <VintageSection background="warm">
+        <VintageContainer>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <VintageHeading level={2} className="mb-6">
+              Sẵn sàng khám phá dịch vụ tuyệt vời?
+            </VintageHeading>
+            <VintageText variant="lead" className="mb-8 max-w-3xl mx-auto">
+              Hãy để chúng tôi đồng hành cùng bạn trong hành trình chinh phục
+              sức khỏe và vóc dáng lý tưởng
+            </VintageText>
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Link to="/membership">
+                <VintageButton variant="gold" size="lg" className="group">
+                  <Crown className="mr-2 h-5 w-5" />
+                  <span>Đăng ký ngay</span>
+                  <Sparkles className="ml-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
+                </VintageButton>
+              </Link>
+              <Link to="/club">
+                <VintageButton variant="secondary" size="lg" className="group">
+                  <span>Tham quan CLB</span>
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </VintageButton>
+              </Link>
+            </div>
+          </motion.div>
+        </VintageContainer>
+      </VintageSection>
     </div>
   );
 }

@@ -3,6 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
 import {
+  VintageContainer,
+  VintageSection,
+  VintageCard,
+  VintageHeading,
+  VintageText,
+  VintageButton,
+  VintageGrid,
+} from "../Templates/VintageLayout";
+import {
   Calendar,
   Clock,
   Users,
@@ -15,6 +24,15 @@ import {
   Target,
   Award,
   TrendingUp,
+  Star,
+  Play,
+  Shield,
+  Crown,
+  Sparkles,
+  Heart,
+  Trophy,
+  Timer,
+  Zap,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -44,7 +62,7 @@ export default function ClassDetails() {
     } catch (error) {
       console.error("Error fetching class details:", error);
       toast.error("Không thể tải thông tin lớp học");
-      navigate("/my-classes");
+      navigate("/classes");
     } finally {
       setLoading(false);
     }
@@ -63,12 +81,8 @@ export default function ClassDetails() {
 
       await axios.post(
         "http://localhost:5000/api/classes/enroll",
-        {
-          classId: id,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { classId: id },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("Đăng ký lớp học thành công!");
@@ -89,36 +103,41 @@ export default function ClassDetails() {
         return {
           color: "blue",
           text: "Sắp diễn ra",
-          bgColor: "bg-blue-100",
+          bgColor: "bg-gradient-to-r from-blue-100 to-blue-200",
           textColor: "text-blue-800",
+          borderColor: "border-blue-300",
         };
       case "ongoing":
         return {
           color: "green",
           text: "Đang diễn ra",
-          bgColor: "bg-green-100",
+          bgColor: "bg-gradient-to-r from-green-100 to-green-200",
           textColor: "text-green-800",
+          borderColor: "border-green-300",
         };
       case "completed":
         return {
           color: "gray",
           text: "Hoàn thành",
-          bgColor: "bg-gray-100",
+          bgColor: "bg-gradient-to-r from-gray-100 to-gray-200",
           textColor: "text-gray-800",
+          borderColor: "border-gray-300",
         };
       case "cancelled":
         return {
           color: "red",
           text: "Đã hủy",
-          bgColor: "bg-red-100",
+          bgColor: "bg-gradient-to-r from-red-100 to-red-200",
           textColor: "text-red-800",
+          borderColor: "border-red-300",
         };
       default:
         return {
           color: "gray",
           text: "Không xác định",
-          bgColor: "bg-gray-100",
+          bgColor: "bg-gradient-to-r from-gray-100 to-gray-200",
           textColor: "text-gray-800",
+          borderColor: "border-gray-300",
         };
     }
   };
@@ -137,32 +156,59 @@ export default function ClassDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-warm to-vintage-cream pt-24 pb-16">
+        <VintageContainer>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex justify-center items-center py-20"
+          >
+            <VintageCard className="p-12 text-center shadow-elegant">
+              <div className="w-16 h-16 border-4 border-vintage-primary border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+              <VintageHeading level={4} className="mb-2 text-vintage-dark">
+                Đang tải thông tin lớp học
+              </VintageHeading>
+              <VintageText variant="body" className="text-vintage-neutral">
+                Vui lòng đợi trong giây lát...
+              </VintageText>
+            </VintageCard>
+          </motion.div>
+        </VintageContainer>
       </div>
     );
   }
 
   if (!classData) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Không tìm thấy lớp học
-            </h2>
-            <button
-              onClick={() => navigate("/my-classes")}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Quay lại danh sách lớp học
-            </button>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-warm to-vintage-cream pt-24 pb-16">
+        <VintageContainer>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-20"
+          >
+            <VintageCard className="p-16 text-center max-w-2xl mx-auto shadow-elegant">
+              <div className="w-24 h-24 bg-gradient-to-br from-vintage-warm to-vintage-gold/20 rounded-full flex items-center justify-center mx-auto mb-8">
+                <BookOpen className="h-12 w-12 text-vintage-primary" />
+              </div>
+              <VintageHeading level={2} className="mb-6 text-vintage-dark">
+                Không tìm thấy lớp học
+              </VintageHeading>
+              <VintageText variant="lead" className="mb-8 text-vintage-neutral">
+                Lớp học bạn đang tìm kiếm có thể đã được cập nhật hoặc không còn
+                khả dụng.
+              </VintageText>
+              <VintageButton
+                variant="primary"
+                onClick={() => navigate("/classes")}
+                className="group"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                Quay lại danh sách lớp học
+              </VintageButton>
+            </VintageCard>
+          </motion.div>
+        </VintageContainer>
       </div>
     );
   }
@@ -180,268 +226,602 @@ export default function ClassDetails() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-gray-50 pt-20"
+      className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-warm to-vintage-cream pt-24 pb-16"
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate("/my-classes")}
-            className="flex items-center text-blue-600 hover:text-blue-700 mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Quay lại danh sách lớp học
-          </button>
-
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+      <VintageContainer>
+        {/* Enhanced Breadcrumb */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-4 shadow-soft border border-vintage-gold/20">
+            <div className="flex items-center space-x-3 text-sm">
+              <button
+                onClick={() => navigate("/classes")}
+                className="flex items-center text-vintage-primary hover:text-vintage-gold transition-colors font-medium group"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                Danh sách lớp học
+              </button>
+              <span className="text-vintage-gold">•</span>
+              <span className="text-vintage-neutral font-medium">
                 {classData.className}
-              </h1>
-              <p className="text-lg text-gray-600">{classData.serviceName}</p>
+              </span>
             </div>
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.textColor}`}
-            >
-              {statusInfo.text}
-            </span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+        <VintageGrid cols={{ sm: 1, lg: 3 }} gap={12}>
+          {/* Main Content - 2 columns */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Enhanced Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <VintageCard className="p-8 shadow-elegant">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-12 h-12 bg-gradient-luxury rounded-xl flex items-center justify-center">
+                        <BookOpen className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <VintageHeading
+                          level={1}
+                          className="text-vintage-dark leading-tight"
+                        >
+                          {classData.className}
+                        </VintageHeading>
+                        <VintageText
+                          variant="body"
+                          className="text-vintage-primary font-medium"
+                        >
+                          {classData.serviceName}
+                        </VintageText>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 md:mt-0">
+                    <div
+                      className={`inline-flex items-center px-4 py-2 rounded-full border ${statusInfo.bgColor} ${statusInfo.textColor} ${statusInfo.borderColor}`}
+                    >
+                      <div className="w-2 h-2 bg-current rounded-full mr-2 animate-pulse"></div>
+                      <span className="font-semibold text-sm">
+                        {statusInfo.text}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Class Stats */}
+                <VintageGrid cols={{ sm: 2, md: 4 }} gap={4} className="mb-6">
+                  {[
+                    {
+                      icon: Users,
+                      value: `${classData.currentMembers || 0}/${
+                        classData.maxMembers
+                      }`,
+                      label: "Học viên",
+                      color: "blue",
+                    },
+                    {
+                      icon: Calendar,
+                      value: `${classData.totalSessions}`,
+                      label: "Tổng buổi",
+                      color: "green",
+                    },
+                    {
+                      icon: Timer,
+                      value: `${classData.currentSession || 0}`,
+                      label: "Đã học",
+                      color: "purple",
+                    },
+                    {
+                      icon: Trophy,
+                      value: `${progressPercent.toFixed(0)}%`,
+                      label: "Tiến độ",
+                      color: "amber",
+                    },
+                  ].map((stat, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2 + index * 0.1 }}
+                      className={`bg-${stat.color}-50 border border-${stat.color}-200 rounded-xl p-4 text-center`}
+                    >
+                      <stat.icon
+                        className={`h-6 w-6 text-${stat.color}-600 mx-auto mb-2`}
+                      />
+                      <div
+                        className={`text-xl font-bold text-${stat.color}-800`}
+                      >
+                        {stat.value}
+                      </div>
+                      <div className={`text-xs text-${stat.color}-600`}>
+                        {stat.label}
+                      </div>
+                    </motion.div>
+                  ))}
+                </VintageGrid>
+
+                {/* Progress Bar */}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <VintageText
+                      variant="caption"
+                      className="text-vintage-neutral"
+                    >
+                      Tiến độ lớp học
+                    </VintageText>
+                    <VintageText
+                      variant="caption"
+                      className="text-vintage-primary font-semibold"
+                    >
+                      {progressPercent.toFixed(1)}% hoàn thành
+                    </VintageText>
+                  </div>
+                  <div className="w-full bg-vintage-warm rounded-full h-3 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercent}%` }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                      className="bg-gradient-luxury h-full rounded-full shadow-inner"
+                    ></motion.div>
+                  </div>
+                </div>
+              </VintageCard>
+            </motion.div>
+
             {/* Service Image */}
             {classData.service?.image && (
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <img
-                  src={classData.service.image}
-                  alt={classData.serviceName}
-                  className="w-full h-64 object-cover"
-                />
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <VintageCard className="overflow-hidden shadow-elegant">
+                  <div className="relative group">
+                    <img
+                      src={classData.service.image}
+                      alt={classData.serviceName}
+                      className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-vintage-dark/60 via-transparent to-transparent"></div>
+
+                    {/* Floating Play Button */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <div className="w-20 h-20 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-elegant group-hover:scale-110 transition-transform duration-300">
+                        <Play className="h-8 w-8 text-vintage-primary ml-1" />
+                      </div>
+                    </div>
+
+                    {/* Class Info Overlay */}
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-soft">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <VintageText
+                              variant="caption"
+                              className="text-vintage-neutral"
+                            >
+                              Học phí
+                            </VintageText>
+                            <VintageText
+                              variant="body"
+                              className="font-bold text-vintage-primary text-lg"
+                            >
+                              {classData.price?.toLocaleString() || "0"}đ
+                            </VintageText>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Star className="h-4 w-4 text-vintage-gold fill-current" />
+                            <span className="text-sm font-medium text-vintage-primary">
+                              4.8/5
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </VintageCard>
+              </motion.div>
             )}
 
             {/* Description */}
             {classData.description && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">
-                  Mô tả lớp học
-                </h2>
-                <p className="text-gray-600 leading-relaxed">
-                  {classData.description}
-                </p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <VintageCard className="p-8 shadow-elegant">
+                  <VintageHeading
+                    level={3}
+                    className="mb-6 text-vintage-dark flex items-center"
+                  >
+                    <Target className="h-6 w-6 mr-3 text-vintage-primary" />
+                    Mô tả lớp học
+                  </VintageHeading>
+                  <VintageText
+                    variant="body"
+                    className="text-vintage-neutral leading-relaxed text-lg"
+                  >
+                    {classData.description}
+                  </VintageText>
+                </VintageCard>
+              </motion.div>
             )}
 
             {/* Service Benefits */}
             {classData.service?.benefits &&
               classData.service.benefits.length > 0 && (
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <Award className="h-5 w-5 mr-2 text-yellow-500" />
-                    Lợi ích
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {classData.service.benefits.map((benefit, index) => (
-                      <div key={index} className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                        <span className="text-gray-600">{benefit}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <VintageCard className="p-8 shadow-elegant">
+                    <VintageHeading
+                      level={3}
+                      className="mb-6 text-vintage-dark flex items-center"
+                    >
+                      <Award className="h-6 w-6 mr-3 text-vintage-gold" />
+                      Lợi ích từ lớp học
+                    </VintageHeading>
+                    <VintageGrid cols={{ sm: 1, md: 2 }} gap={4}>
+                      {classData.service.benefits.map((benefit, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.5 + index * 0.1 }}
+                          className="flex items-center p-3 bg-vintage-warm rounded-lg"
+                        >
+                          <CheckCircle className="h-5 w-5 text-green-600 mr-3 flex-shrink-0" />
+                          <VintageText
+                            variant="body"
+                            className="text-vintage-neutral"
+                          >
+                            {benefit}
+                          </VintageText>
+                        </motion.div>
+                      ))}
+                    </VintageGrid>
+                  </VintageCard>
+                </motion.div>
               )}
 
             {/* Requirements */}
             {classData.requirements && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                  <Target className="h-5 w-5 mr-2 text-red-500" />
-                  Yêu cầu
-                </h2>
-                <p className="text-gray-600">{classData.requirements}</p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <VintageCard className="p-8 shadow-elegant">
+                  <VintageHeading
+                    level={3}
+                    className="mb-6 text-vintage-dark flex items-center"
+                  >
+                    <Shield className="h-6 w-6 mr-3 text-red-500" />
+                    Yêu cầu tham gia
+                  </VintageHeading>
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                    <VintageText
+                      variant="body"
+                      className="text-red-700 leading-relaxed"
+                    >
+                      {classData.requirements}
+                    </VintageText>
+                  </div>
+                </VintageCard>
+              </motion.div>
             )}
 
             {/* Schedule */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                <Clock className="h-5 w-5 mr-2 text-blue-500" />
-                Lịch học
-              </h2>
-              <p className="text-gray-600">
-                {formatSchedule(classData.schedule)}
-              </p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <VintageCard className="p-8 shadow-elegant">
+                <VintageHeading
+                  level={3}
+                  className="mb-6 text-vintage-dark flex items-center"
+                >
+                  <Clock className="h-6 w-6 mr-3 text-blue-500" />
+                  Lịch học chi tiết
+                </VintageHeading>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                  <VintageText
+                    variant="body"
+                    className="text-blue-700 font-medium text-lg"
+                  >
+                    {formatSchedule(classData.schedule)}
+                  </VintageText>
+                </div>
+              </VintageCard>
+            </motion.div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Info */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Thông tin cơ bản
-              </h3>
+          {/* Sidebar - Enhanced */}
+          <div className="space-y-8">
+            {/* Quick Info Card */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <VintageCard className="p-6 shadow-elegant">
+                <VintageHeading level={4} className="mb-6 text-vintage-dark">
+                  Thông tin chi tiết
+                </VintageHeading>
 
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <User className="h-4 w-4 text-gray-400 mr-3" />
-                  <div>
-                    <p className="text-xs text-gray-500">Huấn luyện viên</p>
-                    <p className="font-medium">
-                      {classData.instructorName || "Chưa có"}
-                    </p>
-                  </div>
+                <div className="space-y-6">
+                  {[
+                    {
+                      icon: User,
+                      label: "Huấn luyện viên",
+                      value: classData.instructorName || "Chưa có",
+                      color: "purple",
+                    },
+                    {
+                      icon: MapPin,
+                      label: "Địa điểm",
+                      value: classData.location,
+                      color: "blue",
+                    },
+                    {
+                      icon: Users,
+                      label: "Học viên",
+                      value: `${classData.currentMembers || 0}/${
+                        classData.maxMembers
+                      }`,
+                      color: "green",
+                    },
+                    {
+                      icon: BookOpen,
+                      label: "Tổng buổi học",
+                      value: `${classData.totalSessions} buổi`,
+                      color: "amber",
+                    },
+                    {
+                      icon: Calendar,
+                      label: "Thời gian",
+                      value: `${new Date(
+                        classData.startDate
+                      ).toLocaleDateString("vi-VN")} - ${new Date(
+                        classData.endDate
+                      ).toLocaleDateString("vi-VN")}`,
+                      color: "red",
+                    },
+                    {
+                      icon: DollarSign,
+                      label: "Học phí",
+                      value: `${classData.price?.toLocaleString() || 0}đ`,
+                      color: "emerald",
+                      highlight: true,
+                    },
+                  ].map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 + index * 0.1 }}
+                      className={`flex items-start space-x-4 p-4 rounded-xl transition-all duration-300 ${
+                        item.highlight
+                          ? "bg-gradient-to-r from-vintage-gold/20 to-vintage-accent/20 border border-vintage-gold/30"
+                          : "bg-vintage-warm hover:bg-white hover:shadow-soft"
+                      }`}
+                    >
+                      <div
+                        className={`w-10 h-10 bg-${item.color}-100 rounded-lg flex items-center justify-center flex-shrink-0`}
+                      >
+                        <item.icon
+                          className={`h-5 w-5 text-${item.color}-600`}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <VintageText
+                          variant="caption"
+                          className="text-vintage-neutral"
+                        >
+                          {item.label}
+                        </VintageText>
+                        <VintageText
+                          variant="body"
+                          className={`font-semibold ${
+                            item.highlight
+                              ? "text-vintage-primary text-lg"
+                              : "text-vintage-dark"
+                          } break-words`}
+                        >
+                          {item.value}
+                        </VintageText>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 text-gray-400 mr-3" />
-                  <div>
-                    <p className="text-xs text-gray-500">Địa điểm</p>
-                    <p className="font-medium">{classData.location}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 text-gray-400 mr-3" />
-                  <div>
-                    <p className="text-xs text-gray-500">Học viên</p>
-                    <p className="font-medium">
-                      {classData.currentMembers || 0}/{classData.maxMembers}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <BookOpen className="h-4 w-4 text-gray-400 mr-3" />
-                  <div>
-                    <p className="text-xs text-gray-500">Tổng buổi học</p>
-                    <p className="font-medium">
-                      {classData.totalSessions} buổi
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 text-gray-400 mr-3" />
-                  <div>
-                    <p className="text-xs text-gray-500">Thời gian</p>
-                    <p className="font-medium">
-                      {new Date(classData.startDate).toLocaleDateString(
-                        "vi-VN"
-                      )}{" "}
-                      -{" "}
-                      {new Date(classData.endDate).toLocaleDateString("vi-VN")}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 text-gray-400 mr-3" />
-                  <div>
-                    <p className="text-xs text-gray-500">Học phí</p>
-                    <p className="font-bold text-lg text-green-600">
-                      {classData.price?.toLocaleString() || 0}đ
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Progress */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Tiến độ lớp học
-              </h3>
-
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Buổi học đã diễn ra</span>
-                  <span className="font-medium">
-                    {classData.currentSession || 0}/{classData.totalSessions}
-                  </span>
-                </div>
-
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progressPercent}%` }}
-                  ></div>
-                </div>
-
-                <p className="text-xs text-gray-500">
-                  {progressPercent.toFixed(1)}% hoàn thành
-                </p>
-              </div>
-            </div>
+              </VintageCard>
+            </motion.div>
 
             {/* Enrollment Stats */}
             {classData.enrollmentStats && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  Thống kê đăng ký
-                </h3>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <VintageCard className="p-6 shadow-elegant">
+                  <VintageHeading
+                    level={4}
+                    className="mb-6 text-vintage-dark flex items-center"
+                  >
+                    <TrendingUp className="h-5 w-5 mr-2" />
+                    Thống kê đăng ký
+                  </VintageHeading>
 
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tổng đăng ký:</span>
-                    <span className="font-medium">
-                      {classData.enrollmentStats.totalEnrollments}
-                    </span>
+                  <div className="space-y-4">
+                    {[
+                      {
+                        label: "Tổng đăng ký",
+                        value: classData.enrollmentStats.totalEnrollments,
+                        color: "blue",
+                      },
+                      {
+                        label: "Đã thanh toán",
+                        value: classData.enrollmentStats.paidEnrollments,
+                        color: "green",
+                      },
+                      {
+                        label: "Chờ thanh toán",
+                        value: classData.enrollmentStats.pendingPayments,
+                        color: "amber",
+                      },
+                    ].map((stat, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center p-3 bg-vintage-warm rounded-lg"
+                      >
+                        <VintageText
+                          variant="body"
+                          className="text-vintage-neutral"
+                        >
+                          {stat.label}:
+                        </VintageText>
+                        <VintageText
+                          variant="body"
+                          className={`font-bold text-${stat.color}-600`}
+                        >
+                          {stat.value}
+                        </VintageText>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Đã thanh toán:</span>
-                    <span className="font-medium text-green-600">
-                      {classData.enrollmentStats.paidEnrollments}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Chờ thanh toán:</span>
-                    <span className="font-medium text-amber-600">
-                      {classData.enrollmentStats.pendingPayments}
-                    </span>
-                  </div>
-                </div>
-              </div>
+                </VintageCard>
+              </motion.div>
             )}
 
             {/* Enrollment Button */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              {canEnroll ? (
-                <button
-                  onClick={handleEnroll}
-                  disabled={enrolling}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                >
-                  {enrolling ? "Đang đăng ký..." : "Đăng ký ngay"}
-                </button>
-              ) : (
-                <div className="text-center">
-                  <p className="text-gray-600 mb-2">
-                    {classData.status === "completed"
-                      ? "Lớp học đã kết thúc"
-                      : classData.status === "ongoing"
-                      ? "Lớp học đang diễn ra"
-                      : classData.status === "cancelled"
-                      ? "Lớp học đã bị hủy"
-                      : classData.currentMembers >= classData.maxMembers
-                      ? "Lớp học đã đầy"
-                      : "Không thể đăng ký"}
-                  </p>
-                  <button
-                    disabled
-                    className="w-full bg-gray-300 text-gray-500 py-3 px-4 rounded-lg cursor-not-allowed font-medium"
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <VintageCard className="p-6 shadow-elegant">
+                {canEnroll ? (
+                  <VintageButton
+                    variant="gold"
+                    size="lg"
+                    onClick={handleEnroll}
+                    disabled={enrolling}
+                    className="w-full group relative overflow-hidden"
                   >
-                    Không thể đăng ký
-                  </button>
+                    <div className="relative z-10 flex items-center justify-center">
+                      {enrolling ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Đang đăng ký...
+                        </>
+                      ) : (
+                        <>
+                          <Crown className="h-5 w-5 mr-2" />
+                          Đăng ký ngay
+                          <Sparkles className="h-5 w-5 ml-2 group-hover:rotate-12 transition-transform" />
+                        </>
+                      )}
+                    </div>
+                    {!enrolling && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    )}
+                  </VintageButton>
+                ) : (
+                  <div className="text-center">
+                    <div className="mb-4 p-4 bg-gray-50 rounded-xl">
+                      <VintageText
+                        variant="body"
+                        className="text-gray-600 mb-2"
+                      >
+                        {classData.status === "completed"
+                          ? "Lớp học đã kết thúc"
+                          : classData.status === "ongoing"
+                          ? "Lớp học đang diễn ra"
+                          : classData.status === "cancelled"
+                          ? "Lớp học đã bị hủy"
+                          : classData.currentMembers >= classData.maxMembers
+                          ? "Lớp học đã đầy"
+                          : "Không thể đăng ký"}
+                      </VintageText>
+                    </div>
+                    <VintageButton
+                      variant="secondary"
+                      size="lg"
+                      disabled
+                      className="w-full"
+                    >
+                      Không thể đăng ký
+                    </VintageButton>
+                  </div>
+                )}
+
+                {/* Additional CTA */}
+                <div className="mt-4 pt-4 border-t border-vintage-gold/20">
+                  <VintageText
+                    variant="caption"
+                    className="text-center text-vintage-neutral mb-3"
+                  >
+                    Cần hỗ trợ?
+                  </VintageText>
+                  <VintageButton
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => navigate("/club")}
+                  >
+                    Liên hệ tư vấn
+                  </VintageButton>
                 </div>
-              )}
-            </div>
+              </VintageCard>
+            </motion.div>
+
+            {/* Trust Signals */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <VintageCard className="p-6 shadow-elegant">
+                <VintageHeading
+                  level={5}
+                  className="mb-4 text-vintage-dark text-center"
+                >
+                  Cam kết chất lượng
+                </VintageHeading>
+                <div className="space-y-3 text-center">
+                  {[
+                    { icon: Shield, text: "Đảm bảo an toàn" },
+                    { icon: Award, text: "Chứng chỉ quốc tế" },
+                    { icon: Heart, text: "500+ học viên hài lòng" },
+                  ].map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-center space-x-2 text-vintage-neutral"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span className="text-sm">{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </VintageCard>
+            </motion.div>
           </div>
-        </div>
-      </div>
+        </VintageGrid>
+      </VintageContainer>
     </motion.div>
   );
 }

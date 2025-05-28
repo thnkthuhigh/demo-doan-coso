@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Users,
   CreditCard,
@@ -17,6 +18,8 @@ import AdminServiceManager from "../qldv";
 import AdminClubManager from "../qlclb";
 import ClassManagement from "../ClassManagement";
 import AttendanceManagement from "../AttendanceManagement";
+import Statistics from "../Statistics";
+import UserManagement from "../UserManagement"; // Thêm import
 
 const AdminDashboard = () => {
   const [activeModule, setActiveModule] = useState("dashboard");
@@ -24,6 +27,8 @@ const AdminDashboard = () => {
   // Render content based on active module
   const renderContent = () => {
     switch (activeModule) {
+      case "users":
+        return <UserManagement />; // Thêm case này
       case "images":
         return <ImageManager />;
       case "payments":
@@ -39,7 +44,7 @@ const AdminDashboard = () => {
       case "attendance":
         return <AttendanceManagement />;
       case "stats":
-        return <StatsPlaceholder />;
+        return <Statistics />;
       case "dashboard":
       default:
         return <DashboardHome setActiveModule={setActiveModule} />;
@@ -56,8 +61,47 @@ const AdminDashboard = () => {
   );
 };
 
-// Dashboard home with stats and quick links
+// Dashboard home with real stats
 const DashboardHome = ({ setActiveModule }) => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        "http://localhost:5000/api/stats/dashboard",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setStats(response.data);
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="mb-8">
@@ -65,39 +109,116 @@ const DashboardHome = ({ setActiveModule }) => {
         <p className="mt-1 text-gray-600">Xem tổng quan và quản lý hệ thống</p>
       </div>
 
-      {/* Stat cards */}
+      {/* Stat cards với dữ liệu thật */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="Tổng người dùng"
-          value="256"
-          change="+12%"
+          value={stats?.stats?.totalUsers || 0}
+          change={`+${stats?.stats?.newUsersThisMonth || 0} tháng này`}
           icon={<Users className="h-7 w-7" />}
           color="blue"
         />
         <StatCard
           title="Doanh thu tháng"
-          value="12.5M VND"
-          change="+8.2%"
+          value={formatCurrency(stats?.stats?.monthlyRevenue || 0)}
+          change={`${stats?.stats?.attendanceRate || 0}% tỷ lệ tham gia`}
           icon={<CreditCard className="h-7 w-7" />}
           color="green"
         />
         <StatCard
           title="Lớp học hoạt động"
-          value="32"
-          change="+4"
+          value={stats?.stats?.activeClasses || 0}
+          change={`${stats?.stats?.newMembersThisMonth || 0} đăng ký mới`}
           icon={<Calendar className="h-7 w-7" />}
           color="purple"
         />
         <StatCard
           title="Thành viên mới"
-          value="18"
-          change="+6"
+          value={stats?.stats?.newMembersThisMonth || 0}
+          change="Tháng này"
           icon={<Users className="h-7 w-7" />}
           color="amber"
         />
       </div>
 
-      {/* Quick actions */}
+      {/* Charts Section */}
+      {stats?.charts && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Enrollment Chart */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Đăng ký 7 ngày qua
+            </h3>
+            <div className="space-y-3">
+              {stats.charts.last7Days.map((day, index) => (
+                <div key={index} className="flex items-center">
+                  <div className="w-20 text-sm text-gray-500">
+                    {new Date(day.date).toLocaleDateString("vi-VN")}
+                  </div>
+                  <div className="flex-1 mx-3">
+                    <div className="bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{
+                          width: `${Math.max(
+                            (day.enrollments /
+                              Math.max(
+                                ...stats.charts.last7Days.map(
+                                  (d) => d.enrollments
+                                )
+                              )) *
+                              100,
+                            5
+                          )}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="w-12 text-sm font-medium text-gray-900">
+                    {day.enrollments}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Popular Services */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Dịch vụ phổ biến
+            </h3>
+            <div className="space-y-3">
+              {stats.charts.popularServices.map((service, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div
+                      className={`w-3 h-3 rounded-full mr-3 ${
+                        index === 0
+                          ? "bg-blue-500"
+                          : index === 1
+                          ? "bg-green-500"
+                          : index === 2
+                          ? "bg-yellow-500"
+                          : index === 3
+                          ? "bg-purple-500"
+                          : "bg-gray-500"
+                      }`}
+                    ></div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {service._id}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {service.count} lượt đăng ký
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick actions - giữ nguyên */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Truy cập nhanh
@@ -124,7 +245,7 @@ const DashboardHome = ({ setActiveModule }) => {
           <QuickAction
             title="Thành viên"
             icon={<Users className="h-6 w-6" />}
-            onClick={() => setActiveModule("memberships")}
+            onClick={() => setActiveModule("users")} // Thay đổi từ "memberships" thành "users"
             color="indigo"
           />
           <QuickAction
@@ -154,43 +275,39 @@ const DashboardHome = ({ setActiveModule }) => {
         </div>
       </div>
 
-      {/* Recent activity */}
+      {/* Recent activity với dữ liệu thật */}
       <div>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Hoạt động gần đây
         </h2>
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-100">
-            <ActivityItem
-              title="Lớp Yoga buổi sáng vừa được tạo"
-              time="15 phút trước"
-              icon={<Calendar className="h-5 w-5" />}
-              color="purple"
-            />
-            <ActivityItem
-              title="Thanh toán mới: 1.500.000 VND"
-              time="1 giờ trước"
-              icon={<CreditCard className="h-5 w-5" />}
-              color="green"
-            />
-            <ActivityItem
-              title="5 học viên mới đăng ký lớp Boxing"
-              time="2 giờ trước"
-              icon={<Users className="h-5 w-5" />}
-              color="blue"
-            />
-            <ActivityItem
-              title="Buổi tập Zumba đã điểm danh đầy đủ"
-              time="Hôm qua"
-              icon={<ClipboardList className="h-5 w-5" />}
-              color="amber"
-            />
-            <ActivityItem
-              title="CLB Quận 3 báo cáo doanh số"
-              time="2 ngày trước"
-              icon={<Building className="h-5 w-5" />}
-              color="pink"
-            />
+            {stats?.recentActivities?.enrollments
+              ?.slice(0, 5)
+              .map((enrollment, index) => (
+                <ActivityItem
+                  key={index}
+                  title={`${enrollment.user?.username} đăng ký lớp ${enrollment.class?.className}`}
+                  time={new Date(enrollment.enrollmentDate).toLocaleDateString(
+                    "vi-VN"
+                  )}
+                  icon={<Users className="h-5 w-5" />}
+                  color="blue"
+                />
+              ))}
+            {stats?.recentActivities?.classes
+              ?.slice(0, 3)
+              .map((classItem, index) => (
+                <ActivityItem
+                  key={`class-${index}`}
+                  title={`Lớp ${classItem.className} (${classItem.serviceName}) đã được tạo`}
+                  time={new Date(classItem.createdAt).toLocaleDateString(
+                    "vi-VN"
+                  )}
+                  icon={<Calendar className="h-5 w-5" />}
+                  color="purple"
+                />
+              ))}
           </div>
         </div>
       </div>

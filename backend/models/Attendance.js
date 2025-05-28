@@ -26,14 +26,11 @@ const attendanceSchema = new mongoose.Schema(
     },
     checkinTime: {
       type: Date,
+      default: null,
     },
     notes: {
       type: String,
       default: "",
-    },
-    markedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
     },
   },
   {
@@ -41,7 +38,7 @@ const attendanceSchema = new mongoose.Schema(
   }
 );
 
-// Compound index để tránh duplicate
+// Tạo index mới với field đúng
 attendanceSchema.index(
   { classId: 1, userId: 1, sessionNumber: 1 },
   { unique: true }

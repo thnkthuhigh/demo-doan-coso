@@ -71,3 +71,4 @@ export const verifyAdmin = (req, res, next) => {
 // Thêm alias exports để backward compatibility
 export const isAuthenticated = verifyToken;
 export const isAdmin = verifyAdmin;
+export const authenticateToken = verifyToken; // Thêm dòng này

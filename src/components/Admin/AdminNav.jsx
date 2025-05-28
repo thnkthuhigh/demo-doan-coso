@@ -19,6 +19,7 @@ const AdminNav = ({ activeModule, setActiveModule }) => {
       label: "Dashboard",
       icon: <LayoutDashboard size={20} />,
     },
+    { id: "users", label: "Quản lý người dùng", icon: <Users size={20} /> },
     { id: "classes", label: "Quản lý lớp học", icon: <Calendar size={20} /> },
     { id: "attendance", label: "Điểm danh", icon: <ClipboardList size={20} /> },
     {

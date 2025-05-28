@@ -6,6 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import PricingPlans from "../PricingPlans";
 import ConfirmationDialog from "../PricingPlans/index";
 import Toast from "../common/Toast";
+import { Crown, BookOpen, CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function MembershipPage() {
   const navigate = useNavigate();
@@ -201,7 +202,7 @@ export default function MembershipPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-warm to-vintage-cream pt-24 pb-12">
       {/* Toast notification */}
       <Toast
         message={toast.message}
@@ -210,77 +211,130 @@ export default function MembershipPage() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
-            {isUpgrade ? "Nâng Cấp Thẻ Thành Viên" : "Đăng Ký Thẻ Thành Viên"}
-          </h1>
-          <p className="text-xl text-gray-600">
-            Trở thành thành viên của chúng tôi để tận hưởng trải nghiệm tập
-            luyện tốt nhất cùng nhiều ưu đãi hấp dẫn.
-          </p>
-        </div>
-
-        {message.text && (
-          <div
-            className={`mb-8 p-4 rounded-lg ${
-              message.type === "success"
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {message.text}
+        {/* Enhanced Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center max-w-4xl mx-auto mb-12"
+        >
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-elegant border border-vintage-gold/20">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-luxury rounded-xl flex items-center justify-center mr-4">
+                <Crown className="h-8 w-8 text-white" />
+              </div>
+              <div className="text-left">
+                <h1 className="text-4xl font-extrabold vintage-heading text-vintage-dark mb-2">
+                  {isUpgrade
+                    ? "Nâng Cấp Thẻ Thành Viên"
+                    : "Đăng Ký Thẻ Thành Viên"}
+                </h1>
+                <div className="w-24 h-1 bg-gradient-luxury rounded-full"></div>
+              </div>
+            </div>
+            <p className="text-xl text-vintage-neutral vintage-serif leading-relaxed">
+              Trở thành thành viên của chúng tôi để tận hưởng trải nghiệm tập
+              luyện tốt nhất cùng nhiều ưu đãi hấp dẫn và dịch vụ cao cấp.
+            </p>
           </div>
+        </motion.div>
+
+        {/* Enhanced Message Display */}
+        {message.text && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`mb-8 p-6 rounded-2xl backdrop-blur-sm border-2 ${
+              message.type === "success"
+                ? "bg-green-50/80 text-green-700 border-green-200"
+                : "bg-red-50/80 text-red-700 border-red-200"
+            } shadow-soft`}
+          >
+            <div className="flex items-center">
+              <div
+                className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${
+                  message.type === "success" ? "bg-green-200" : "bg-red-200"
+                }`}
+              >
+                {message.type === "success" ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4" />
+                )}
+              </div>
+              <span className="vintage-sans font-medium">{message.text}</span>
+            </div>
+          </motion.div>
         )}
 
-        {/* PricingPlans Component */}
-        <PricingPlans
-          selectedPlan={selectedPlan}
-          onSelectPlan={handleSelectPlan}
-          filterCategory={filterCategory}
-          onFilterChange={setFilterCategory}
-          message={message}
-          isUpgrade={isUpgrade}
-        />
+        {/* Enhanced PricingPlans Container */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-elegant border border-vintage-gold/20 mb-16"
+        >
+          <PricingPlans
+            selectedPlan={selectedPlan}
+            onSelectPlan={handleSelectPlan}
+            filterCategory={filterCategory}
+            onFilterChange={setFilterCategory}
+            message={message}
+            isUpgrade={isUpgrade}
+          />
+        </motion.div>
 
-        <div className="mt-16 bg-white rounded-xl p-8 shadow-md">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Câu hỏi thường gặp
-          </h2>
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">
-                Làm thế nào để gia hạn thẻ thành viên?
-              </h3>
-              <p className="mt-2 text-gray-600">
-                Bạn có thể gia hạn thẻ thành viên bằng cách đăng nhập vào tài
-                khoản và chọn phần "Thẻ thành viên" trong hồ sơ cá nhân, sau đó
-                chọn "Gia hạn" và làm theo hướng dẫn.
-              </p>
+        {/* Enhanced FAQ Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-elegant border border-vintage-gold/20"
+        >
+          <div className="flex items-center mb-6">
+            <div className="w-12 h-12 bg-gradient-luxury rounded-xl flex items-center justify-center mr-4">
+              <BookOpen className="h-6 w-6 text-white" />
             </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">
-                Tôi có thể chuyển nhượng thẻ tập cho người khác không?
-              </h3>
-              <p className="mt-2 text-gray-600">
-                Các gói Cao Cấp và Đặc Quyền cho phép 1 lần chuyển nhượng miễn
-                phí cho người thân trong gia đình. Các gói khác sẽ tính phí
-                chuyển nhượng là 10% giá trị còn lại của gói tập.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">
-                Có hình thức trả góp cho các gói dài hạn không?
-              </h3>
-              <p className="mt-2 text-gray-600">
-                Có, chúng tôi liên kết với các ngân hàng đối tác để cung cấp
-                hình thức trả góp 0% lãi suất trong 3-6 tháng cho các gói tập từ
-                6 tháng trở lên.
-              </p>
-            </div>
+            <h2 className="text-2xl font-bold vintage-heading text-vintage-dark">
+              Câu hỏi thường gặp
+            </h2>
           </div>
-        </div>
 
-        {/* Confirmation Dialog */}
+          <div className="space-y-6">
+            {[
+              {
+                question: "Làm thế nào để gia hạn thẻ thành viên?",
+                answer:
+                  'Bạn có thể gia hạn thẻ thành viên bằng cách đăng nhập vào tài khoản và chọn phần "Thẻ thành viên" trong hồ sơ cá nhân, sau đó chọn "Gia hạn" và làm theo hướng dẫn.',
+              },
+              {
+                question:
+                  "Tôi có thể chuyển nhượng thẻ tập cho người khác không?",
+                answer:
+                  "Các gói Cao Cấp và Đặc Quyền cho phép 1 lần chuyển nhượng miễn phí cho người thân trong gia đình. Các gói khác sẽ tính phí chuyển nhượng là 10% giá trị còn lại của gói tập.",
+              },
+              {
+                question: "Có hình thức trả góp cho các gói dài hạn không?",
+                answer:
+                  "Có, chúng tôi liên kết với các ngân hàng đối tác để cung cấp hình thức trả góp 0% lãi suất trong 3-6 tháng cho các gói tập từ 6 tháng trở lên.",
+              },
+            ].map((faq, index) => (
+              <div
+                key={index}
+                className="bg-vintage-warm/50 rounded-xl p-6 border border-vintage-gold/10"
+              >
+                <h3 className="text-lg font-medium vintage-heading text-vintage-dark mb-3">
+                  {faq.question}
+                </h3>
+                <p className="text-vintage-neutral vintage-serif leading-relaxed">
+                  {faq.answer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Confirmation Dialog với styling cải thiện */}
         {showConfirmation && (
           <ConfirmationDialog
             selectedPlan={selectedPlan}
