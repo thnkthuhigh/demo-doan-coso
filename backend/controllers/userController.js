@@ -1,19 +1,40 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
 // Lấy thông tin user theo ID
 export const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select(
-      "username email gender dob phone fullName address avatar role"
-    );
-    if (!user) {
-      return res.status(404).json({ message: "Không tìm thấy user." });
+    const { id } = req.params;
+
+    // Add validation to check if id exists and is valid
+    if (!id || id === "undefined") {
+      return res.status(400).json({
+        message: "User ID is required",
+      });
     }
+
+    // Optional: Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid user ID format",
+      });
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
     res.json(user);
   } catch (error) {
     console.error("Lỗi khi lấy user:", error);
-    res.status(500).json({ message: "Lỗi server." });
+    res.status(500).json({
+      message: "Server error while fetching user",
+    });
   }
 };
 
