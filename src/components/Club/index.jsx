@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import GymImageGallery from "../Club/Banner";
+import VintageBanner from "./Banner";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
@@ -75,6 +75,13 @@ export default function Club() {
     setSelectedPlan(plan);
   };
 
+  const clubImages = [
+    "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920",
+    "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920",
+    "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1920",
+    "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1920",
+  ];
+
   return (
     <div className="bg-vintage-cream min-h-screen">
       {/* Toast notification */}
@@ -85,31 +92,36 @@ export default function Club() {
       />
 
       {/* Hero Section */}
-      <VintageHero
+      <VintageBanner
+        images={clubImages}
         title="Hệ Thống Câu Lạc Bộ"
         subtitle="Chinh phục sức khỏe, vươn tới đỉnh cao cùng chúng tôi! Khám phá các câu lạc bộ hiện đại với trang thiết bị đẳng cấp."
-        backgroundImage="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920"
+        height="h-screen"
+        autoPlay={true}
+        autoPlayInterval={4000}
       >
-        <div className="flex flex-col sm:flex-row gap-6 justify-center">
+        <VintageButton
+          variant="gold"
+          size="lg"
+          onClick={() =>
+            document.getElementById("clubs-section").scrollIntoView({
+              behavior: "smooth",
+            })
+          }
+        >
+          <Crown className="mr-2 h-5 w-5" />
+          Khám phá CLB
+        </VintageButton>
+        <Link to="/membership">
           <VintageButton
-            variant="gold"
+            variant="secondary"
             size="lg"
-            onClick={() =>
-              document.getElementById("clubs-section").scrollIntoView({
-                behavior: "smooth",
-              })
-            }
+            className="border-white text-white hover:bg-white hover:text-vintage-dark"
           >
-            <Crown className="mr-2 h-5 w-5" />
-            Khám phá CLB
+            Đăng ký thành viên
           </VintageButton>
-          <Link to="/membership">
-            <VintageButton variant="secondary" size="lg">
-              Đăng ký thành viên
-            </VintageButton>
-          </Link>
-        </div>
-      </VintageHero>
+        </Link>
+      </VintageBanner>
 
       {/* Club List Section */}
       <VintageSection background="warm" id="clubs-section">

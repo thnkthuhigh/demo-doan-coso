@@ -1,204 +1,217 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
-// Danh sách ảnh Gym chất lượng cao hơn
-const gymImages = [
-  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-  "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-  "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-];
-
-const GymImageGallery = () => {
+const VintageBanner = ({
+  images = [],
+  title = "Royal Fitness Club",
+  subtitle = "Nơi khởi nguồn cho hành trình hoàn thiện bản thân",
+  showButtons = true,
+  children,
+  height = "h-screen",
+  autoPlay = true,
+  autoPlayInterval = 5000,
+  className = "",
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Chuyển ảnh tự động sau 5 giây
+  // Default images nếu không truyền từ parent
+  const defaultImages = [
+    "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+  ];
+
+  const bannerImages = images.length > 0 ? images : defaultImages;
+
+  // Auto play functionality
   useEffect(() => {
+    if (!autoPlay || bannerImages.length <= 1) return;
+
     const interval = setInterval(() => {
       goToNext();
-    }, 5000);
+    }, autoPlayInterval);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [autoPlay, autoPlayInterval, bannerImages.length]);
 
   const goToPrevious = () => {
-    console.log("Previous button clicked");
     setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? gymImages.length - 1 : prevIndex - 1
+      prevIndex === 0 ? bannerImages.length - 1 : prevIndex - 1
     );
   };
 
   const goToNext = () => {
-    console.log("Next button clicked");
     setCurrentIndex((prevIndex) =>
-      prevIndex === gymImages.length - 1 ? 0 : prevIndex + 1
+      prevIndex === bannerImages.length - 1 ? 0 : prevIndex + 1
     );
   };
 
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+  };
+
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      {/* Lớp ảnh */}
-      <AnimatePresence mode="wait">
-        <motion.img
-          key={currentIndex}
-          src={gymImages[currentIndex]}
-          alt={`Gym ${currentIndex + 1}`}
-          className="w-full h-full object-cover"
-          initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 1.2, ease: "easeInOut" }}
-        />
-      </AnimatePresence>
+    <div className={`relative w-full ${height} overflow-hidden ${className}`}>
+      {/* Background Images */}
+      <div className="absolute inset-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
+            className="absolute inset-0"
+          >
+            <img
+              src={bannerImages[currentIndex]}
+              alt={`Banner ${currentIndex + 1}`}
+              className="w-full h-full object-cover"
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-      {/* Vintage Overlay cho text nổi bật */}
-      <div className="absolute inset-0 banner-overlay-vintage z-20"></div>
+      {/* Vintage Overlay Patterns */}
+      <div className="absolute inset-0 bg-gradient-to-b from-vintage-dark/70 via-vintage-dark/30 to-vintage-dark/80 z-10"></div>
 
-      {/* Alternative overlay cho contrast tốt hơn */}
-      <div className="absolute inset-0 bg-gradient-to-b from-vintage-dark/40 via-transparent to-vintage-dark/60 z-20"></div>
+      {/* Decorative Corner Ornaments */}
+      <div className="absolute top-0 left-0 w-24 h-24 z-20">
+        <div className="vintage-ornament-top-left"></div>
+      </div>
+      <div className="absolute top-0 right-0 w-24 h-24 z-20">
+        <div className="vintage-ornament-top-right"></div>
+      </div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 z-20">
+        <div className="vintage-ornament-bottom-left"></div>
+      </div>
+      <div className="absolute bottom-0 right-0 w-24 h-24 z-20">
+        <div className="vintage-ornament-bottom-right"></div>
+      </div>
 
-      {/* Content overlay để text nổi bật */}
-      <div className="absolute inset-0 z-25">
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center text-white px-8 max-w-4xl mx-auto">
+      {/* Main Content */}
+      <div className="absolute inset-0 z-30 flex items-center justify-center">
+        <div className="text-center text-white px-8 max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="vintage-content-frame p-12 bg-vintage-dark/20 backdrop-blur-sm border border-vintage-gold/30 rounded-3xl"
+          >
+            {/* Decorative Top Border */}
+            <div className="w-32 h-1 bg-gradient-to-r from-transparent via-vintage-gold to-transparent mx-auto mb-8"></div>
+
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="text-5xl md:text-7xl font-bold vintage-heading text-shadow-strong mb-6"
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="text-5xl md:text-7xl lg:text-8xl font-bold vintage-heading text-shadow-strong mb-6 text-vintage-cream"
             >
-              Royal Fitness Club
+              {title}
             </motion.h1>
+
             <motion.p
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="text-xl md:text-2xl text-vintage-cream vintage-sans text-shadow-soft mb-8 leading-relaxed"
-            >
-              Nơi khởi nguồn cho hành trình hoàn thiện bản thân
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.7 }}
-              className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+              className="text-xl md:text-2xl lg:text-3xl text-vintage-cream vintage-serif text-shadow-soft mb-10 leading-relaxed max-w-4xl mx-auto opacity-90"
             >
-              <button className="btn-vintage-gold btn-lg px-8 py-4 text-lg font-semibold transform hover:scale-105 transition-all duration-300">
-                <span>Khám phá ngay</span>
-                <svg
-                  className="w-6 h-6 ml-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  />
-                </svg>
-              </button>
-              <button className="btn-vintage-secondary btn-lg px-8 py-4 text-lg font-semibold border-white text-white hover:bg-white hover:text-vintage-dark transform hover:scale-105 transition-all duration-300">
-                <svg
-                  className="w-6 h-6 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 3l14 9-14 9V3z"
-                  />
-                </svg>
-                <span>Xem video</span>
-              </button>
-            </motion.div>
-          </div>
+              {subtitle}
+            </motion.p>
+
+            {/* Decorative Middle Divider */}
+            <div className="flex items-center justify-center mb-10">
+              <div className="w-16 h-px bg-vintage-gold"></div>
+              <div className="w-3 h-3 bg-vintage-gold rotate-45 mx-4"></div>
+              <div className="w-16 h-px bg-vintage-gold"></div>
+            </div>
+
+            {showButtons && (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.9 }}
+                className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+              >
+                {children}
+              </motion.div>
+            )}
+
+            {/* Decorative Bottom Border */}
+            <div className="w-32 h-1 bg-gradient-to-r from-transparent via-vintage-gold to-transparent mx-auto mt-8"></div>
+          </motion.div>
         </div>
       </div>
 
-      {/* Navigation Controls với z-index cao hơn */}
-      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-40 flex space-x-4">
-        {gymImages.map((_, index) => (
+      {/* Navigation Controls */}
+      {bannerImages.length > 1 && (
+        <>
+          {/* Arrow Navigation */}
           <button
-            key={index}
-            onClick={() => {
-              console.log(`Changing to slide ${index + 1}`);
-              setCurrentIndex(index);
-            }}
-            className={`w-3 h-3 rounded-full transition-all duration-300 pointer-events-auto border border-white/30 ${
-              index === currentIndex
-                ? "bg-vintage-gold scale-125 shadow-golden"
-                : "bg-white/40 hover:bg-white/70 hover:scale-110"
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
+            type="button"
+            onClick={goToPrevious}
+            className="absolute top-1/2 left-6 md:left-8 -translate-y-1/2 w-14 h-14 bg-vintage-dark/40 hover:bg-vintage-dark/60 backdrop-blur-sm rounded-full border-2 border-vintage-gold/30 hover:border-vintage-gold/60 transition-all duration-300 z-40 group"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="w-6 h-6 text-vintage-cream group-hover:text-vintage-gold transition-colors mx-auto" />
+          </button>
 
-      {/* Nút chuyển trái */}
-      <button
-        type="button"
-        onClick={goToPrevious}
-        className="absolute top-1/2 left-6 -translate-y-1/2 bg-vintage-dark/30 hover:bg-vintage-dark/50 p-4 rounded-full backdrop-blur-sm transition-all duration-300 z-40 pointer-events-auto border border-white/20 hover:border-white/40 group"
-        aria-label="Previous"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          className="w-6 h-6 text-white group-hover:text-vintage-gold transition-colors"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </button>
+          <button
+            type="button"
+            onClick={goToNext}
+            className="absolute top-1/2 right-6 md:right-8 -translate-y-1/2 w-14 h-14 bg-vintage-dark/40 hover:bg-vintage-dark/60 backdrop-blur-sm rounded-full border-2 border-vintage-gold/30 hover:border-vintage-gold/60 transition-all duration-300 z-40 group"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="w-6 h-6 text-vintage-cream group-hover:text-vintage-gold transition-colors mx-auto" />
+          </button>
 
-      {/* Nút chuyển phải */}
-      <button
-        type="button"
-        onClick={goToNext}
-        className="absolute top-1/2 right-6 -translate-y-1/2 bg-vintage-dark/30 hover:bg-vintage-dark/50 p-4 rounded-full backdrop-blur-sm transition-all duration-300 z-40 pointer-events-auto border border-white/20 hover:border-white/40 group"
-        aria-label="Next"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          className="w-6 h-6 text-white group-hover:text-vintage-gold transition-colors"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
-      </button>
+          {/* Dot Indicators */}
+          <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-40 flex space-x-3">
+            {bannerImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`relative group transition-all duration-300 ${
+                  index === currentIndex ? "w-12 h-4" : "w-4 h-4 hover:w-6"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              >
+                <div
+                  className={`w-full h-full rounded-full border-2 transition-all duration-300 ${
+                    index === currentIndex
+                      ? "bg-vintage-gold border-vintage-gold shadow-golden"
+                      : "bg-vintage-cream/30 border-vintage-cream/50 hover:border-vintage-gold/70 hover:bg-vintage-gold/50"
+                  }`}
+                />
+                {index === currentIndex && (
+                  <div className="absolute inset-0 rounded-full bg-vintage-gold animate-pulse opacity-50"></div>
+                )}
+              </button>
+            ))}
+          </div>
 
-      {/* Hiển thị vị trí hiện tại */}
-      <div className="absolute bottom-4 right-6 z-40 bg-vintage-dark/40 px-4 py-2 rounded-full text-white text-sm backdrop-blur-sm border border-white/20 vintage-sans">
-        <span className="text-vintage-gold font-semibold">
-          {currentIndex + 1}
-        </span>
-        <span className="mx-1">/</span>
-        <span>{gymImages.length}</span>
-      </div>
+          {/* Slide Counter */}
+          <div className="absolute bottom-6 right-6 md:right-8 z-40 bg-vintage-dark/50 backdrop-blur-sm px-4 py-2 rounded-full border border-vintage-gold/30 text-vintage-cream vintage-sans">
+            <span className="text-vintage-gold font-semibold">
+              {String(currentIndex + 1).padStart(2, "0")}
+            </span>
+            <span className="mx-2 text-vintage-cream/60">/</span>
+            <span className="text-vintage-cream/80">
+              {String(bannerImages.length).padStart(2, "0")}
+            </span>
+          </div>
+        </>
+      )}
 
-      {/* Gradient borders cho style vintage */}
+      {/* Decorative Border Lines */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-vintage-gold to-transparent z-30"></div>
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-vintage-gold to-transparent z-30"></div>
+      <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-transparent via-vintage-gold to-transparent z-30"></div>
+      <div className="absolute top-0 bottom-0 right-0 w-1 bg-gradient-to-b from-transparent via-vintage-gold to-transparent z-30"></div>
     </div>
   );
 };
 
-export default GymImageGallery;
+export default VintageBanner;

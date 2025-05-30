@@ -27,6 +27,7 @@ import {
   Target,
   CheckCircle,
 } from "lucide-react";
+import VintageBanner from "../Club/Banner";
 
 export default function HomePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -177,37 +178,45 @@ export default function HomePage() {
     },
   ];
 
+  const homeImages = [
+    "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920",
+    "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1920",
+    "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920",
+    "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1920",
+  ];
+
   return (
-    <div className="bg-vintage-cream content-with-navbar">
+    <div className="bg-vintage-cream">
       {/* Hero Section */}
-      <VintageHero
+      <VintageBanner
+        images={homeImages}
         title="Royal Fitness Club"
         subtitle="Nơi khởi nguồn cho hành trình hoàn thiện bản thân. Trải nghiệm dịch vụ fitness đẳng cấp hoàng gia với không gian sang trọng và đội ngũ chuyên nghiệp."
-        backgroundImage="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920"
+        height="h-screen"
+        autoPlay={true}
+        autoPlayInterval={5000}
       >
-        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-          <Link to="/services">
-            <VintageButton
-              variant="gold"
-              size="lg"
-              className="group w-full sm:w-auto"
-            >
-              <span>Khám phá dịch vụ</span>
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </VintageButton>
-          </Link>
-          <Link to="/membership">
-            <VintageButton
-              variant="secondary"
-              size="lg"
-              className="group w-full sm:w-auto border-white text-white hover:bg-white hover:text-vintage-dark"
-            >
-              <Crown className="h-5 w-5 flex-shrink-0" />
-              <span>Đăng ký thành viên</span>
-            </VintageButton>
-          </Link>
-        </div>
-      </VintageHero>
+        <Link to="/services">
+          <VintageButton
+            variant="gold"
+            size="lg"
+            className="group w-full sm:w-auto"
+          >
+            <span>Khám phá dịch vụ</span>
+            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          </VintageButton>
+        </Link>
+        <Link to="/membership">
+          <VintageButton
+            variant="secondary"
+            size="lg"
+            className="group w-full sm:w-auto border-white text-white hover:bg-white hover:text-vintage-dark"
+          >
+            <Crown className="h-5 w-5 flex-shrink-0" />
+            <span>Đăng ký thành viên</span>
+          </VintageButton>
+        </Link>
+      </VintageBanner>
 
       {/* Features Section */}
       <VintageSection background="warm">

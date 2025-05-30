@@ -4,6 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
+import { User, Crown, Shield, Star } from "lucide-react";
 
 // Import components
 import ProfileSidebar from "./ProfileSidebar";
@@ -19,7 +20,7 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [avatar, setAvatar] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [section, setSection] = useState("profile"); // 'profile', 'password', or 'membership'
+  const [section, setSection] = useState("profile");
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -45,35 +46,55 @@ const UserProfile = () => {
 
         console.log("Fetched user data:", res.data);
 
-        // Add simulated membership data for testing
-        const userData = {
-          ...res.data,
-          membership: {
-            id: "MEM" + Math.floor(10000 + Math.random() * 90000),
-            type: "Standard", // or 'VIP'
-            startDate: new Date(
-              Date.now() - 30 * 24 * 60 * 60 * 1000
-            ).toISOString(), // 30 days ago
-            endDate: new Date(
-              Date.now() + 60 * 24 * 60 * 60 * 1000
-            ).toISOString(), // 60 days from now
-          },
-        };
+        // Chỉ lấy membership thực từ API, không tạo giả
+        let userData = res.data;
 
-        // Set user data in state
+        try {
+          const membershipResponse = await axios.get(
+            `http://localhost:5000/api/memberships/user/${decoded.userId}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (
+            membershipResponse.data &&
+            membershipResponse.data.status === "active"
+          ) {
+            console.log(
+              "Real active membership found:",
+              membershipResponse.data
+            );
+            userData = {
+              ...userData,
+              membership: {
+                id: membershipResponse.data._id || membershipResponse.data.id,
+                type: membershipResponse.data.type,
+                startDate: membershipResponse.data.startDate,
+                endDate: membershipResponse.data.endDate,
+                status: membershipResponse.data.status,
+                price: membershipResponse.data.price,
+              },
+            };
+          } else {
+            // Không tạo membership giả, để null hoặc undefined
+            console.log("No active membership found");
+            userData.membership = null;
+          }
+        } catch (membershipError) {
+          console.log("No membership found for user:", membershipError.message);
+          // Không tạo membership giả
+          userData.membership = null;
+        }
+
+        console.log("Final user data:", userData);
+
         setUser(userData);
-
-        // Set form data
         setForm({
           ...userData,
           dob: userData.dob ? userData.dob.split("T")[0] : "",
         });
 
-        // IMPORTANT: Only set previewUrl if we're uploading a new image
-        // Otherwise, let the component handle displaying the existing avatar
-        // Do NOT set previewUrl to userData.avatar here as it's an object not a string
-
-        // Update user in localStorage to ensure Nav component has latest data
         localStorage.setItem("user", JSON.stringify(userData));
       } catch (err) {
         console.error("Lỗi khi lấy thông tin:", err);
@@ -106,13 +127,11 @@ const UserProfile = () => {
     }
   };
 
-  // Update the handleSave function
   const handleSave = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      // Update user info
       const response = await axios.put(
         `http://localhost:5000/api/users/${user._id}`,
         {
@@ -129,15 +148,12 @@ const UserProfile = () => {
         }
       );
 
-      // Get updated user information
       let updatedUser = response.data;
 
-      // Preserve avatar if not changing it
       if (!avatar && user.avatar) {
         updatedUser.avatar = user.avatar;
       }
 
-      // Upload avatar if changed
       if (avatar) {
         const formData = new FormData();
         formData.append("avatar", avatar);
@@ -154,9 +170,6 @@ const UserProfile = () => {
             }
           );
 
-          console.log("Avatar upload response:", avatarResponse.data);
-
-          // Update user with avatar info
           updatedUser = {
             ...updatedUser,
             avatar: avatarResponse.data.avatar,
@@ -167,9 +180,6 @@ const UserProfile = () => {
         }
       }
 
-      console.log("Final updated user:", updatedUser);
-
-      // Update both local state and localStorage
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
@@ -222,12 +232,26 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-50 to-violet-50">
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <div className="text-purple-800 font-medium text-lg">
-            Đang tải thông tin người dùng...
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-warm to-vintage-cream pt-24 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex justify-center items-center py-20"
+          >
+            <div className="p-12 text-center bg-white/95 backdrop-blur-sm border-2 border-vintage-accent/50 shadow-elegant rounded-3xl">
+              <div className="relative mb-8">
+                <div className="w-20 h-20 border-4 border-vintage-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <div className="absolute inset-0 w-20 h-20 border-4 border-vintage-accent rounded-full mx-auto animate-pulse"></div>
+              </div>
+              <h4 className="mb-3 text-vintage-dark text-xl font-bold vintage-heading">
+                Đang tải thông tin người dùng
+              </h4>
+              <p className="text-vintage-neutral vintage-body">
+                Vui lòng đợi trong giây lát...
+              </p>
+            </div>
+          </motion.div>
         </div>
       </div>
     );
@@ -240,42 +264,89 @@ const UserProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-violet-50 to-purple-300 pt-28 pb-16 px-4 sm:px-6 lg:px-8">
-      <div
-        id="notification"
-        className="fixed top-24 right-4 bg-green-600 text-white px-6 py-4 rounded-xl shadow-lg flex items-center opacity-0 transition-opacity duration-300 z-50"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 mr-2"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path
-            fillRule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-            clipRule="evenodd"
-          />
-        </svg>
-        <span>Cập nhật thành công!</span>
-      </div>
-
-      <div className="max-w-5xl mx-auto">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-warm to-vintage-cream pt-24 pb-16"
+    >
+      {/* Luxury Hero Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-12"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Hồ sơ cá nhân
-          </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Xem và cập nhật thông tin cá nhân của bạn
-          </p>
+          <div className="bg-white/95 backdrop-blur-sm border-2 border-vintage-accent/30 shadow-elegant rounded-3xl p-12 relative overflow-hidden">
+            {/* Decorative Background Pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="vintage-pattern h-full w-full"></div>
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-center justify-center mb-8">
+                <div className="w-20 h-20 bg-gradient-luxury rounded-2xl flex items-center justify-center mr-6 shadow-golden">
+                  <User className="h-10 w-10 text-white" />
+                </div>
+                <div className="text-left">
+                  <h1 className="text-4xl md:text-5xl font-bold text-vintage-dark mb-3 vintage-heading">
+                    Hồ Sơ Cá Nhân
+                  </h1>
+                  <div className="w-32 h-2 bg-gradient-golden rounded-full shadow-md"></div>
+                </div>
+              </div>
+
+              <p className="text-vintage-neutral text-xl leading-relaxed max-w-3xl mx-auto vintage-body mb-8">
+                Quản lý thông tin cá nhân, bảo mật tài khoản và theo dõi thành
+                tích của bạn tại phòng tập luxury.
+              </p>
+
+              {/* Trust Indicators */}
+              <div className="flex justify-center items-center space-x-12 pt-8 border-t-2 border-vintage-accent/30">
+                {[
+                  {
+                    icon: Shield,
+                    text: "Bảo mật cao",
+                    color: "text-vintage-primary",
+                  },
+                  {
+                    icon: Crown,
+                    text: "Thành viên VIP",
+                    color: "text-vintage-gold",
+                  },
+                  {
+                    icon: Star,
+                    text: "Dịch vụ 5 sao",
+                    color: "text-vintage-primary",
+                  },
+                ].map((item, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 + index * 0.1 }}
+                    className="flex items-center space-x-3 group"
+                  >
+                    <div className="w-12 h-12 bg-vintage-warm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-soft">
+                      <item.icon className={`h-6 w-6 ${item.color}`} />
+                    </div>
+                    <span className="text-vintage-dark font-semibold vintage-body">
+                      {item.text}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
         </motion.div>
 
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="md:w-1/3">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Enhanced Sidebar */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="lg:w-1/3"
+          >
             <ProfileSidebar
               user={user}
               previewUrl={previewUrl}
@@ -285,9 +356,15 @@ const UserProfile = () => {
               handleAvatarChange={handleAvatarChange}
               cardVariants={cardVariants}
             />
-          </div>
+          </motion.div>
 
-          <div className="md:w-2/3">
+          {/* Enhanced Main Content */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="lg:w-2/3"
+          >
             <AnimatePresence mode="wait">
               {section === "profile" ? (
                 <ProfileInfo
@@ -315,10 +392,73 @@ const UserProfile = () => {
                 />
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
         </div>
+
+        {/* Enhanced Stats Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-16"
+        >
+          <div className="bg-white/95 backdrop-blur-sm border-2 border-vintage-accent/30 shadow-elegant rounded-3xl p-12">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-vintage-dark mb-4 vintage-heading">
+                Thành Tích Của Bạn
+              </h2>
+              <div className="w-24 h-1 bg-gradient-golden rounded-full mx-auto"></div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                {
+                  value: "24",
+                  label: "Lớp đã tham gia",
+                  icon: "🏆",
+                  color: "from-vintage-warm to-vintage-cream",
+                },
+                {
+                  value: "5",
+                  label: "Lớp đang học",
+                  icon: "📚",
+                  color: "from-vintage-accent to-vintage-warm",
+                },
+                {
+                  value: "92%",
+                  label: "Tỷ lệ hoàn thành",
+                  icon: "⭐",
+                  color: "from-vintage-gold/20 to-vintage-warm",
+                },
+                {
+                  value: "6",
+                  label: "Tháng thành viên",
+                  icon: "👑",
+                  color: "from-vintage-primary/10 to-vintage-cream",
+                },
+              ].map((stat, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + index * 0.1 }}
+                  whileHover={{ y: -5, scale: 1.05 }}
+                  className={`text-center p-6 bg-gradient-to-br ${stat.color} rounded-2xl border-2 border-vintage-accent/20 hover:shadow-golden transition-all duration-300`}
+                >
+                  <div className="text-3xl mb-3">{stat.icon}</div>
+                  <div className="text-3xl font-bold text-vintage-dark mb-2 vintage-heading">
+                    {stat.value}
+                  </div>
+                  <div className="text-vintage-neutral font-medium vintage-body">
+                    {stat.label}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

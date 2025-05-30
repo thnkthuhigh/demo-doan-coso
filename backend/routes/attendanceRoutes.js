@@ -57,4 +57,34 @@ router.delete("/force-reset", verifyToken, async (req, res) => {
   }
 });
 
+// Get user attendance report
+router.get("/user/:userId/report", verifyToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Kiểm tra quyền truy cập
+    if (req.user.id !== userId && req.user.role !== "admin") {
+      return res.status(403).json({
+        message: "Bạn không có quyền xem thông tin này",
+      });
+    }
+
+    // Tạm thời trả về dữ liệu rỗng
+    res.json({
+      attendanceRecords: [],
+      stats: {
+        totalSessions: 0,
+        attendedSessions: 0,
+        missedSessions: 0,
+        attendanceRate: 0,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching attendance report:", error);
+    res.status(500).json({
+      message: "Lỗi server khi lấy báo cáo điểm danh",
+    });
+  }
+});
+
 export default router;

@@ -93,7 +93,22 @@ function App() {
                 path="/admin/*"
                 element={
                   <AdminLayout>
-                    <AdminDashboard />
+                    <Routes>
+                      <Route path="dashboard" element={<AdminDashboard />} />
+                      <Route path="users" element={<AdminDashboard />} />
+                      <Route path="classes" element={<AdminDashboard />} />
+                      <Route path="attendance" element={<AdminDashboard />} />
+                      <Route path="payments" element={<AdminDashboard />} />
+                      <Route path="memberships" element={<AdminDashboard />} />
+                      <Route path="services" element={<AdminDashboard />} />
+                      <Route path="clubs" element={<AdminDashboard />} />
+                      <Route path="images" element={<AdminDashboard />} />
+                      <Route path="stats" element={<AdminDashboard />} />
+                      <Route
+                        path=""
+                        element={<Navigate to="dashboard" replace />}
+                      />
+                    </Routes>
                   </AdminLayout>
                 }
               />
@@ -103,7 +118,10 @@ function App() {
               <Route path="/qldv" element={<AdminServiceManager />} />
 
               {/* Default admin route */}
-              <Route path="/admin" element={<Navigate to="/admin" replace />} />
+              <Route
+                path="/admin"
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
 
               {/* 404 Route */}
               <Route path="*" element={<Navigate to="/" replace />} />

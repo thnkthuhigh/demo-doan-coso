@@ -1537,3 +1537,682 @@ img {
   transform: scale(1.05);
   color: #d4af37;
 }
+
+/* Thêm vào cuối file */
+
+/* Enhanced vintage input styles */
+.vintage-input {
+  background: rgba(248, 245, 242, 0.7);
+  border: 2px solid rgba(168, 146, 126, 0.3);
+  border-radius: 1rem;
+  padding: 1rem;
+  font-family: var(--font-body);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.vintage-input:focus {
+  outline: none;
+  border-color: var(--vintage-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  background: rgba(248, 245, 242, 0.9);
+}
+
+.vintage-input::placeholder {
+  color: rgba(92, 88, 85, 0.6);
+}
+
+/* Enhanced form styling */
+.form-vintage {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  border-radius: 2rem;
+  box-shadow: 0 20px 40px rgba(45, 42, 38, 0.1),
+    0 8px 16px rgba(212, 175, 55, 0.1);
+}
+
+/* Enhanced button hover effects */
+.btn-vintage-auth {
+  background: linear-gradient(
+    135deg,
+    var(--vintage-gold),
+    var(--vintage-accent)
+  );
+  color: var(--vintage-dark);
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+}
+
+.btn-vintage-auth:hover {
+  background: linear-gradient(
+    135deg,
+    var(--vintage-accent),
+    var(--vintage-gold)
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(212, 175, 55, 0.4);
+}
+
+/* Enhanced checkbox styling */
+input[type="checkbox"]:checked {
+  background-color: var(--vintage-gold);
+  border-color: var(--vintage-gold);
+}
+
+/* Enhanced select styling */
+select.vintage-select {
+  background: rgba(248, 245, 242, 0.7);
+  border: 2px solid rgba(168, 146, 126, 0.3);
+  border-radius: 1rem;
+  padding: 1rem;
+  font-family: var(--font-body);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* Social login buttons */
+.social-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(168, 146, 126, 0.3);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.social-btn:hover {
+  background: rgba(248, 245, 242, 0.8);
+  border-color: var(--vintage-gold);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+/* Progress bar for success step */
+.progress-vintage {
+  background: rgba(168, 146, 126, 0.2);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.progress-vintage .progress-fill {
+  background: linear-gradient(
+    90deg,
+    var(--vintage-gold),
+    var(--vintage-accent)
+  );
+  height: 100%;
+  border-radius: 1rem;
+  transition: width 2s ease;
+}
+
+/* Enhanced error styling */
+.error-vintage {
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  color: rgb(127, 29, 29);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+}
+
+/* Decorative elements */
+.decorative-blur {
+  filter: blur(3rem);
+  opacity: 0.2;
+  border-radius: 50%;
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Auth page specific backgrounds */
+.auth-bg-pattern {
+  background-image: radial-gradient(
+      circle at 25% 25%,
+      rgba(212, 175, 55, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 75% 75%,
+      rgba(168, 146, 126, 0.08) 0%,
+      transparent 50%
+    );
+}
+
+/* Enhanced typography for auth pages */
+.auth-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: linear-gradient(
+    135deg,
+    var(--vintage-primary),
+    var(--vintage-brown)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.auth-subtitle {
+  font-family: var(--font-body);
+  color: var(--vintage-neutral);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* Step indicator for multi-step forms */
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.step-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: rgba(168, 146, 126, 0.3);
+  transition: all 0.3s ease;
+}
+
+.step-dot.active {
+  background: var(--vintage-gold);
+  transform: scale(1.2);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+}
+
+.step-dot.completed {
+  background: var(--vintage-accent);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .auth-title {
+    font-size: 2.5rem;
+  }
+
+  .form-vintage {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .btn-vintage-auth {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .vintage-input {
+    padding: 0.875rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-title {
+    font-size: 2rem;
+  }
+
+  .decorative-blur {
+    width: 120px !important;
+    height: 120px !important;
+  }
+}
+
+/* Thêm vào cuối file */
+
+/* Enhanced vintage input styles */
+.vintage-input {
+  background: rgba(248, 245, 242, 0.7);
+  border: 2px solid rgba(168, 146, 126, 0.3);
+  border-radius: 1rem;
+  padding: 1rem;
+  font-family: var(--font-body);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.vintage-input:focus {
+  outline: none;
+  border-color: var(--vintage-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  background: rgba(248, 245, 242, 0.9);
+}
+
+.vintage-input::placeholder {
+  color: rgba(92, 88, 85, 0.6);
+}
+
+/* Enhanced form styling */
+.form-vintage {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  border-radius: 2rem;
+  box-shadow: 0 20px 40px rgba(45, 42, 38, 0.1),
+    0 8px 16px rgba(212, 175, 55, 0.1);
+}
+
+/* Enhanced button hover effects */
+.btn-vintage-auth {
+  background: linear-gradient(
+    135deg,
+    var(--vintage-gold),
+    var(--vintage-accent)
+  );
+  color: var(--vintage-dark);
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+}
+
+.btn-vintage-auth:hover {
+  background: linear-gradient(
+    135deg,
+    var(--vintage-accent),
+    var(--vintage-gold)
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(212, 175, 55, 0.4);
+}
+
+/* Enhanced checkbox styling */
+input[type="checkbox"]:checked {
+  background-color: var(--vintage-gold);
+  border-color: var(--vintage-gold);
+}
+
+/* Enhanced select styling */
+select.vintage-select {
+  background: rgba(248, 245, 242, 0.7);
+  border: 2px solid rgba(168, 146, 126, 0.3);
+  border-radius: 1rem;
+  padding: 1rem;
+  font-family: var(--font-body);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* Social login buttons */
+.social-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(168, 146, 126, 0.3);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.social-btn:hover {
+  background: rgba(248, 245, 242, 0.8);
+  border-color: var(--vintage-gold);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+/* Progress bar for success step */
+.progress-vintage {
+  background: rgba(168, 146, 126, 0.2);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.progress-vintage .progress-fill {
+  background: linear-gradient(
+    90deg,
+    var(--vintage-gold),
+    var(--vintage-accent)
+  );
+  height: 100%;
+  border-radius: 1rem;
+  transition: width 2s ease;
+}
+
+/* Enhanced error styling */
+.error-vintage {
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  color: rgb(127, 29, 29);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+}
+
+/* Decorative elements */
+.decorative-blur {
+  filter: blur(3rem);
+  opacity: 0.2;
+  border-radius: 50%;
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Auth page specific backgrounds */
+.auth-bg-pattern {
+  background-image: radial-gradient(
+      circle at 25% 25%,
+      rgba(212, 175, 55, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 75% 75%,
+      rgba(168, 146, 126, 0.08) 0%,
+      transparent 50%
+    );
+}
+
+/* Enhanced typography for auth pages */
+.auth-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: linear-gradient(
+    135deg,
+    var(--vintage-primary),
+    var(--vintage-brown)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.auth-subtitle {
+  font-family: var(--font-body);
+  color: var(--vintage-neutral);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* Step indicator for multi-step forms */
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.step-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: rgba(168, 146, 126, 0.3);
+  transition: all 0.3s ease;
+}
+
+.step-dot.active {
+  background: var(--vintage-gold);
+  transform: scale(1.2);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+}
+
+.step-dot.completed {
+  background: var(--vintage-accent);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .auth-title {
+    font-size: 2.5rem;
+  }
+
+  .form-vintage {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .btn-vintage-auth {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .vintage-input {
+    padding: 0.875rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-title {
+    font-size: 2rem;
+  }
+
+  .decorative-blur {
+    width: 120px !important;
+    height: 120px !important;
+  }
+}
+/* Thêm vào cuối file */
+
+/* Enhanced logo styling */
+.shadow-golden {
+  box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4),
+    0 6px 15px rgba(212, 175, 55, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.shadow-elegant {
+  box-shadow: 0 20px 40px rgba(45, 42, 38, 0.1),
+    0 8px 16px rgba(212, 175, 55, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Logo animation effects */
+@keyframes floating {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(2deg);
+  }
+}
+
+.logo-float {
+  animation: floating 3s ease-in-out infinite;
+}
+
+/* Enhanced gradient text */
+.text-gradient-royal {
+  background: linear-gradient(
+    135deg,
+    var(--vintage-primary) 0%,
+    var(--vintage-gold) 30%,
+    var(--vintage-accent) 60%,
+    var(--vintage-primary) 100%
+  );
+  background-size: 200% 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 4s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Royal crown styling enhancements */
+.crown-royal {
+  filter: drop-shadow(0 4px 8px rgba(212, 175, 55, 0.3));
+  animation: crown-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes crown-glow {
+  0% {
+    filter: drop-shadow(0 4px 8px rgba(212, 175, 55, 0.3));
+  }
+  100% {
+    filter: drop-shadow(0 6px 12px rgba(212, 175, 55, 0.5));
+  }
+}
+
+/* Decorative elements */
+.decorative-dots {
+  position: relative;
+}
+
+.decorative-dots::before,
+.decorative-dots::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--vintage-gold);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+.decorative-dots::before {
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: pulse-left 2s ease-in-out infinite;
+}
+
+.decorative-dots::after {
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: pulse-right 2s ease-in-out infinite 1s;
+}
+
+@keyframes pulse-left {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-50%) scale(1.5);
+  }
+}
+
+@keyframes pulse-right {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-50%) scale(1.5);
+  }
+}
+
+/* Enhanced border effects */
+.border-royal {
+  border: 2px solid;
+  border-image: linear-gradient(
+      45deg,
+      var(--vintage-gold),
+      var(--vintage-accent),
+      var(--vintage-primary),
+      var(--vintage-gold)
+    )
+    1;
+  border-radius: 1.5rem;
+}
+
+/* Sparkle animation */
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+.sparkle-1 {
+  animation: sparkle 1.5s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+.sparkle-2 {
+  animation: sparkle 1.5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.sparkle-3 {
+  animation: sparkle 1.5s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+/* Mobile responsive logo */
+@media (max-width: 768px) {
+  .logo-royal {
+    width: 80px;
+    height: 80px;
+  }
+
+  .logo-royal .crown-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .text-gradient-royal {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .logo-royal {
+    width: 70px;
+    height: 70px;
+  }
+
+  .logo-royal .crown-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .text-gradient-royal {
+    font-size: 2rem;
+  }
+}

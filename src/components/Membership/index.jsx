@@ -6,7 +6,15 @@ import { jwtDecode } from "jwt-decode";
 import PricingPlans from "../PricingPlans";
 import ConfirmationDialog from "../PricingPlans/index";
 import Toast from "../common/Toast";
-import { Crown, BookOpen, CheckCircle, AlertTriangle } from "lucide-react";
+import {
+  Crown,
+  BookOpen,
+  CheckCircle,
+  AlertTriangle,
+  Star,
+  Sparkles,
+  Award,
+} from "lucide-react";
 
 export default function MembershipPage() {
   const navigate = useNavigate();
@@ -218,7 +226,7 @@ export default function MembershipPage() {
           transition={{ duration: 0.8 }}
           className="text-center max-w-4xl mx-auto mb-12"
         >
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-elegant border border-vintage-gold/20">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-elegant border border-vintage-gold/20">
             <div className="flex items-center justify-center mb-6">
               <div className="w-16 h-16 bg-gradient-luxury rounded-xl flex items-center justify-center mr-4">
                 <Crown className="h-8 w-8 text-white" />
@@ -236,6 +244,31 @@ export default function MembershipPage() {
               Trở thành thành viên của chúng tôi để tận hưởng trải nghiệm tập
               luyện tốt nhất cùng nhiều ưu đãi hấp dẫn và dịch vụ cao cấp.
             </p>
+
+            {/* Trust Indicators */}
+            <div className="flex justify-center items-center space-x-8 mt-6 pt-6 border-t border-vintage-gold/20">
+              {[
+                {
+                  icon: Star,
+                  text: "5 sao đánh giá",
+                  color: "text-yellow-500",
+                },
+                { icon: Award, text: "Chứng nhận ISO", color: "text-blue-500" },
+                {
+                  icon: Sparkles,
+                  text: "500+ thành viên",
+                  color: "text-purple-500",
+                },
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center space-x-2 text-vintage-neutral"
+                >
+                  <item.icon className={`h-5 w-5 ${item.color}`} />
+                  <span className="text-sm font-medium">{item.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </motion.div>
 
@@ -267,13 +300,23 @@ export default function MembershipPage() {
           </motion.div>
         )}
 
-        {/* Enhanced PricingPlans Container */}
+        {/* Enhanced PricingPlans Container with Equal Height Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-elegant border border-vintage-gold/20 mb-16"
         >
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-bold text-vintage-dark mb-4">
+              Chọn gói thành viên phù hợp
+            </h2>
+            <p className="text-vintage-neutral max-w-2xl mx-auto">
+              Mỗi gói đều được thiết kế để mang đến trải nghiệm tốt nhất cho
+              từng nhu cầu tập luyện
+            </p>
+          </div>
+
           <PricingPlans
             selectedPlan={selectedPlan}
             onSelectPlan={handleSelectPlan}
@@ -281,7 +324,56 @@ export default function MembershipPage() {
             onFilterChange={setFilterCategory}
             message={message}
             isUpgrade={isUpgrade}
+            containerClassName="pricing-plans-equal-height"
           />
+        </motion.div>
+
+        {/* Enhanced Features Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="grid md:grid-cols-2 gap-8 mb-16"
+        >
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-elegant border border-vintage-gold/20">
+            <h3 className="text-2xl font-bold text-vintage-dark mb-6">
+              Tại sao chọn chúng tôi?
+            </h3>
+            <div className="space-y-4">
+              {[
+                "Trang thiết bị hiện đại nhất",
+                "Huấn luyện viên chuyên nghiệp",
+                "Không gian tập luyện rộng rãi",
+                "Chương trình đa dạng",
+                "Hỗ trợ 24/7",
+              ].map((feature, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                  <span className="text-vintage-neutral">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-elegant border border-vintage-gold/20">
+            <h3 className="text-2xl font-bold text-vintage-dark mb-6">
+              Cam kết của chúng tôi
+            </h3>
+            <div className="space-y-4">
+              {[
+                "Hoàn tiền 100% nếu không hài lòng",
+                "Đảm bảo an toàn tuyệt đối",
+                "Chế độ bảo hành thiết bị",
+                "Tư vấn miễn phí trọn đời",
+                "Ưu đãi đặc biệt cho thành viên lâu năm",
+              ].map((commitment, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <Star className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                  <span className="text-vintage-neutral">{commitment}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </motion.div>
 
         {/* Enhanced FAQ Section */}
@@ -291,7 +383,7 @@ export default function MembershipPage() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-elegant border border-vintage-gold/20"
         >
-          <div className="flex items-center mb-6">
+          <div className="flex items-center mb-8">
             <div className="w-12 h-12 bg-gradient-luxury rounded-xl flex items-center justify-center mr-4">
               <BookOpen className="h-6 w-6 text-white" />
             </div>
@@ -300,7 +392,7 @@ export default function MembershipPage() {
             </h2>
           </div>
 
-          <div className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
             {[
               {
                 question: "Làm thế nào để gia hạn thẻ thành viên?",
@@ -318,12 +410,18 @@ export default function MembershipPage() {
                 answer:
                   "Có, chúng tôi liên kết với các ngân hàng đối tác để cung cấp hình thức trả góp 0% lãi suất trong 3-6 tháng cho các gói tập từ 6 tháng trở lên.",
               },
+              {
+                question:
+                  "Thẻ thành viên có được sử dụng ở chi nhánh khác không?",
+                answer:
+                  "Có, thẻ thành viên của bạn có thể sử dụng tại tất cả các chi nhánh trong hệ thống. Bạn chỉ cần xuất trình thẻ hoặc ứng dụng mobile để check-in.",
+              },
             ].map((faq, index) => (
               <div
                 key={index}
-                className="bg-vintage-warm/50 rounded-xl p-6 border border-vintage-gold/10"
+                className="bg-vintage-warm/50 rounded-xl p-6 border border-vintage-gold/10 hover:bg-white hover:shadow-soft transition-all duration-300"
               >
-                <h3 className="text-lg font-medium vintage-heading text-vintage-dark mb-3">
+                <h3 className="text-lg font-semibold vintage-heading text-vintage-dark mb-3">
                   {faq.question}
                 </h3>
                 <p className="text-vintage-neutral vintage-serif leading-relaxed">

@@ -30,6 +30,7 @@ import {
   Activity,
   Zap,
 } from "lucide-react";
+import VintageBanner from "../Club/Banner";
 
 export default function ServicePage() {
   const [services, setServices] = useState([]);
@@ -140,42 +141,48 @@ export default function ServicePage() {
     },
   ];
 
+  const serviceImages = [
+    "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920",
+    "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920",
+    "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920",
+  ];
+
   return (
     <div className="bg-vintage-cream min-h-screen">
-      {/* Hero Section */}
-      <VintageHero
+      {/* Replace VintageHero with VintageBanner */}
+      <VintageBanner
+        images={serviceImages}
         title="Dịch Vụ Hàng Đầu"
         subtitle="Chăm Sóc Bạn Từ Tâm - Thay Đổi Từ Hình Thể Đến Cuộc Sống! Khám phá các dịch vụ cao cấp được thiết kế đặc biệt cho sức khỏe và vóc dáng của bạn."
-        backgroundImage="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920"
-        overlay="vintage"
+        height="h-screen"
+        autoPlay={true}
+        autoPlayInterval={6000}
       >
-        <div className="flex flex-col sm:flex-row gap-6 justify-center">
+        <VintageButton
+          variant="gold"
+          size="lg"
+          onClick={() =>
+            document
+              .getElementById("services-section")
+              ?.scrollIntoView({ behavior: "smooth" })
+          }
+          className="group"
+        >
+          <Sparkles className="mr-2 h-5 w-5" />
+          <span>Khám phá ngay</span>
+          <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+        </VintageButton>
+        <Link to="/membership">
           <VintageButton
-            variant="gold"
+            variant="secondary"
             size="lg"
-            onClick={() =>
-              document
-                .getElementById("services-section")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-            className="group"
+            className="group border-white text-white hover:bg-white hover:text-vintage-dark"
           >
-            <Sparkles className="mr-2 h-5 w-5" />
-            <span>Khám phá ngay</span>
-            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            <Crown className="mr-2 h-5 w-5" />
+            <span>Đăng ký thành viên</span>
           </VintageButton>
-          <Link to="/membership">
-            <VintageButton
-              variant="secondary"
-              size="lg"
-              className="group border-white text-white hover:bg-white hover:text-vintage-dark"
-            >
-              <Crown className="mr-2 h-5 w-5" />
-              <span>Đăng ký thành viên</span>
-            </VintageButton>
-          </Link>
-        </div>
-      </VintageHero>
+        </Link>
+      </VintageBanner>
 
       {/* Services Section */}
       <VintageSection background="warm" id="services-section">
