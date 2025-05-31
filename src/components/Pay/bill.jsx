@@ -102,7 +102,7 @@ function BillPage({ userData, order, selectedMethod }) {
               </div>
             ))}
             <hr className="my-4" />
-            <div className="flex justify-between text-xl font-bold">
+            <div className="flex justify-between text-xl font-bold ">
               <span>Tổng cộng:</span>
               <span>{totalAmount.toLocaleString()}đ</span>
             </div>

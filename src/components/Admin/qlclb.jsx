@@ -12,24 +12,28 @@ export default function AdminClubManager() {
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const apiUrl = "http://localhost:5000/api/clubs";
 
   // Lấy dữ liệu CLB từ backend khi component mount
   useEffect(() => {
-    const fetchClubs = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(apiUrl);
-        setClubs(response.data);
-      } catch (error) {
-        console.error("Error fetching clubs:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchClubs();
   }, []);
+
+  const fetchClubs = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(apiUrl);
+      console.log("Clubs fetched:", response.data);
+      setClubs(response.data);
+    } catch (error) {
+      console.error("Error fetching clubs:", error);
+      showNotification("Không thể tải danh sách CLB", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Xử lý thay đổi form input
   const handleChange = (e) => {
@@ -40,35 +44,61 @@ export default function AdminClubManager() {
   // Xử lý gửi form (thêm hoặc cập nhật CLB)
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+
     try {
       if (isEditing) {
-        const updatedClub = { ...formData };
-        await axios.put(`${apiUrl}/${clubs[editIndex]._id}`, updatedClub);
+        // Cập nhật CLB
+        const response = await axios.put(
+          `${apiUrl}/${clubs[editIndex]._id}`,
+          formData
+        );
+        console.log("Update response:", response.data);
+
+        // Cập nhật state
         const updatedClubs = [...clubs];
-        updatedClubs[editIndex] = updatedClub;
+        updatedClubs[editIndex] = response.data.club || response.data;
         setClubs(updatedClubs);
+
         setIsEditing(false);
         setEditIndex(null);
+        showNotification("Cập nhật CLB thành công!");
       } else {
-        const newClub = { ...formData };
-        const response = await axios.post(apiUrl, newClub);
-        setClubs([...clubs, response.data]);
-      }
-      setFormData({ name: "", address: "", image: "", description: "" });
+        // Thêm CLB mới
+        const response = await axios.post(apiUrl, formData);
+        console.log("Create response:", response.data);
 
-      // Show notification
-      showNotification(
-        isEditing ? "Cập nhật CLB thành công!" : "Thêm CLB mới thành công!"
-      );
+        // Thêm CLB mới vào state
+        const newClub = response.data.club || response.data;
+        setClubs([...clubs, newClub]);
+
+        showNotification("Thêm CLB mới thành công!");
+      }
+
+      // Reset form
+      setFormData({ name: "", address: "", image: "", description: "" });
     } catch (error) {
-      console.error("Error:", error);
-      showNotification("Đã xảy ra lỗi, vui lòng thử lại!", "error");
+      console.error("Error submitting form:", error);
+      const errorMessage =
+        error.response?.data?.message || "Đã xảy ra lỗi, vui lòng thử lại!";
+      showNotification(errorMessage, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Xử lý chỉnh sửa CLB
   const handleEdit = (index) => {
-    setFormData(clubs[index]);
+    const club = clubs[index];
+    setFormData({
+      name: club.name,
+      address: club.address,
+      image: club.image,
+      description: club.description,
+    });
     setIsEditing(true);
     setEditIndex(index);
 
@@ -81,25 +111,26 @@ export default function AdminClubManager() {
 
   // Xử lý xóa CLB
   const handleDelete = async (index) => {
-    const confirmDelete = confirm("Bạn có chắc muốn xóa CLB này?");
+    const confirmDelete = window.confirm("Bạn có chắc muốn xóa CLB này?");
     if (!confirmDelete) return;
 
     try {
       await axios.delete(`${apiUrl}/${clubs[index]._id}`);
-      const updatedClubs = [...clubs];
-      updatedClubs.splice(index, 1);
+      const updatedClubs = clubs.filter((_, i) => i !== index);
       setClubs(updatedClubs);
       showNotification("Đã xóa CLB thành công!");
     } catch (error) {
       console.error("Error deleting club:", error);
-      showNotification("Không thể xóa CLB, vui lòng thử lại!", "error");
+      const errorMessage =
+        error.response?.data?.message || "Không thể xóa CLB, vui lòng thử lại!";
+      showNotification(errorMessage, "error");
     }
   };
 
   // Function to show notification
   const showNotification = (message, type = "success") => {
     const notification = document.createElement("div");
-    notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out z-50 ${
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out z-50 ${
       type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
     }`;
     notification.textContent = message;
@@ -107,8 +138,23 @@ export default function AdminClubManager() {
 
     setTimeout(() => {
       notification.classList.add("opacity-0", "translate-y-2");
-      setTimeout(() => document.body.removeChild(notification), 500);
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 500);
     }, 3000);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditIndex(null);
+    setFormData({
+      name: "",
+      address: "",
+      image: "",
+      description: "",
+    });
   };
 
   if (isLoading) {
@@ -143,7 +189,7 @@ export default function AdminClubManager() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên CLB
+                  Tên CLB <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -158,7 +204,7 @@ export default function AdminClubManager() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Địa chỉ
+                  Địa chỉ <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -174,12 +220,12 @@ export default function AdminClubManager() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL ảnh
+                URL ảnh <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="url"
                 name="image"
-                placeholder="Nhập đường dẫn ảnh đại diện"
+                placeholder="Nhập đường dẫn ảnh đại diện (https://...)"
                 value={formData.image}
                 onChange={handleChange}
                 required
@@ -189,13 +235,14 @@ export default function AdminClubManager() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mô tả
+                Mô tả <span className="text-red-500">*</span>
               </label>
               <textarea
                 name="description"
                 placeholder="Mô tả chi tiết về CLB"
                 value={formData.description}
                 onChange={handleChange}
+                required
                 rows="4"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
               ></textarea>
@@ -204,24 +251,26 @@ export default function AdminClubManager() {
             <div className="flex gap-4">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                disabled={isSubmitting}
+                className={`px-6 py-3 rounded-lg transition-all shadow-sm ${
+                  isSubmitting
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                } text-white`}
               >
-                {isEditing ? "Cập nhật CLB" : "Thêm CLB"}
+                {isSubmitting
+                  ? isEditing
+                    ? "Đang cập nhật..."
+                    : "Đang thêm..."
+                  : isEditing
+                  ? "Cập nhật CLB"
+                  : "Thêm CLB"}
               </button>
 
               {isEditing && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditIndex(null);
-                    setFormData({
-                      name: "",
-                      address: "",
-                      image: "",
-                      description: "",
-                    });
-                  }}
+                  onClick={handleCancel}
                   className="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all"
                 >
                   Hủy
@@ -235,7 +284,7 @@ export default function AdminClubManager() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {clubs.map((club, index) => (
             <div
-              key={club._id}
+              key={club._id || index}
               className="bg-white rounded-xl shadow-md overflow-hidden transition-all hover:shadow-lg border border-gray-100"
             >
               <div className="h-48 overflow-hidden relative">
@@ -243,6 +292,10 @@ export default function AdminClubManager() {
                   src={club.image}
                   alt={club.name}
                   className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                  onError={(e) => {
+                    e.target.src =
+                      "https://via.placeholder.com/400x300?text=No+Image";
+                  }}
                 />
               </div>
               <div className="p-6 space-y-3">
@@ -317,7 +370,7 @@ export default function AdminClubManager() {
           ))}
         </div>
 
-        {clubs.length === 0 && (
+        {clubs.length === 0 && !isLoading && (
           <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -335,6 +388,9 @@ export default function AdminClubManager() {
             </svg>
             <p className="mt-4 text-xl font-medium text-gray-500">
               Chưa có CLB nào được thêm vào
+            </p>
+            <p className="mt-2 text-gray-400">
+              Hãy thêm CLB đầu tiên bằng form ở trên
             </p>
           </div>
         )}

@@ -13,6 +13,8 @@ import {
   deletePayment,
   getCompletedPayments,
   updatePaymentStatus,
+  deleteEnrollment,
+  deletePaymentEnrollment, // Thêm dòng này
 } from "../controllers/paymentController.js";
 import { verifyToken, verifyAdmin } from "../middleware/authMiddleware.js";
 
@@ -33,6 +35,13 @@ router.get("/user", verifyToken, getPayments);
 router.get("/my", verifyToken, getPayments);
 
 // ========= PARAMETER ROUTES AFTER =========
+// Route cho xóa đăng ký thanh toán (payment context)
+router.delete(
+  "/enrollment/:enrollmentId",
+  verifyToken,
+  deletePaymentEnrollment
+);
+
 // Admin - Approve/Reject payment (parameter routes)
 router.put("/approve/:paymentId", verifyToken, verifyAdmin, approvePayment);
 router.put("/reject/:paymentId", verifyToken, verifyAdmin, rejectPayment);

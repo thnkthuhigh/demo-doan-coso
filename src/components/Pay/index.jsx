@@ -2,7 +2,29 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import BankPopup from "./BankPopup";
+import ConfirmationModal from "./ConfirmationModal";
 import { motion } from "framer-motion";
+import {
+  CreditCard,
+  Shield,
+  CheckCircle,
+  X,
+  Clock,
+  Star,
+  Gift,
+  Trash2,
+  Copy,
+  Sparkles,
+  Crown,
+  Receipt,
+  ArrowRight,
+  Zap,
+  Heart,
+  Award,
+  Leaf,
+  Mountain,
+  Waves,
+} from "lucide-react";
 
 export default function PaymentPage() {
   const navigate = useNavigate();
@@ -17,8 +39,11 @@ export default function PaymentPage() {
   const [membershipPayment, setMembershipPayment] = useState(null);
   const [selectedClasses, setSelectedClasses] = useState({});
   const [includeMembership, setIncludeMembership] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingClassId, setDeletingClassId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
-  // Thêm custom styling cho navbar khi vào trang Payment
+  // Add custom styling cho navbar khi vào trang Payment
   useEffect(() => {
     document.body.classList.add("payment-page");
     return () => {
@@ -44,21 +69,14 @@ export default function PaymentPage() {
   // Check if we have a pending membership payment
   useEffect(() => {
     const pendingMembershipString = localStorage.getItem("pendingMembership");
-    console.log(
-      "Pending membership from localStorage:",
-      pendingMembershipString
-    );
-
     if (pendingMembershipString) {
       try {
         const pendingMembership = JSON.parse(pendingMembershipString);
-        console.log("Parsed pending membership:", pendingMembership);
         setMembershipPayment(pendingMembership);
       } catch (error) {
         console.error("Error parsing pending membership:", error);
       }
     } else {
-      // If no membership in localStorage, check if there's one from URL state
       if (location.state?.fromMembership && location.state?.membershipId) {
         const fetchMembershipDetails = async () => {
           try {
@@ -76,8 +94,6 @@ export default function PaymentPage() {
 
             if (response.ok) {
               const membershipData = await response.json();
-              console.log("Fetched membership data:", membershipData);
-
               setMembershipPayment({
                 id: membershipData._id,
                 type: membershipData.type,
@@ -135,7 +151,6 @@ export default function PaymentPage() {
         phone: userInfo.phone || "",
       });
 
-      // Chỉ lấy các đăng ký chưa thanh toán
       const unpaidEnrollments = enrollments.filter(
         (enrollment) => !enrollment.paymentStatus
       );
@@ -163,24 +178,29 @@ export default function PaymentPage() {
     fetchUnpaidRegistrations();
   }, [userId]);
 
-  // Hàm xóa đăng ký lớp học - sử dụng ClassEnrollment ID
+  // Hàm xóa đăng ký lớp học
   const handleDeleteRegistration = async (enrollmentId) => {
-    if (!confirm("Bạn có chắc muốn xóa đăng ký lớp học này?")) {
-      return;
-    }
+    setDeletingClassId(enrollmentId);
+    setDeleteError("");
+    setShowDeleteConfirm(true);
+  };
+
+  // Add new function for actual deletion
+  const confirmDeleteRegistration = async () => {
+    if (!deletingClassId) return;
 
     try {
       const token = localStorage.getItem("token");
-
       if (!token) {
-        alert("Bạn cần đăng nhập lại!");
-        navigate("/login");
+        setDeleteError("Bạn cần đăng nhập lại!");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
         return;
       }
 
-      // Gọi API xóa ClassEnrollment
       const response = await fetch(
-        `http://localhost:5000/api/classes/enrollment/${enrollmentId}`,
+        `http://localhost:5000/api/payments/enrollment/${deletingClassId}`,
         {
           method: "DELETE",
           headers: {
@@ -190,43 +210,64 @@ export default function PaymentPage() {
         }
       );
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Không thể xóa đăng ký");
+        throw new Error(responseData.message || "Không thể xóa đăng ký");
       }
 
-      // Cập nhật lại danh sách lớp học sau khi xóa
+      // Success - remove from list
       setRegisteredClasses(
-        registeredClasses.filter((cls) => cls.id !== enrollmentId)
+        registeredClasses.filter((cls) => cls.id !== deletingClassId)
       );
 
-      // Cập nhật selectedClasses
       const newSelectedClasses = { ...selectedClasses };
-      delete newSelectedClasses[enrollmentId];
+      delete newSelectedClasses[deletingClassId];
       setSelectedClasses(newSelectedClasses);
 
-      alert("Đã xóa đăng ký lớp học thành công!");
+      // Đóng modal
+      setShowDeleteConfirm(false);
+      setDeletingClassId(null);
+      setDeleteError("");
+
+      // Thông báo thành công (có thể thêm toast)
+      console.log("Đã xóa đăng ký lớp học thành công!");
     } catch (error) {
       console.error("Lỗi khi xóa đăng ký:", error);
-      alert("Không thể xóa đăng ký. Vui lòng thử lại sau.");
+      setDeleteError(error.message);
     }
   };
 
-  // Animation variants
+  // Add function to close modal
+  const closeDeleteConfirm = () => {
+    setShowDeleteConfirm(false);
+    setDeletingClassId(null);
+    setDeleteError("");
+  };
+
+  // Animation variants với tinh thần Zen
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         when: "beforeChildren",
-        staggerChildren: 0.1,
+        staggerChildren: 0.08,
+        ease: "easeOut",
       },
     },
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 },
+    hidden: { y: 30, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.25, 0, 1],
+      },
+    },
   };
 
   // Initialize selected classes
@@ -240,7 +281,7 @@ export default function PaymentPage() {
     }
   }, [registeredClasses]);
 
-  // Hàm chuyển đổi trạng thái chọn lớp học
+  // Toggle class selection
   const toggleClassSelection = (classId) => {
     const newState = {
       ...selectedClasses,
@@ -249,11 +290,9 @@ export default function PaymentPage() {
     setSelectedClasses(newState);
   };
 
-  // Hàm tính toán tổng tiền dựa trên trạng thái đã chọn của các lớp học
+  // Calculate total
   const calculateTotal = (selectedState) => {
     let sum = 0;
-
-    // Tính tổng tiền cho các lớp học đã chọn
     Object.keys(selectedState).forEach((clsId) => {
       if (selectedState[clsId]) {
         const cls = registeredClasses.find((c) => c.id === clsId);
@@ -263,7 +302,6 @@ export default function PaymentPage() {
       }
     });
 
-    // Thêm tiền gói thành viên nếu có
     if (membershipPayment && includeMembership) {
       sum += membershipPayment.price;
     }
@@ -273,19 +311,50 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-gray-600 text-lg font-medium">Đang tải dữ liệu...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-gray-50 to-stone-100">
+        {/* Zen Loading Animation */}
+        <motion.div
+          className="relative"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 border-2 border-slate-300 border-t-slate-700 rounded-full"
+          />
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0 w-8 h-8 m-auto border-2 border-gray-400 border-b-gray-800 rounded-full"
+          />
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-6 text-slate-700 text-lg font-light tracking-wide"
+        >
+          Đang tải...
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-2 text-slate-500 text-sm"
+        >
+          Vui lòng đợi trong giây lát
+        </motion.p>
       </div>
     );
   }
 
   const total = calculateTotal(selectedClasses);
 
-  // Thêm hàm xử lý thanh toán
+  // Handle payment
   const handlePayment = () => {
     if (!selectedMethod) {
-      alert("Chọn phương thức!");
+      alert("Vui lòng chọn phương thức thanh toán!");
       return;
     }
 
@@ -296,7 +365,7 @@ export default function PaymentPage() {
     }
   };
 
-  // Xử lý thanh toán các phương thức khác
+  // Handle direct payment
   const handleDirectPayment = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -306,12 +375,10 @@ export default function PaymentPage() {
         return;
       }
 
-      // Lấy các ClassEnrollment ID đã chọn
       const selectedClassIds = registeredClasses
         .filter((cls) => selectedClasses[cls.id])
         .map((cls) => cls.id);
 
-      // Kiểm tra có item nào được chọn không
       if (
         selectedClassIds.length === 0 &&
         (!membershipPayment || !includeMembership)
@@ -320,15 +387,11 @@ export default function PaymentPage() {
         return;
       }
 
-      // Tạo danh sách registrationIds
       const registrationIds = [...selectedClassIds];
-
-      // Thêm membership ID nếu có và được chọn
       if (membershipPayment && includeMembership) {
         registrationIds.push(membershipPayment.id);
       }
 
-      // Xác định payment type
       let paymentType = "class";
       if (
         membershipPayment &&
@@ -342,7 +405,6 @@ export default function PaymentPage() {
           : "membership";
       }
 
-      // Tạo payment với các ClassEnrollment đã chọn
       const response = await fetch("http://localhost:5000/api/payments", {
         method: "POST",
         headers: {
@@ -363,7 +425,6 @@ export default function PaymentPage() {
         throw new Error(errorData.message || "Thanh toán lỗi");
       }
 
-      // Clear pending membership sau khi tạo payment thành công
       if (membershipPayment && includeMembership) {
         localStorage.removeItem("pendingMembership");
         localStorage.removeItem("pendingPayment");
@@ -376,298 +437,397 @@ export default function PaymentPage() {
     }
   };
 
-  // Payment method icons
-  const getMethodIcon = (method) => {
-    switch (method) {
-      case "Thẻ ngân hàng":
-        return (
-          <svg
-            className="w-6 h-6"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              x="2"
-              y="5"
-              width="20"
-              height="14"
-              rx="2"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <path d="M2 10H22" stroke="currentColor" strokeWidth="2" />
-            <path
-              d="M6 15H10"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        );
-      case "VNPay":
-        return (
-          <svg
-            className="w-6 h-6"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M22 9H2M22 12H2"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <rect
-              x="2"
-              y="5"
-              width="20"
-              height="14"
-              rx="2"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <circle cx="18" cy="15" r="1" fill="currentColor" />
-            <circle cx="15" cy="15" r="1" fill="currentColor" />
-          </svg>
-        );
-      case "Momo":
-        return (
-          <svg
-            className="w-6 h-6"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M17 11C17 14.3137 14.3137 17 11 17C7.68629 17 5 14.3137 5 11C5 7.68629 7.68629 5 11 5C14.3137 5 17 7.68629 17 11Z"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <path
-              d="M20 11C20 15.9706 15.9706 20 11 20C6.02944 20 2 15.9706 2 11C2 6.02944 6.02944 2 11 2C15.9706 2 20 6.02944 20 11Z"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-          </svg>
-        );
-      case "ZaloPay":
-        return (
-          <svg
-            className="w-6 h-6"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M2 9C2 7.34315 3.34315 6 5 6H19C20.6569 6 22 7.34315 22 9V15C22 16.6569 20.6569 18 19 18H5C3.34315 18 2 16.6569 2 15V9Z"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <path
-              d="M6 11L9 14L14 9"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        );
-      default:
-        return null;
-    }
-  };
+  // Payment methods với thiết kế Zen
+  const paymentMethods = [
+    {
+      id: "Thẻ ngân hàng",
+      name: "Chuyển khoản ngân hàng",
+      icon: <CreditCard className="w-5 h-5" />,
+      description: "Giao dịch an toàn qua ngân hàng",
+      color: "from-slate-600 to-slate-700",
+      bgLight: "bg-slate-50",
+      recommended: true,
+    },
+    {
+      id: "VNPay",
+      name: "VNPay",
+      icon: <Zap className="w-5 h-5" />,
+      description: "Ví điện tử VNPay",
+      color: "from-blue-600 to-indigo-700",
+      bgLight: "bg-blue-50",
+    },
+    {
+      id: "Momo",
+      name: "Momo",
+      icon: <Heart className="w-5 h-5" />,
+      description: "Ví điện tử Momo",
+      color: "from-pink-600 to-rose-700",
+      bgLight: "bg-pink-50",
+    },
+    {
+      id: "ZaloPay",
+      name: "ZaloPay",
+      icon: <Award className="w-5 h-5" />,
+      description: "Ví điện tử ZaloPay",
+      color: "from-emerald-600 to-teal-700",
+      bgLight: "bg-emerald-50",
+    },
+  ];
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      className="min-h-screen pt-24 pb-16 bg-gradient-to-br from-indigo-900/95 to-purple-900/95"
-    >
-      {/* Thêm phần tạo nav backdrop */}
-      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/30 to-transparent z-40"></div>
+    <>
+      {/* Zen CSS Styles */}
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <motion.div variants={itemVariants} className="text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-            Thanh toán
-          </h1>
-          <p className="text-indigo-200 max-w-md mx-auto">
-            Hoàn tất đăng ký khóa học của bạn và bắt đầu hành trình fitness ngay
-            hôm nay
-          </p>
-        </motion.div>
+        .zen-text-primary {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 400;
+          letter-spacing: -0.01em;
+        }
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Order Details */}
-          <motion.div variants={itemVariants} className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-xl border border-indigo-100/10 overflow-hidden">
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-4 px-6">
-                <h2 className="text-xl font-semibold text-white">
-                  Chi tiết đơn hàng
-                </h2>
+        .zen-text-heading {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
+
+        .zen-card {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(148, 163, 184, 0.1);
+          box-shadow: 0 4px 32px rgba(0, 0, 0, 0.04);
+        }
+
+        .zen-card-hover {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .zen-card-hover:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .zen-button {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          font-family: "Inter", sans-serif;
+          font-weight: 500;
+          letter-spacing: -0.01em;
+        }
+
+        .zen-divider {
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(148, 163, 184, 0.3),
+            transparent
+          );
+          height: 1px;
+        }
+
+        .zen-bg {
+          background: linear-gradient(
+            135deg,
+            #f8fafc 0%,
+            #f1f5f9 25%,
+            #e2e8f0 50%,
+            #f1f5f9 75%,
+            #f8fafc 100%
+          );
+        }
+      `}</style>
+
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="min-h-screen zen-bg pt-16 pb-20"
+      >
+        {/* Floating Elements */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+          <motion.div
+            animate={{
+              y: [0, -30, 0],
+              rotate: [0, 5, 0],
+              opacity: [0.1, 0.2, 0.1],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute top-20 left-20"
+          >
+            <Leaf className="h-32 w-32 text-slate-300" />
+          </motion.div>
+
+          <motion.div
+            animate={{
+              y: [0, 40, 0],
+              x: [0, -20, 0],
+              opacity: [0.05, 0.15, 0.05],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 5,
+            }}
+            className="absolute top-40 right-32"
+          >
+            <Mountain className="h-40 w-40 text-slate-200" />
+          </motion.div>
+
+          <motion.div
+            animate={{
+              x: [0, 30, 0],
+              opacity: [0.08, 0.18, 0.08],
+            }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 10,
+            }}
+            className="absolute bottom-32 left-1/3"
+          >
+            <Waves className="h-28 w-28 text-blue-200" />
+          </motion.div>
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <motion.div variants={itemVariants} className="text-center mb-16">
+            <div className="zen-card rounded-2xl p-12 max-w-4xl mx-auto">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-gradient-to-r from-slate-700 to-slate-800 p-4 rounded-xl shadow-sm">
+                  <Receipt className="h-7 w-7 text-white" />
+                </div>
               </div>
 
-              <div className="p-6">
-                {registeredClasses.length === 0 && !membershipPayment ? (
-                  <div className="py-10 text-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-16 w-16 text-gray-300 mx-auto mb-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    <p className="text-gray-500 mb-4">
-                      Không có mục nào cần thanh toán.
-                    </p>
-                    <div className="flex justify-center space-x-3">
-                      <button
-                        onClick={() => navigate("/classes")}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-                      >
-                        Tìm lớp học
-                      </button>
-                      <button
-                        onClick={() => navigate("/membership")}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-                      >
-                        Đăng ký gói tập
-                      </button>
+              <h1 className="text-4xl lg:text-5xl zen-text-heading text-slate-800 mb-4">
+                Thanh Toán
+              </h1>
+              <h2 className="text-2xl zen-text-primary text-slate-600 mb-6">
+                Hoàn tất đơn hàng của bạn
+              </h2>
+              <div className="zen-divider w-24 mx-auto mb-6"></div>
+              <p className="text-lg zen-text-primary text-slate-500 max-w-2xl mx-auto leading-relaxed">
+                Hoàn tất thanh toán để bắt đầu hành trình fitness với sự tập
+                trung và tĩnh lặng
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Main Content */}
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+            {/* Order Details - 3 columns */}
+            <motion.div variants={itemVariants} className="xl:col-span-3">
+              <div className="zen-card rounded-2xl overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-8">
+                  <div className="flex items-center">
+                    <div className="bg-white/15 p-3 rounded-xl mr-4">
+                      <Sparkles className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl zen-text-heading text-white mb-1">
+                        Chi Tiết Đơn Hàng
+                      </h2>
+                      <p className="text-slate-200 zen-text-primary">
+                        Xem lại và chỉnh sửa đơn hàng
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Classes section */}
-                    {registeredClasses.length > 0 && (
-                      <>
-                        <div className="flex justify-between items-center mb-2">
-                          <h3 className="font-semibold text-gray-700">
-                            Lớp học đã đăng ký
-                          </h3>
+                </div>
 
-                          <button
-                            onClick={() => {
-                              const newSelectedState = {};
-                              const allSelected = registeredClasses.every(
-                                (cls) => selectedClasses[cls.id]
-                              );
-
-                              registeredClasses.forEach((cls) => {
-                                newSelectedState[cls.id] = !allSelected;
-                              });
-
-                              setSelectedClasses(newSelectedState);
-                            }}
-                            className="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition-colors"
-                          >
-                            {registeredClasses.every(
-                              (cls) => selectedClasses[cls.id]
-                            )
-                              ? "Bỏ chọn tất cả"
-                              : "Chọn tất cả"}
-                          </button>
-                        </div>
-
-                        {registeredClasses.map((cls) => (
-                          <div
-                            key={cls.id}
-                            className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"
-                          >
-                            <div className="flex items-center flex-grow">
-                              <input
-                                type="checkbox"
-                                id={`class-${cls.id}`}
-                                checked={selectedClasses[cls.id] || false}
-                                onChange={() => toggleClassSelection(cls.id)}
-                                className="mr-3 h-5 w-5 accent-indigo-600 cursor-pointer"
-                              />
-                              <div>
-                                <label
-                                  htmlFor={`class-${cls.id}`}
-                                  className="font-medium text-gray-800 cursor-pointer"
-                                >
-                                  {cls.name}
-                                </label>
-                                <p className="text-sm text-gray-500">
-                                  {cls.serviceName} - HLV:{" "}
-                                  {cls.instructorName || "Chưa có"}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  Mã đăng ký: {cls.id.slice(-6)}
-                                </p>
-                              </div>
-                            </div>
-                            <span className="mx-4 font-semibold text-gray-800">
-                              {cls.price.toLocaleString()}đ
-                            </span>
-                            <button
-                              onClick={() => handleDeleteRegistration(cls.id)}
-                              className="flex items-center justify-center w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
-                      </>
-                    )}
-
-                    {/* Membership payment info */}
-                    {membershipPayment && (
-                      <>
-                        {registeredClasses.length > 0 && (
-                          <h3 className="font-semibold text-gray-700 mt-6 mb-2">
-                            Gói tập
-                          </h3>
-                        )}
-                        <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl border border-blue-100 mb-4">
-                          <div className="flex justify-between items-center">
+                <div className="p-8">
+                  {registeredClasses.length === 0 && !membershipPayment ? (
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="text-center py-20"
+                    >
+                      <div className="bg-slate-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8">
+                        <Gift className="h-10 w-10 text-slate-400" />
+                      </div>
+                      <h3 className="text-xl zen-text-heading text-slate-700 mb-4">
+                        Giỏ Hàng Trống
+                      </h3>
+                      <p className="zen-text-primary text-slate-500 mb-8">
+                        Chưa có mục nào cần thanh toán
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => navigate("/classes")}
+                          className="zen-button px-8 py-3 bg-slate-800 text-white rounded-xl hover:bg-slate-700"
+                        >
+                          Khám phá lớp học
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => navigate("/membership")}
+                          className="zen-button px-8 py-3 border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50"
+                        >
+                          Xem gói tập
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <div className="space-y-8">
+                      {/* Classes Section */}
+                      {registeredClasses.length > 0 && (
+                        <div>
+                          <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center">
-                              <input
-                                type="checkbox"
-                                id="membership-checkbox"
-                                checked={includeMembership}
-                                onChange={() =>
-                                  setIncludeMembership(!includeMembership)
-                                }
-                                className="mr-3 h-5 w-5 accent-indigo-600 cursor-pointer"
-                              />
-                              <div>
-                                <label
-                                  htmlFor="membership-checkbox"
-                                  className="font-semibold text-indigo-800 cursor-pointer"
-                                >
-                                  {membershipPayment.name ||
-                                    `Gói ${membershipPayment.type}`}
-                                </label>
-                                <p className="text-sm text-gray-600">
-                                  Thời hạn:{" "}
-                                  {membershipPayment.duration
-                                    ? membershipPayment.duration === 30
+                              <div className="bg-slate-100 p-2 rounded-lg mr-3">
+                                <Star className="h-5 w-5 text-slate-600" />
+                              </div>
+                              <h3 className="text-lg zen-text-heading text-slate-800">
+                                Đăng Ký Lớp Học ({registeredClasses.length})
+                              </h3>
+                            </div>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                const newSelectedState = {};
+                                const allSelected = registeredClasses.every(
+                                  (cls) => selectedClasses[cls.id]
+                                );
+                                registeredClasses.forEach((cls) => {
+                                  newSelectedState[cls.id] = !allSelected;
+                                });
+                                setSelectedClasses(newSelectedState);
+                              }}
+                              className="zen-button text-sm px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50"
+                            >
+                              {registeredClasses.every(
+                                (cls) => selectedClasses[cls.id]
+                              )
+                                ? "Bỏ chọn tất cả"
+                                : "Chọn tất cả"}
+                            </motion.button>
+                          </div>
+
+                          <div className="space-y-4">
+                            {registeredClasses.map((cls, index) => (
+                              <motion.div
+                                key={cls.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                                className={`zen-card-hover p-6 rounded-xl border-2 transition-all duration-300 ${
+                                  selectedClasses[cls.id]
+                                    ? "border-slate-300 bg-slate-50/50"
+                                    : "border-slate-200 bg-white"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-4 flex-grow">
+                                    <div className="relative">
+                                      <input
+                                        type="checkbox"
+                                        id={`class-${cls.id}`}
+                                        checked={
+                                          selectedClasses[cls.id] || false
+                                        }
+                                        onChange={() =>
+                                          toggleClassSelection(cls.id)
+                                        }
+                                        className="w-5 h-5 text-slate-600 border-2 border-slate-300 rounded focus:ring-slate-400 focus:ring-2"
+                                      />
+                                      {selectedClasses[cls.id] && (
+                                        <CheckCircle className="absolute -top-1 -right-1 h-4 w-4 text-slate-600" />
+                                      )}
+                                    </div>
+                                    <div className="flex-grow">
+                                      <label
+                                        htmlFor={`class-${cls.id}`}
+                                        className="zen-text-heading text-lg text-slate-800 cursor-pointer block mb-1"
+                                      >
+                                        {cls.name}
+                                      </label>
+                                      <p className="zen-text-primary text-slate-600 mb-1">
+                                        <span className="font-medium">
+                                          {cls.serviceName}
+                                        </span>
+                                        {cls.instructorName && (
+                                          <> • HLV: {cls.instructorName}</>
+                                        )}
+                                      </p>
+                                      <p className="text-sm text-slate-400">
+                                        ID: {cls.id.slice(-8).toUpperCase()}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center space-x-4">
+                                    <div className="text-right">
+                                      <p className="text-2xl zen-text-heading text-slate-800">
+                                        {cls.price.toLocaleString()}₫
+                                      </p>
+                                    </div>
+                                    <motion.button
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      onClick={() =>
+                                        handleDeleteRegistration(cls.id)
+                                      }
+                                      className="zen-button bg-red-50 hover:bg-red-100 text-red-500 p-2 rounded-lg transition-all duration-200"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </motion.button>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Membership Section */}
+                      {membershipPayment && (
+                        <div>
+                          <div className="flex items-center mb-6">
+                            <div className="bg-gradient-to-r from-slate-600 to-slate-700 p-2 rounded-lg mr-3">
+                              <Crown className="h-5 w-5 text-white" />
+                            </div>
+                            <h3 className="text-lg zen-text-heading text-slate-800">
+                              Gói Thành Viên
+                            </h3>
+                          </div>
+
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="zen-card border-2 border-slate-300 rounded-xl p-6"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4">
+                                <input
+                                  type="checkbox"
+                                  id="membership-checkbox"
+                                  checked={includeMembership}
+                                  onChange={() =>
+                                    setIncludeMembership(!includeMembership)
+                                  }
+                                  className="w-5 h-5 text-slate-600 border-2 border-slate-300 rounded focus:ring-slate-400 focus:ring-2"
+                                />
+                                <div>
+                                  <label
+                                    htmlFor="membership-checkbox"
+                                    className="zen-text-heading text-xl text-slate-800 cursor-pointer block mb-1"
+                                  >
+                                    {membershipPayment.name ||
+                                      `Gói ${membershipPayment.type}`}
+                                  </label>
+                                  <p className="zen-text-primary text-slate-600 mb-1">
+                                    Thời hạn:{" "}
+                                    {membershipPayment.duration === 30
                                       ? "1 tháng"
                                       : membershipPayment.duration === 90
                                       ? "3 tháng"
@@ -675,142 +835,192 @@ export default function PaymentPage() {
                                       ? "6 tháng"
                                       : membershipPayment.duration === 365
                                       ? "12 tháng"
-                                      : `${membershipPayment.duration} ngày`
-                                    : "30 ngày"}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  Mã thẻ:{" "}
-                                  {membershipPayment.id.substring(
-                                    membershipPayment.id.length - 6
+                                      : `${membershipPayment.duration} ngày`}
+                                  </p>
+                                  <p className="text-sm text-slate-400">
+                                    ID:{" "}
+                                    {membershipPayment.id
+                                      .substring(
+                                        membershipPayment.id.length - 8
+                                      )
+                                      .toUpperCase()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-3xl zen-text-heading text-slate-800">
+                                  {new Intl.NumberFormat("vi-VN").format(
+                                    membershipPayment.price
                                   )}
+                                  ₫
                                 </p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="font-semibold text-indigo-800">
-                                {new Intl.NumberFormat("vi-VN").format(
-                                  membershipPayment.price
+                          </motion.div>
+                        </div>
+                      )}
+
+                      {/* Total Section */}
+                      <div className="zen-card border border-slate-200 rounded-xl p-6">
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center text-lg">
+                            <span className="zen-text-primary text-slate-600">
+                              Tạm tính
+                            </span>
+                            <span className="zen-text-heading text-slate-800">
+                              {total.toLocaleString()}₫
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-lg">
+                            <span className="zen-text-primary text-slate-600">
+                              Phí dịch vụ
+                            </span>
+                            <span className="zen-text-heading text-emerald-600">
+                              Miễn phí
+                            </span>
+                          </div>
+                          <div className="zen-divider"></div>
+                          <div className="flex justify-between items-center pt-2">
+                            <span className="text-xl zen-text-heading text-slate-800">
+                              Tổng cộng
+                            </span>
+                            <span className="text-3xl zen-text-heading text-slate-900">
+                              {total.toLocaleString()}₫
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Payment Methods - 2 columns */}
+            <motion.div variants={itemVariants} className="xl:col-span-2">
+              <div className="zen-card rounded-2xl overflow-hidden sticky top-24">
+                <div className="bg-gradient-to-r from-slate-700 to-slate-800 p-6">
+                  <div className="flex items-center">
+                    <div className="bg-white/15 p-2 rounded-lg mr-3">
+                      <Shield className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg zen-text-heading text-white mb-1">
+                        Phương Thức Thanh Toán
+                      </h2>
+                      <p className="text-slate-200 text-sm zen-text-primary">
+                        Chọn cách thức phù hợp
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="space-y-3">
+                    {paymentMethods.map((method, index) => (
+                      <motion.label
+                        key={method.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`zen-card-hover relative block cursor-pointer transition-all duration-200 ${
+                          selectedMethod === method.id
+                            ? "ring-2 ring-slate-400 shadow-lg"
+                            : ""
+                        }`}
+                      >
+                        <div
+                          className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                            selectedMethod === method.id
+                              ? "border-slate-400 bg-slate-50"
+                              : "border-slate-200 hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <input
+                              type="radio"
+                              value={method.id}
+                              checked={selectedMethod === method.id}
+                              onChange={() => setSelectedMethod(method.id)}
+                              className="w-4 h-4 text-slate-600 border-2 border-slate-300 focus:ring-slate-400"
+                            />
+                            <div
+                              className={`p-2 rounded-lg bg-gradient-to-r ${method.color}`}
+                            >
+                              <div className="text-white">{method.icon}</div>
+                            </div>
+                            <div className="flex-grow">
+                              <div className="flex items-center">
+                                <span className="zen-text-heading text-slate-800">
+                                  {method.name}
+                                </span>
+                                {method.recommended && (
+                                  <span className="ml-2 bg-slate-700 text-white text-xs px-2 py-1 rounded-full">
+                                    Khuyến nghị
+                                  </span>
                                 )}
-                                đ
+                              </div>
+                              <p className="text-sm zen-text-primary text-slate-500 mt-1">
+                                {method.description}
                               </p>
                             </div>
                           </div>
                         </div>
-                      </>
-                    )}
-
-                    {/* Total section */}
-                    <div className="mt-6 pt-4 border-t border-gray-200">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Tạm tính</span>
-                        <span className="text-gray-800">
-                          {total.toLocaleString()}đ
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-gray-600">Giảm giá</span>
-                        <span className="text-gray-800">0đ</span>
-                      </div>
-                      <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                        <span className="font-bold text-lg text-gray-900">
-                          Tổng thanh toán
-                        </span>
-                        <span className="font-bold text-lg text-indigo-600">
-                          {total.toLocaleString()}đ
-                        </span>
-                      </div>
-                    </div>
+                      </motion.label>
+                    ))}
                   </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
 
-          {/* Payment Methods */}
-          <motion.div variants={itemVariants} className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-4 px-6">
-                <h2 className="text-xl font-semibold text-white">
-                  Phương thức thanh toán
-                </h2>
-              </div>
-
-              <div className="p-6">
-                {["Thẻ ngân hàng", "VNPay", "Momo", "ZaloPay"].map((m) => (
-                  <label
-                    key={m}
-                    className={`flex items-center gap-3 p-4 mb-3 border rounded-xl cursor-pointer transition-all ${
-                      selectedMethod === m
-                        ? "border-indigo-500 bg-indigo-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      value={m}
-                      checked={selectedMethod === m}
-                      onChange={() => setSelectedMethod(m)}
-                      className="w-5 h-5 accent-indigo-600"
-                    />
-                    <span className="text-indigo-500">{getMethodIcon(m)}</span>
-                    <span className="font-medium text-gray-800">{m}</span>
-                  </label>
-                ))}
-
-                <div className="mt-8">
-                  <button
+                  {/* Payment Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
                     onClick={handlePayment}
                     disabled={
                       (registeredClasses.length === 0 && !membershipPayment) ||
-                      !selectedMethod
+                      !selectedMethod ||
+                      total === 0
                     }
-                    className={`w-full py-3 px-6 rounded-xl font-medium text-white shadow-sm flex items-center justify-center ${
+                    className={`zen-button w-full mt-8 py-4 px-6 rounded-xl text-lg shadow-lg transition-all duration-300 ${
                       (registeredClasses.length === 0 && !membershipPayment) ||
-                      !selectedMethod
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                    } transition-all duration-300`}
+                      !selectedMethod ||
+                      total === 0
+                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        : "bg-slate-800 hover:bg-slate-700 text-white shadow-slate-300"
+                    }`}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    Thanh toán {total > 0 ? `(${total.toLocaleString()}đ)` : ""}
-                  </button>
-                </div>
+                    <div className="flex items-center justify-center space-x-3">
+                      <Shield className="h-5 w-5" />
+                      <span>
+                        {total > 0 ? (
+                          <>
+                            Thanh toán{" "}
+                            <span className="font-bold">
+                              {total.toLocaleString()}₫
+                            </span>
+                          </>
+                        ) : (
+                          "Thanh toán"
+                        )}
+                      </span>
+                      <ArrowRight className="h-5 w-5" />
+                    </div>
+                  </motion.button>
 
-                <div className="mt-4 text-center text-sm text-gray-500">
-                  <p className="flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                    Thanh toán an toàn & bảo mật
-                  </p>
+                  {/* Security Info */}
+                  <div className="mt-6 text-center">
+                    <div className="flex items-center justify-center space-x-2 text-sm text-slate-500">
+                      <Shield className="h-4 w-4" />
+                      <span className="zen-text-primary">
+                        Bảo mật SSL 256-bit
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
 
         {/* Bank Payment Popup */}
@@ -832,218 +1042,24 @@ export default function PaymentPage() {
           />
         )}
 
-        {/* Receipt - Display after payment */}
-        {showReceipt && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-10 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
-          >
-            <div className="bg-gradient-to-r from-green-500 to-emerald-500 py-4 px-6">
-              <h2 className="text-xl font-semibold text-white flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Phiếu thanh toán
-              </h2>
-            </div>
-
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Thông tin cá nhân
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-gray-700">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-3 text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                      <p>
-                        <span className="font-medium">Họ tên:</span>{" "}
-                        {userData.name}
-                      </p>
-                    </div>
-                    <div className="flex items-center text-gray-700">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-3 text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <p>
-                        <span className="font-medium">Email:</span>{" "}
-                        {userData.email}
-                      </p>
-                    </div>
-                    <div className="flex items-center text-gray-700">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-3 text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
-                      <p>
-                        <span className="font-medium">SĐT:</span>{" "}
-                        {userData.phone || "Chưa cập nhật"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-4">
-                    Thông tin thanh toán
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-gray-700">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-3 text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                      <p>
-                        <span className="font-medium">PT thanh toán:</span>{" "}
-                        {selectedMethod}
-                      </p>
-                    </div>
-                    <div className="flex items-center text-orange-500 font-medium">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <p>Đang chờ xác nhận thanh toán</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Chi tiết đơn hàng
-                  </h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    {/* Chỉ hiển thị các lớp học đã chọn */}
-                    {registeredClasses
-                      .filter((cls) => selectedClasses[cls.id])
-                      .map((cls) => (
-                        <div
-                          key={cls.id}
-                          className="flex justify-between py-2 border-b border-gray-200"
-                        >
-                          <span className="text-gray-700">{cls.name}</span>
-                          <span className="font-medium">
-                            {cls.price.toLocaleString()}đ
-                          </span>
-                        </div>
-                      ))}
-
-                    {/* Chỉ hiển thị membership nếu được chọn */}
-                    {membershipPayment && includeMembership && (
-                      <div className="flex justify-between py-2 border-b border-gray-200">
-                        <span className="text-gray-700">
-                          {membershipPayment.name ||
-                            `Gói ${membershipPayment.type}`}
-                        </span>
-                        <span className="font-medium">
-                          {membershipPayment.price.toLocaleString()}đ
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Tổng cộng */}
-                    <div className="flex justify-between py-3 mt-2 border-t border-gray-300">
-                      <span className="font-bold text-gray-900">
-                        Tổng cộng:
-                      </span>
-                      <span className="font-bold text-indigo-600">
-                        {total.toLocaleString()}đ
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 flex justify-center">
-                <button
-                  onClick={() => navigate("/my-classes")}
-                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg shadow-sm flex items-center transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                    />
-                  </svg>
-                  Xem danh sách lớp học đã đăng ký
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </div>
-    </motion.div>
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={closeDeleteConfirm}
+          onConfirm={
+            deleteError ? closeDeleteConfirm : confirmDeleteRegistration
+          }
+          title={deleteError ? "Lỗi xóa đăng ký" : "Xác nhận xóa đăng ký"}
+          message={
+            deleteError
+              ? deleteError
+              : "Bạn có chắc chắn muốn xóa đăng ký lớp học này? Hành động này không thể hoàn tác."
+          }
+          confirmText={deleteError ? "Đóng" : "Xóa đăng ký"}
+          cancelText="Hủy"
+          isError={!!deleteError}
+        />
+      </motion.div>
+    </>
   );
 }

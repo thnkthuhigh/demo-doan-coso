@@ -394,3 +394,96 @@ export const getPaymentDetails = async (req, res) => {
     res.status(500).json({ message: "Lỗi server" });
   }
 };
+
+// Thêm function mới cho xóa đăng ký thanh toán
+export const deletePaymentEnrollment = async (req, res) => {
+  try {
+    const { enrollmentId } = req.params;
+    const userId = req.user.id;
+
+    // Tìm enrollment
+    const enrollment = await ClassEnrollment.findById(enrollmentId);
+
+    if (!enrollment) {
+      return res.status(404).json({
+        message: "Không tìm thấy đăng ký",
+      });
+    }
+
+    // Kiểm tra quyền: chỉ user đăng ký hoặc admin mới có thể xóa
+    if (enrollment.user.toString() !== userId && req.user.role !== "admin") {
+      return res.status(403).json({
+        message: "Bạn không có quyền xóa đăng ký này",
+      });
+    }
+
+    // Kiểm tra trạng thái thanh toán
+    if (enrollment.paymentStatus === "paid") {
+      return res.status(400).json({
+        message:
+          "Không thể xóa đăng ký đã thanh toán. Vui lòng liên hệ admin để được hỗ trợ.",
+      });
+    }
+
+    // Xóa đăng ký (chỉ cho phép xóa khi chưa thanh toán)
+    await ClassEnrollment.findByIdAndDelete(enrollmentId);
+
+    return res.status(200).json({
+      message: "Đã xóa đăng ký thành công",
+    });
+  } catch (error) {
+    console.error("Error deleting payment enrollment:", error);
+    return res.status(500).json({
+      message: "Lỗi server khi xóa đăng ký",
+      error: error.message,
+    });
+  }
+};
+
+// Giữ nguyên function deleteEnrollment cũ cho việc xóa enrollment dựa trên trạng thái lớp học
+export const deleteEnrollment = async (req, res) => {
+  try {
+    const { enrollmentId } = req.params;
+
+    // Tìm enrollment với populate class để kiểm tra trạng thái
+    const enrollment = await ClassEnrollment.findById(enrollmentId).populate({
+      path: "class",
+      select: "className status startDate endDate schedule",
+    });
+
+    if (!enrollment) {
+      return res.status(404).json({
+        message: "Không tìm thấy đăng ký lớp học",
+      });
+    }
+
+    // Kiểm tra trạng thái lớp học
+    const classInfo = enrollment.class;
+    const currentDate = new Date();
+    const classStartDate = new Date(classInfo.startDate);
+
+    // Nếu lớp đã bắt đầu hoặc đang diễn ra
+    if (
+      classInfo.status === "ongoing" ||
+      (classStartDate <= currentDate && classInfo.status !== "completed")
+    ) {
+      return res.status(400).json({
+        message:
+          "Không thể hủy đăng ký khi lớp học đang diễn ra. Vui lòng liên hệ admin để được hỗ trợ.",
+      });
+    }
+
+    // Nếu lớp chưa bắt đầu, cho phép xóa
+    await ClassEnrollment.findByIdAndDelete(enrollmentId);
+
+    return res.status(200).json({
+      message: "Đã hủy đăng ký lớp học thành công",
+    });
+  } catch (error) {
+    console.error("Error deleting enrollment:", error);
+    return res.status(500).json({
+      message: "Lỗi server khi xóa đăng ký",
+      error: error.message,
+    });
+  }
+};

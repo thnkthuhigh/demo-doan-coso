@@ -1,164 +1,33 @@
 import { useState, useEffect } from "react";
-import GymImageGallery from "../Club/Banner";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import PricingPlans from "../PricingPlans";
 import Toast from "../common/Toast";
-
-const membershipPlans = [
-  {
-    id: "basic",
-    name: "Gói Cơ Bản",
-    price: 1980000,
-    duration: 30, // days
-    type: "Basic",
-    features: [
-      "Tập luyện tại 01 CLB đã chọn.",
-      "Tham gia Yoga và Group X tại 01 CLB đã chọn.",
-      "1 buổi định hướng luyện tập và tư vấn dinh dưỡng.",
-      "Sử dụng dịch vụ thư giãn (sauna, steambath).",
-      "Nước uống miễn phí.",
-      "Khăn tập thể thao cao cấp.",
-    ],
-    color: "blue",
-    badge: "Phổ biến",
-  },
-  {
-    id: "standard",
-    name: "Gói Cơ Bản Nâng Cao",
-    price: 5400000,
-    duration: 90, // 3 months
-    type: "Standard",
-    features: [
-      "Tập luyện tại 01 CLB đã chọn.",
-      "Tham gia Yoga và Group X tại 01 CLB đã chọn.",
-      "Tự do tập luyện tại tất cả các câu lạc bộ trong hệ thống.",
-      "Không giới hạn thời gian luyện tập.",
-      "Sử dụng dịch vụ thư giãn sau luyện tập (sauna, steambath).",
-      "Khăn tập thể thao cao cấp.",
-      "Hệ thống khóa từ thông minh, bảo mật tối ưu.",
-    ],
-    color: "green",
-    badge: "Tiết kiệm",
-  },
-  {
-    id: "vip",
-    name: "Gói VIP",
-    price: 10800000,
-    duration: 180, // 6 months
-    type: "VIP",
-    features: [
-      "Tự do tập luyện tại tất cả các CLB trong hệ thống.",
-      "Tham gia tất cả các lớp Yoga và Group X tại tất cả các CLB.",
-      "Được dẫn theo 1 người thân đi tập.",
-      "Nước uống miễn phí, khăn tập thể thao cao cấp.",
-      "Ưu tiên đặt chỗ các lớp Yoga và GroupX trước 48 tiếng.",
-    ],
-    color: "amber",
-    popular: true,
-  },
-  {
-    id: "offpeak-basic",
-    name: "Gói Giờ Thấp Điểm",
-    price: 1200000,
-    duration: 30, // days
-    type: "Basic",
-    features: [
-      "Tập luyện tại 01 CLB đã chọn.",
-      "Chỉ được tập từ 10:00 - 16:00 các ngày trong tuần.",
-      "Không được sử dụng vào ngày cuối tuần và ngày lễ.",
-      "1 buổi định hướng luyện tập cơ bản.",
-      "Nước uống miễn phí.",
-    ],
-    color: "blue",
-    badge: "Tiết kiệm",
-    offPeak: true,
-  },
-  {
-    id: "student",
-    name: "Gói Sinh Viên",
-    price: 1500000,
-    duration: 30, // days
-    type: "Basic",
-    features: [
-      "Chỉ áp dụng cho sinh viên (yêu cầu thẻ sinh viên).",
-      "Tập luyện tại 01 CLB đã chọn.",
-      "Tham gia Yoga và Group X cơ bản.",
-      "Được sử dụng vào tất cả các ngày trong tuần.",
-      "Nước uống miễn phí.",
-    ],
-    color: "indigo",
-    badge: "Sinh viên",
-  },
-  {
-    id: "weekend",
-    name: "Gói Cuối Tuần",
-    price: 990000,
-    duration: 30, // days
-    type: "Basic",
-    features: [
-      "Chỉ được sử dụng vào các ngày cuối tuần (T7, CN).",
-      "Tập luyện tại 01 CLB đã chọn.",
-      "Tham gia tất cả các lớp Yoga và Group X trong ngày cuối tuần.",
-      "Không giới hạn thời gian tập luyện vào ngày cuối tuần.",
-      "Nước uống miễn phí.",
-    ],
-    color: "rose",
-    badge: "Cuối tuần",
-  },
-  {
-    id: "family",
-    name: "Gói Gia Đình",
-    price: 3500000,
-    duration: 30, // days
-    type: "Standard",
-    features: [
-      "Dành cho 2 thành viên trong gia đình.",
-      "Tập luyện tại 01 CLB đã chọn.",
-      "Tham gia các lớp Yoga và Group X.",
-      "Sử dụng dịch vụ thư giãn (sauna, steambath).",
-      "Nước uống miễn phí.",
-      "Khăn tập thể thao cao cấp.",
-    ],
-    color: "purple",
-    badge: "Gia đình",
-  },
-  {
-    id: "senior",
-    name: "Gói Người Cao Tuổi",
-    price: 1500000,
-    duration: 30, // days
-    type: "Basic",
-    features: [
-      "Dành cho người trên 55 tuổi.",
-      "Tập luyện tại 01 CLB đã chọn.",
-      "Các lớp tập nhẹ nhàng chuyên biệt.",
-      "Huấn luyện viên có kinh nghiệm với người cao tuổi.",
-      "Thời gian tập không giới hạn.",
-      "Nước uống miễn phí.",
-    ],
-    color: "teal",
-    badge: "Người cao tuổi",
-  },
-];
+import {
+  MapPin,
+  Star,
+  Crown,
+  ArrowRight,
+  X,
+  CheckCircle,
+  Cherry,
+  Mountain,
+  Waves,
+  Sparkles,
+  Heart,
+  Shield,
+  Award,
+} from "lucide-react";
 
 export default function Club() {
   const navigate = useNavigate();
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    interest: "",
-  });
-  const [formStatus, setFormStatus] = useState(null);
   const [selectedClub, setSelectedClub] = useState(null);
   const [showMembershipSection, setShowMembershipSection] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [filterType, setFilterType] = useState("all"); // "all", "regular", "offpeak"
   const [userId, setUserId] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [membershipMessage, setMembershipMessage] = useState({
@@ -175,6 +44,35 @@ export default function Club() {
         setClubs(response.data);
       } catch (error) {
         console.error("Lỗi khi tải danh sách CLB:", error);
+        // Fallback data nếu API không hoạt động
+        setClubs([
+          {
+            id: 1,
+            name: "Royal Fitness Premium",
+            address: "123 Nguyễn Văn Linh, Quận 7, TP.HCM",
+            description:
+              "Câu lạc bộ cao cấp với trang thiết bị hiện đại và dịch vụ 5 sao",
+            image:
+              "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+          },
+          {
+            id: 2,
+            name: "Royal Fitness Elite",
+            address: "456 Lê Văn Việt, Quận 9, TP.HCM",
+            description:
+              "Không gian tập luyện sang trọng với huấn luyện viên chuyên nghiệp",
+            image:
+              "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800",
+          },
+          {
+            id: 3,
+            name: "Royal Fitness Zen",
+            address: "789 Võ Văn Tần, Quận 3, TP.HCM",
+            description: "Kết hợp triết lý phương Đông với công nghệ hiện đại",
+            image:
+              "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800",
+          },
+        ]);
       } finally {
         setLoading(false);
       }
@@ -183,46 +81,50 @@ export default function Club() {
     fetchClubs();
   }, []);
 
+  // Sửa lỗi localStorage - Kiểm tra environment và handle errors
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
+    const initializeAuth = () => {
+      // Kiểm tra xem có đang trong browser environment không
+      if (typeof window === "undefined") return;
+
       try {
-        const decoded = jwtDecode(token);
-        setUserId(decoded.userId);
-        setIsLoggedIn(true);
-      } catch (error) {
-        console.error("Invalid token:", error);
+        // Kiểm tra localStorage có available không
+        if (!window.localStorage) {
+          console.warn("localStorage không khả dụng");
+          return;
+        }
+
+        const token = localStorage.getItem("token");
+        if (token && token !== "undefined" && token !== "null") {
+          try {
+            const decoded = jwtDecode(token);
+            // Kiểm tra token có hết hạn không
+            if (decoded.exp && decoded.exp * 1000 > Date.now()) {
+              setUserId(decoded.userId);
+              setIsLoggedIn(true);
+            } else {
+              // Token hết hạn, xóa khỏi localStorage
+              localStorage.removeItem("token");
+            }
+          } catch (jwtError) {
+            console.warn("Token không hợp lệ:", jwtError);
+            // Xóa token không hợp lệ
+            localStorage.removeItem("token");
+          }
+        }
+      } catch (storageError) {
+        console.warn("Lỗi truy cập localStorage:", storageError);
+        // Fallback: sử dụng session state
+        setIsLoggedIn(false);
+        setUserId(null);
       }
-    }
+    };
+
+    // Chờ component mount hoàn toàn
+    const timeoutId = setTimeout(initializeAuth, 100);
+
+    return () => clearTimeout(timeoutId);
   }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setFormStatus("submitting");
-
-    try {
-      // Demo API call - thay thế với API thật khi có
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Form submitted:", formData);
-      setFormStatus("success");
-      setFormData({ name: "", email: "", phone: "", interest: "" });
-
-      setTimeout(() => setFormStatus(null), 3000);
-    } catch (error) {
-      console.error("Lỗi khi gửi form:", error);
-      setFormStatus("error");
-
-      setTimeout(() => setFormStatus(null), 3000);
-    }
-  };
 
   const openClubDetails = (club) => {
     setSelectedClub(club);
@@ -236,187 +138,361 @@ export default function Club() {
     setSelectedPlan(plan);
   };
 
-  const getFilteredPlans = () => {
-    if (filterType === "all") return membershipPlans;
-    if (filterType === "offpeak")
-      return membershipPlans.filter((plan) => plan.offPeak);
-    return membershipPlans.filter((plan) => !plan.offPeak);
-  };
+  const clubImages = [
+    "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920",
+    "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920",
+    "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1920",
+    "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1920",
+  ];
 
-  // Format price
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN").format(price);
-  };
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-      },
+  const clubFeatures = [
+    {
+      icon: <Shield className="h-6 w-6" />,
+      title: "An Toàn Tuyệt Đối",
+      description: "Hệ thống bảo mật và vệ sinh đạt chuẩn quốc tế",
     },
+    {
+      icon: <Award className="h-6 w-6" />,
+      title: "Chất Lượng Hàng Đầu",
+      description: "Trang thiết bị hiện đại nhập khẩu từ châu Âu",
+    },
+    {
+      icon: <Heart className="h-6 w-6" />,
+      title: "Dịch Vụ Tận Tâm",
+      description: "Đội ngũ nhân viên chuyên nghiệp, tận tình",
+    },
+  ];
+
+  const clubEquipments = [
+    "Máy tập hiện đại nhập khẩu từ Mỹ",
+    "Phòng tập rộng rãi, thoáng mát",
+    "Khu vực cardio riêng biệt",
+    "Phòng tập yoga chuyên biệt",
+    "Hệ thống âm thanh ánh sáng hiện đại",
+    "Khu vực thay đồ sang trọng",
+  ];
+
+  const clubServices = [
+    "Huấn luyện viên cá nhân chuyên nghiệp",
+    "Các lớp học nhóm đa dạng",
+    "Tư vấn dinh dưỡng miễn phí",
+    "Spa & massage thư giãn",
+    "Căng tin thực phẩm healthy",
+    "Dịch vụ giữ trẻ an toàn",
+  ];
+
+  const handleScrollToClubs = () => {
+    try {
+      const element = document.getElementById("clubs-section");
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    } catch (error) {
+      console.warn("Scroll error:", error);
+    }
   };
 
-  const itemVariants = {
-    hidden: { y: 50, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
-    },
+  // Safe image handler
+  const handleImageError = (e) => {
+    e.target.src =
+      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800";
   };
 
   return (
-    <div className="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen">
-      {/* Toast notification */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        onClose={() => setToast({ message: "", type: "" })}
-      />
-
-      {/* Hero Section */}
-      <div className="relative h-[70vh] overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-purple-900/80 z-10"></div>
-        <div className="absolute inset-0">
-          <GymImageGallery />
-        </div>
-        <div className="absolute inset-0 z-20 flex items-center justify-center">
-          <motion.div
-            className="text-center max-w-4xl px-6"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h1 className="text-5xl sm:text-6xl font-extrabold text-white uppercase tracking-wide mb-4 drop-shadow-lg">
-              Hệ Thống Câu Lạc Bộ
-            </h1>
-            <p className="text-2xl sm:text-3xl text-white/90 italic font-light">
-              "Chinh phục sức khỏe, vươn tới đỉnh cao cùng chúng tôi!"
-            </p>
-          </motion.div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-gray-50 to-transparent z-10"></div>
-      </div>
-
-      {/* Club List Section */}
-      <div className="max-w-7xl mx-auto px-6 py-24">
+    <div className="min-h-screen bg-gray-50">
+      {/* Floating Elements - Japanese Aesthetic */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="mb-16 text-center"
+          animate={{
+            y: [0, -20, 0],
+            rotate: [0, 5, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute top-20 left-10"
         >
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">
-            Khám Phá Các Câu Lạc Bộ
-          </h2>
-          <div className="w-20 h-1.5 bg-blue-600 mx-auto rounded-full"></div>
-          <p className="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
-            Chúng tôi tự hào mang đến cho bạn hệ thống câu lạc bộ hiện đại,
-            trang thiết bị đẳng cấp và đội ngũ HLV chuyên nghiệp, giúp bạn đạt
-            được mục tiêu sức khỏe và thể hình.
-          </p>
+          <Cherry className="h-12 w-12 text-pink-400 opacity-30" />
         </motion.div>
 
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-gray-600 text-lg font-medium">
-                Đang tải danh sách CLB...
-              </span>
-            </div>
-          </div>
-        ) : (
+        <motion.div
+          animate={{
+            y: [0, 15, 0],
+            rotate: [0, -10, 0],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2,
+          }}
+          className="absolute top-40 right-20"
+        >
+          <Mountain className="h-16 w-16 text-blue-400 opacity-20" />
+        </motion.div>
+      </div>
+
+      {/* Toast notification - Conditional rendering */}
+      {toast.message && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ message: "", type: "" })}
+        />
+      )}
+
+      {/* Hero Section - Japanese Zen Style */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background with Japanese overlay */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: `url(${clubImages[0]})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-gray-900/70 to-blue-900/60 z-10" />
+
+        {/* Geometric Overlay - Japanese Pattern */}
+        <div className="absolute inset-0 z-15">
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-pink-300/30 rounded-none rotate-45 animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/3 w-24 h-24 border border-blue-300/30 rounded-full animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/4 w-20 h-20 border border-green-300/30 rotate-12 animate-pulse delay-2000"></div>
+        </div>
+
+        <div className="relative z-20 max-w-6xl mx-auto px-4">
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2 }}
+            className="text-center max-w-4xl mx-auto"
           >
-            {clubs.map((club, index) => (
+            {/* Hero Title */}
+            <div className="relative mb-8">
+              <h1 className="text-5xl md:text-7xl font-light text-white mb-4">
+                <span className="text-pink-400">Royal</span>
+                <span className="mx-4 text-yellow-400">•</span>
+                <span className="text-blue-400">Fitness</span>
+              </h1>
+              <div className="w-32 h-1 bg-gradient-to-r from-pink-400 via-yellow-400 to-blue-400 mx-auto rounded-full"></div>
+            </div>
+
+            <div className="space-y-6 mb-12">
+              <p className="text-xl md:text-2xl text-white/90 font-light italic">
+                Chinh phục đỉnh cao sức khỏe cùng chúng tôi
+              </p>
+              <p className="text-lg md:text-xl text-white/80">
+                Nơi giao thoa giữa truyền thống và hiện đại
+              </p>
+              <p className="text-base text-white/70 max-w-2xl mx-auto leading-relaxed">
+                Khám phá hệ thống câu lạc bộ hiện đại với triết lý phương Đông,
+                nơi bạn không chỉ rèn luyện thể chất mà còn tìm thấy sự cân bằng
+                trong tâm hồn
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <motion.button
+                whileHover={{ scale: 1.05, rotate: 1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleScrollToClubs}
+                className="px-8 py-4 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
+              >
+                <Cherry className="inline mr-3 h-5 w-5" />
+                <span>Khám Phá Câu Lạc Bộ</span>
+                <ArrowRight className="inline ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </motion.button>
+
+              <Link to="/membership">
+                <motion.button
+                  whileHover={{ scale: 1.05, rotate: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Crown className="inline mr-3 h-5 w-5" />
+                  <span>Đăng Ký Thành Viên</span>
+                </motion.button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-gradient-to-br from-pink-50 via-white to-blue-50">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-light text-gray-800 mb-6">
+              Tại Sao Chọn Chúng Tôi?
+            </h2>
+            <p className="text-pink-500 font-medium tracking-wider mb-4 uppercase text-sm">
+              Điểm Khác Biệt
+            </p>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Sự hòa quyện hoàn hảo giữa triết lý phương Đông và công nghệ hiện
+              đại, tạo nên trải nghiệm tập luyện độc đáo
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {clubFeatures.map((feature, index) => (
               <motion.div
                 key={index}
-                variants={itemVariants}
-                whileHover={{ y: -10 }}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.2 }}
+                viewport={{ once: true }}
+                className="group"
               >
-                <div className="overflow-hidden h-64">
-                  <img
-                    src={club.image}
-                    alt={club.name}
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-                  />
-                </div>
-                <div className="p-6 space-y-3">
-                  <h3 className="text-2xl font-bold text-gray-800 flex items-center">
-                    {club.name}
-                    <span className="ml-2 w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                  </h3>
-                  <p className="text-sm text-gray-500 flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    {club.address}
-                  </p>
-                  <p className="text-gray-700 line-clamp-3">
-                    {club.description}
-                  </p>
-                  <div className="pt-4">
-                    <button
-                      onClick={() => openClubDetails(club)}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 shadow-md w-full"
-                    >
-                      Xem Chi Tiết
-                    </button>
+                <div className="bg-white rounded-2xl p-8 text-center h-full shadow-lg hover:shadow-xl transition-all duration-500 group-hover:transform group-hover:scale-105 border border-gray-100">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full text-white mb-6 group-hover:scale-110 transition-transform duration-300">
+                    {feature.icon}
                   </div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed text-sm">
+                    {feature.description}
+                  </p>
                 </div>
               </motion.div>
             ))}
-          </motion.div>
-        )}
-      </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Club List Section */}
+      <section className="py-20 bg-white" id="clubs-section">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-light text-gray-800 mb-6">
+              Khám Phá Các Câu Lạc Bộ
+            </h2>
+            <p className="text-blue-500 font-medium tracking-wider mb-4 uppercase text-sm">
+              Hệ Thống Cơ Sở
+            </p>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Mỗi câu lạc bộ đều được thiết kế với không gian thiền định và
+              trang thiết bị hiện đại, mang đến trải nghiệm tập luyện tuyệt vời
+            </p>
+            <div className="w-24 h-px bg-gradient-to-r from-transparent via-pink-500 to-transparent mx-auto mt-8"></div>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="text-center">
+                <div className="w-12 h-12 border-2 border-pink-300 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
+                <p className="text-gray-600">
+                  Đang tải danh sách câu lạc bộ...
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {clubs.map((club, index) => (
+                <motion.div
+                  key={club.id || `club-${index}`}
+                  initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.8, delay: index * 0.15 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -10 }}
+                  className="h-full group"
+                >
+                  <div className="bg-white rounded-2xl overflow-hidden h-full shadow-lg hover:shadow-2xl transition-all duration-700 group-hover:transform group-hover:scale-105 border border-gray-100">
+                    {/* Image Section */}
+                    <div className="relative overflow-hidden h-64">
+                      <img
+                        src={club.image}
+                        alt={club.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                        onError={handleImageError}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                      {/* Status Indicator */}
+                      <div className="absolute top-4 right-4">
+                        <div className="flex items-center space-x-2 bg-black/20 backdrop-blur-sm rounded-full px-3 py-1">
+                          <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                          <span className="text-white font-medium text-sm">
+                            Đang hoạt động
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Pattern Overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-blue-500 to-green-500 opacity-80"></div>
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="p-6 space-y-4">
+                      <div className="flex items-start justify-between">
+                        <h3 className="text-xl font-semibold text-gray-800 group-hover:text-pink-600 transition-colors flex-1">
+                          {club.name}
+                        </h3>
+                        <div className="flex ml-4">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={`star-${i}`}
+                              className="h-4 w-4 text-yellow-400 fill-current"
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center text-gray-600">
+                        <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-pink-500" />
+                        <span className="text-sm">{club.address}</span>
+                      </div>
+
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        {club.description}
+                      </p>
+
+                      <div className="pt-4 space-y-3 border-t border-gray-100">
+                        <button
+                          onClick={() => openClubDetails(club)}
+                          className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 px-4 rounded-lg font-medium hover:shadow-lg transition-all duration-300 group flex items-center justify-center"
+                        >
+                          <span>Xem Chi Tiết</span>
+                          <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </button>
+
+                        <Link to="/membership" className="block">
+                          <button className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3 px-4 rounded-lg font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center">
+                            <Crown className="h-4 w-4 mr-2" />
+                            <span>Đăng Ký Ngay</span>
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Membership Section */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">
-              Đăng Ký Gói Tập
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-light text-gray-800 mb-6">
+              Gói Thành Viên
             </h2>
-            <div className="w-20 h-1.5 bg-blue-600 mx-auto rounded-full"></div>
-            <p className="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
-              Chọn gói tập phù hợp với lịch trình và nhu cầu của bạn. Chúng tôi
-              cung cấp nhiều gói tập đa dạng từ giờ thấp điểm đến các gói dành
-              riêng cho cuối tuần.
+            <p className="text-blue-500 font-medium tracking-wider mb-4 uppercase text-sm">
+              Chọn Gói Phù Hợp
+            </p>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Lựa chọn gói tập phù hợp với lối sống và mục tiêu của bạn, từ cơ
+              bản đến cao cấp với nhiều ưu đãi hấp dẫn
             </p>
 
             {!showMembershipSection ? (
@@ -424,495 +500,193 @@ export default function Club() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
-                className="mt-8"
+                className="mt-12"
               >
                 <button
                   onClick={() => setShowMembershipSection(true)}
-                  className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition duration-300"
+                  className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
                 >
-                  Xem Các Gói Tập
+                  <Sparkles className="inline mr-3 h-5 w-5" />
+                  <span>Xem Các Gói Thành Viên</span>
+                  <ArrowRight className="inline ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </motion.div>
             ) : null}
-          </motion.div>
+          </div>
 
           {showMembershipSection && (
-            <>
-              {/* PricingPlans Component - Notice the readOnly prop */}
-              <PricingPlans
-                selectedPlan={selectedPlan}
-                onSelectPlan={handleSelectPlan}
-                filterCategory={filterCategory}
-                onFilterChange={setFilterCategory}
-                message={membershipMessage}
-                readOnly={true} // Set this to true to hide selection buttons
-              />
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                <PricingPlans
+                  selectedPlan={selectedPlan}
+                  onSelectPlan={handleSelectPlan}
+                  filterCategory={filterCategory}
+                  onFilterChange={setFilterCategory}
+                  message={membershipMessage}
+                  readOnly={true}
+                />
 
-              <div className="text-center my-12">
-                <Link
-                  to="/membership"
-                  className="px-8 py-4 rounded-xl text-white font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all shadow-md"
-                >
-                  Đăng ký ngay
-                </Link>
+                <div className="text-center mt-12 pt-8 border-t border-gray-100">
+                  <Link to="/membership">
+                    <button className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group">
+                      <Crown className="inline mr-3 h-5 w-5" />
+                      <span>Đăng Ký Thành Viên Ngay</span>
+                      <ArrowRight className="inline ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </Link>
+                </div>
               </div>
-            </>
+            </motion.div>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* Registration Form */}
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 py-20 px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-white"
-          >
-            <h2 className="text-4xl font-bold mb-6">Đăng Ký Tư Vấn Miễn Phí</h2>
-            <p className="text-lg text-white/90 mb-8">
-              Hãy để lại thông tin của bạn, chúng tôi sẽ liên hệ và tư vấn miễn
-              phí về các dịch vụ phù hợp nhất với nhu cầu của bạn.
-            </p>
-            <div className="space-y-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mr-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <span>Tư vấn chuyên nghiệp với HLV kinh nghiệm</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mr-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <span>Lộ trình tập luyện phù hợp với thể trạng</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mr-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <span>Chế độ dinh dưỡng khoa học</span>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <form
-              onSubmit={handleSubmit}
-              className="bg-white p-8 rounded-2xl shadow-2xl space-y-5"
-            >
-              <div>
-                <label
-                  htmlFor="name"
-                  className="text-sm font-medium text-gray-700 block mb-2"
-                >
-                  Họ và tên
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Nhập họ và tên của bạn"
-                  required
-                  className="w-full p-4 rounded-xl border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="email"
-                  className="text-sm font-medium text-gray-700 block mb-2"
-                >
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="example@email.com"
-                  required
-                  className="w-full p-4 rounded-xl border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="text-sm font-medium text-gray-700 block mb-2"
-                >
-                  Số điện thoại
-                </label>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="0987654321"
-                  required
-                  className="w-full p-4 rounded-xl border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="interest"
-                  className="text-sm font-medium text-gray-700 block mb-2"
-                >
-                  Nội dung quan tâm
-                </label>
-                <textarea
-                  id="interest"
-                  name="interest"
-                  value={formData.interest}
-                  onChange={handleInputChange}
-                  placeholder="Tôi quan tâm đến..."
-                  rows="3"
-                  className="w-full p-4 rounded-xl border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                ></textarea>
-              </div>
-
-              <button
-                type="submit"
-                disabled={formStatus === "submitting"}
-                className={`w-full py-4 mt-4 font-bold rounded-xl shadow-lg transition duration-300 ${
-                  formStatus === "submitting"
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
-                }`}
-              >
-                {formStatus === "submitting" ? (
-                  <div className="flex items-center justify-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Đang gửi...
-                  </div>
-                ) : (
-                  "Gửi Đăng Ký"
-                )}
-              </button>
-
-              {formStatus === "success" && (
-                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <svg
-                        className="h-5 w-5 text-green-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-green-700">
-                        Đăng ký thành công! Chúng tôi sẽ liên hệ sớm nhất.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {formStatus === "error" && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg
-                        className="h-5 w-5 text-red-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700">
-                        Có lỗi xảy ra! Vui lòng thử lại sau.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </form>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Modal for club details */}
+      {/* Club Details Modal */}
       {selectedClub && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200"
           >
-            <div className="relative">
-              <img
-                src={selectedClub.image}
-                alt={selectedClub.name}
-                className="w-full h-72 object-cover"
-              />
-              <button
-                onClick={closeClubDetails}
-                className="absolute top-4 right-4 bg-black/50 hover:bg-black text-white p-2 rounded-full transition duration-200"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="p-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">
-                {selectedClub.name}
-              </h2>
-              <div className="flex items-center mb-6">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-gray-500 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                <span className="text-gray-600">{selectedClub.address}</span>
-              </div>
-
-              <p className="text-gray-700 mb-8">{selectedClub.description}</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-blue-50 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                    Trang Thiết Bị
-                  </h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <svg
-                        className="h-5 w-5 text-blue-600 mr-2 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Máy tập hiện đại nhập khẩu từ Mỹ
-                    </li>
-                    <li className="flex items-start">
-                      <svg
-                        className="h-5 w-5 text-blue-600 mr-2 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Phòng tập rộng rãi, thoáng mát
-                    </li>
-                    <li className="flex items-start">
-                      <svg
-                        className="h-5 w-5 text-blue-600 mr-2 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Khu vực cardio riêng biệt
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="bg-blue-50 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                    Dịch Vụ
-                  </h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <svg
-                        className="h-5 w-5 text-blue-600 mr-2 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Huấn luyện viên cá nhân
-                    </li>
-                    <li className="flex items-start">
-                      <svg
-                        className="h-5 w-5 text-blue-600 mr-2 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Các lớp học nhóm đa dạng
-                    </li>
-                    <li className="flex items-start">
-                      <svg
-                        className="h-5 w-5 text-blue-600 mr-2 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Tư vấn dinh dưỡng
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="mt-8 flex justify-center">
+            <div className="p-8 space-y-8">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-gray-100 pb-6">
+                <h2 className="text-3xl font-light text-gray-800">
+                  {selectedClub.name}
+                </h2>
                 <button
                   onClick={closeClubDetails}
-                  className="mr-4 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="h-6 w-6 text-gray-600" />
+                </button>
+              </div>
+
+              {/* Hero Image */}
+              <div className="relative overflow-hidden rounded-xl">
+                <img
+                  src={selectedClub.image}
+                  alt={selectedClub.name}
+                  className="w-full h-80 object-cover"
+                  onError={handleImageError}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="flex items-center text-white">
+                    <MapPin className="h-5 w-5 mr-2" />
+                    <span className="font-medium">{selectedClub.address}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                  Giới Thiệu
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {selectedClub.description}. Với không gian hiện đại và đội ngũ
+                  chuyên nghiệp, chúng tôi cam kết mang đến cho bạn trải nghiệm
+                  tập luyện tuyệt vời nhất.
+                </p>
+              </div>
+
+              {/* Features Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                  <h3 className="text-lg font-semibold text-blue-600 mb-4 flex items-center">
+                    <Shield className="h-5 w-5 mr-2" />
+                    Trang Thiết Bị
+                  </h3>
+                  <div className="space-y-3">
+                    {clubEquipments.map((item, index) => (
+                      <div
+                        key={`equipment-${index}`}
+                        className="flex items-start"
+                      >
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-600 text-sm">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl p-6 border border-pink-100">
+                  <h3 className="text-lg font-semibold text-pink-600 mb-4 flex items-center">
+                    <Heart className="h-5 w-5 mr-2" />
+                    Dịch Vụ
+                  </h3>
+                  <div className="space-y-3">
+                    {clubServices.map((item, index) => (
+                      <div
+                        key={`service-${index}`}
+                        className="flex items-start"
+                      >
+                        <CheckCircle className="h-5 w-5 text-pink-500 mr-3 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-600 text-sm">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Info */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-yellow-700 mb-3 flex items-center">
+                  <Star className="h-5 w-5 mr-2" />
+                  Ưu Đãi Đặc Biệt
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-yellow-700">
+                  <div>• Miễn phí tư vấn dinh dưỡng cho thành viên mới</div>
+                  <div>• Giảm giá 20% gói PT trong tháng đầu</div>
+                  <div>• Free trial 3 ngày cho khách hàng mới</div>
+                  <div>• Tặng áo thun Royal Fitness khi đăng ký</div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100">
+                <button
+                  onClick={closeClubDetails}
+                  className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium hover:bg-gray-300 transition-colors"
                 >
                   Đóng
                 </button>
-                <Link
-                  to="/membership"
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                >
-                  Đăng Ký Thành Viên
+                <Link to="/membership" className="flex-1">
+                  <button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 px-6 rounded-lg font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center">
+                    <Crown className="mr-2 h-4 w-4" />
+                    <span>Đăng Ký Thành Viên</span>
+                  </button>
                 </Link>
               </div>
             </div>
           </motion.div>
         </div>
       )}
+
+      {/* Floating Action Button */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 2, duration: 0.5 }}
+        className="fixed bottom-8 right-8 z-40"
+      >
+        <Link to="/membership">
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-16 h-16 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full shadow-lg flex items-center justify-center group hover:shadow-xl transition-all duration-300"
+          >
+            <Crown className="h-8 w-8 group-hover:scale-110 transition-transform" />
+          </motion.button>
+        </Link>
+      </motion.div>
     </div>
   );
 }

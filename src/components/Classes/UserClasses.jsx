@@ -21,6 +21,19 @@ import {
   BarChart3,
   Target,
   Award,
+  Cherry,
+  Mountain,
+  Waves,
+  Star,
+  Sparkles,
+  Crown,
+  ArrowRight,
+  Heart,
+  Activity,
+  Zap,
+  Gem,
+  Flower2,
+  Shield,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -37,12 +50,12 @@ export default function UserClasses() {
   const [attendanceData, setAttendanceData] = useState({});
 
   const statusOptions = [
-    { value: "all", label: "Tất cả" },
-    { value: "paid", label: "Đã thanh toán" },
-    { value: "pending", label: "Chờ thanh toán" },
-    { value: "upcoming", label: "Sắp diễn ra" },
-    { value: "ongoing", label: "Đang học" },
-    { value: "completed", label: "Hoàn thành" },
+    { value: "all", label: "Tất Cả Lớp Học", icon: Sparkles },
+    { value: "paid", label: "Đã Thanh Toán", icon: CheckCircle },
+    { value: "pending", label: "Chờ Thanh Toán", icon: AlertTriangle },
+    { value: "upcoming", label: "Sắp Diễn Ra", icon: Calendar },
+    { value: "ongoing", label: "Đang Học", icon: Activity },
+    { value: "completed", label: "Hoàn Thành", icon: Award },
   ];
 
   useEffect(() => {
@@ -58,7 +71,7 @@ export default function UserClasses() {
           navigate("/login");
         }
       } catch (error) {
-        console.error("Error parsing user data:", error);
+        console.error("Lỗi phân tích dữ liệu người dùng:", error);
         navigate("/login");
       }
     } else {
@@ -86,12 +99,11 @@ export default function UserClasses() {
 
       setEnrollments(response.data || []);
 
-      // Fetch attendance data for each class
       if (response.data && response.data.length > 0) {
         fetchAttendanceData(uid);
       }
     } catch (error) {
-      console.error("Lỗi khi lấy lớp học của user:", error);
+      console.error("Lỗi khi lấy lớp học của người dùng:", error);
       if (error.response?.status === 401) {
         toast.error("Phiên đăng nhập đã hết hạn");
         navigate("/login");
@@ -115,7 +127,6 @@ export default function UserClasses() {
         }
       );
 
-      // Group attendance by class
       const attendanceByClass = {};
       response.data.attendanceRecords?.forEach((record) => {
         const classId = record.classId?._id || record.classId;
@@ -154,10 +165,11 @@ export default function UserClasses() {
       return {
         color: "amber",
         icon: AlertTriangle,
-        text: "Chờ thanh toán",
-        bgColor: "bg-amber-50",
+        text: "Chờ Thanh Toán",
+        bgColor: "bg-gradient-to-r from-amber-50 to-orange-50",
         borderColor: "border-amber-200",
         textColor: "text-amber-700",
+        iconBg: "bg-amber-100",
       };
     }
 
@@ -165,50 +177,64 @@ export default function UserClasses() {
       case "upcoming":
         return {
           color: "blue",
-          icon: Clock,
-          text: "Sắp diễn ra",
-          bgColor: "bg-blue-50",
+          icon: Calendar,
+          text: "Sắp Diễn Ra",
+          bgColor: "bg-gradient-to-r from-blue-50 to-indigo-50",
           borderColor: "border-blue-200",
           textColor: "text-blue-700",
+          iconBg: "bg-blue-100",
         };
       case "ongoing":
         return {
           color: "green",
-          icon: CheckCircle,
-          text: "Đang diễn ra",
-          bgColor: "bg-green-50",
+          icon: Activity,
+          text: "Đang Diễn Ra",
+          bgColor: "bg-gradient-to-r from-green-50 to-emerald-50",
           borderColor: "border-green-200",
           textColor: "text-green-700",
+          iconBg: "bg-green-100",
         };
       case "completed":
         return {
-          color: "gray",
+          color: "purple",
           icon: Award,
-          text: "Hoàn thành",
-          bgColor: "bg-gray-50",
-          borderColor: "border-gray-200",
-          textColor: "text-gray-700",
+          text: "Hoàn Thành",
+          bgColor: "bg-gradient-to-r from-purple-50 to-violet-50",
+          borderColor: "border-purple-200",
+          textColor: "text-purple-700",
+          iconBg: "bg-purple-100",
         };
       default:
         return {
           color: "gray",
           icon: XCircle,
-          text: "Không xác định",
-          bgColor: "bg-gray-50",
+          text: "Không Xác Định",
+          bgColor: "bg-gradient-to-r from-gray-50 to-slate-50",
           borderColor: "border-gray-200",
           textColor: "text-gray-700",
+          iconBg: "bg-gray-100",
         };
     }
   };
 
   const formatSchedule = (schedule) => {
-    if (!schedule || schedule.length === 0) return "Chưa có lịch";
+    if (!schedule || schedule.length === 0) return "Chưa Có Lịch";
 
-    const daysOfWeek = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+    const daysOfWeek = [
+      "Chủ Nhật",
+      "Thứ Hai",
+      "Thứ Ba",
+      "Thứ Tư",
+      "Thứ Năm",
+      "Thứ Sáu",
+      "Thứ Bảy",
+    ];
     return schedule
       .map((slot) => {
-        const day = daysOfWeek[slot.dayOfWeek] || "N/A";
-        return `${day}: ${slot.startTime || "N/A"}-${slot.endTime || "N/A"}`;
+        const day = daysOfWeek[slot.dayOfWeek] || "Không Xác Định";
+        return `${day}: ${slot.startTime || "Không Có"} - ${
+          slot.endTime || "Không Có"
+        }`;
       })
       .join(", ");
   };
@@ -229,6 +255,12 @@ export default function UserClasses() {
     const currentSession = enrollment.class?.currentSession || 0;
     const totalSessions = enrollment.class?.totalSessions || 0;
     return totalSessions > 0 ? (currentSession / totalSessions) * 100 : 0;
+  };
+
+  const getRemainingSessionsCount = (enrollment) => {
+    const totalSessions = enrollment.class?.totalSessions || 0;
+    const currentSession = enrollment.class?.currentSession || 0;
+    return Math.max(0, totalSessions - currentSession);
   };
 
   // Filter enrollments
@@ -287,9 +319,26 @@ export default function UserClasses() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-gray-600 text-lg font-medium">Đang tải dữ liệu...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
+        {/* Japanese Loading Animation */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="relative w-24 h-24 mx-auto mb-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-red-500 rounded-full animate-spin"></div>
+            <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+              <Cherry className="h-8 w-8 text-pink-500 animate-pulse" />
+            </div>
+          </div>
+          <div className="text-2xl font-light text-gray-800 mb-4">
+            学習データを読み込み中
+          </div>
+          <p className="text-gray-600 text-lg font-medium">
+            Đang Tải Dữ Liệu Học Tập...
+          </p>
+        </motion.div>
       </div>
     );
   }
@@ -299,127 +348,225 @@ export default function UserClasses() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="min-h-screen pt-24 pb-16 bg-gradient-to-br from-gray-50 to-gray-100"
+      className="min-h-screen pt-24 pb-16 bg-gradient-to-br from-blue-50 via-white to-pink-50 relative overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                Lớp học của tôi
-              </h1>
-              <p className="text-gray-600 max-w-3xl">
-                Theo dõi tiến độ và quản lý các lớp học bạn đã đăng ký
-              </p>
+      {/* Japanese Floating Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <motion.div
+          animate={{
+            y: [0, -30, 0],
+            rotate: [0, 10, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute top-20 left-10"
+        >
+          <Cherry className="h-16 w-16 text-pink-300 opacity-40" />
+        </motion.div>
+
+        <motion.div
+          animate={{
+            y: [0, 20, 0],
+            rotate: [0, -15, 0],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 3,
+          }}
+          className="absolute top-40 right-20"
+        >
+          <Mountain className="h-20 w-20 text-blue-300 opacity-30" />
+        </motion.div>
+
+        <motion.div
+          animate={{
+            y: [0, -15, 0],
+            x: [0, 10, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 6,
+          }}
+          className="absolute bottom-40 left-1/4"
+        >
+          <Waves className="h-14 w-14 text-cyan-300 opacity-35" />
+        </motion.div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Japanese Hero Section */}
+        <motion.div variants={itemVariants} className="mb-12">
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-gray-200/50 relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-pink-300/50 to-transparent rounded-full -translate-y-32 translate-x-32"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-300/50 to-transparent rounded-full translate-y-24 -translate-x-24"></div>
             </div>
-            <div className="mt-4 md:mt-0 flex items-center space-x-3">
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-                />
-                Làm mới
-              </button>
-              <button
-                onClick={() => navigate("/classes")}
-                className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                <BookOpen className="h-4 w-4 mr-2" />
-                Đăng ký thêm
-              </button>
+
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-red-500 rounded-2xl flex items-center justify-center mr-6 shadow-lg">
+                      <BookOpen className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-4xl font-light text-gray-800 mb-2 font-serif">
+                        私の学習スケジュール
+                      </div>
+                      <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+                        Lịch Học Của Tôi
+                      </h1>
+                      <div className="w-24 h-1 bg-gradient-to-r from-pink-400 to-red-500 rounded-full"></div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-lg mb-6 max-w-2xl">
+                    Theo dõi tiến độ học tập và quản lý các lớp học bạn đã đăng
+                    ký. Khám phá hành trình fitness của bạn với những thống kê
+                    chi tiết.
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-4">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="flex items-center px-6 py-3 bg-white border-2 border-gray-200 rounded-2xl hover:border-pink-300 hover:bg-pink-50 transition-all duration-300 group shadow-md"
+                  >
+                    <RefreshCw
+                      className={`h-5 w-5 mr-2 text-gray-600 group-hover:text-pink-600 ${
+                        refreshing ? "animate-spin" : ""
+                      }`}
+                    />
+                    <span className="text-gray-700 group-hover:text-pink-700 font-medium">
+                      Làm Mới
+                    </span>
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate("/classes")}
+                    className="flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-2xl hover:from-pink-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl group"
+                  >
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    <span className="font-medium">Đăng Ký Thêm</span>
+                    <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Statistics */}
+        {/* Japanese Statistics Cards */}
         <motion.div
           variants={itemVariants}
-          className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12"
         >
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="flex items-center">
-              <BarChart3 className="h-8 w-8 text-gray-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {stats.total}
+          {[
+            {
+              icon: BarChart3,
+              value: stats.total,
+              label: "Tổng Lớp Học",
+              color: "blue",
+              gradient: "from-blue-500 to-indigo-500",
+            },
+            {
+              icon: CheckCircle,
+              value: stats.paid,
+              label: "Đã Thanh Toán",
+              color: "green",
+              gradient: "from-green-500 to-emerald-500",
+            },
+            {
+              icon: AlertTriangle,
+              value: stats.pending,
+              label: "Chờ Thanh Toán",
+              color: "amber",
+              gradient: "from-amber-500 to-orange-500",
+            },
+            {
+              icon: Activity,
+              value: stats.ongoing,
+              label: "Đang Học",
+              color: "purple",
+              gradient: "from-purple-500 to-violet-500",
+            },
+            {
+              icon: Award,
+              value: stats.completed,
+              label: "Hoàn Thành",
+              color: "pink",
+              gradient: "from-pink-500 to-rose-500",
+            },
+          ].map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -8, scale: 1.05 }}
+                className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-gray-200/50 hover:shadow-2xl hover:border-gray-300/50 transition-all duration-500 group relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-gray-50/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className={`w-12 h-12 bg-gradient-to-r ${stat.gradient} rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}
+                    >
+                      <IconComponent className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
+                        {stat.value}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    {stat.label}
+                  </div>
                 </div>
-                <div className="text-sm text-gray-600">Tổng lớp học</div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold text-green-600">
-                  {stats.paid}
-                </div>
-                <div className="text-sm text-gray-600">Đã thanh toán</div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="flex items-center">
-              <AlertTriangle className="h-8 w-8 text-amber-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold text-amber-600">
-                  {stats.pending}
-                </div>
-                <div className="text-sm text-gray-600">Chờ thanh toán</div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="flex items-center">
-              <TrendingUp className="h-8 w-8 text-blue-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold text-blue-600">
-                  {stats.ongoing}
-                </div>
-                <div className="text-sm text-gray-600">Đang học</div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="flex items-center">
-              <Award className="h-8 w-8 text-purple-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold text-purple-600">
-                  {stats.completed}
-                </div>
-                <div className="text-sm text-gray-600">Hoàn thành</div>
-              </div>
-            </div>
-          </div>
+              </motion.div>
+            );
+          })}
         </motion.div>
 
-        {/* Filters */}
-        <motion.div variants={itemVariants} className="mb-6">
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+        {/* Japanese Filter Section */}
+        <motion.div variants={itemVariants} className="mb-8">
+          <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-gray-200/50">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-6">
               {/* Search */}
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm lớp học..."
+                  placeholder="Tìm kiếm lớp học, huấn luyện viên..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="pl-12 w-full p-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-pink-200 focus:border-pink-400 transition-all duration-300 text-gray-700 placeholder-gray-500"
                 />
               </div>
 
-              {/* Filter */}
-              <div className="flex items-center space-x-2">
-                <Filter className="h-4 w-4 text-gray-400" />
+              {/* Status Filter */}
+              <div className="flex items-center space-x-4">
+                <Filter className="h-5 w-5 text-gray-500" />
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="p-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-pink-200 focus:border-pink-400 transition-all duration-300 text-gray-700 font-medium min-w-48"
                 >
                   {statusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -432,201 +579,240 @@ export default function UserClasses() {
           </div>
         </motion.div>
 
-        {/* Classes Grid */}
+        {/* Japanese Classes Grid */}
         {filteredEnrollments.length === 0 ? (
           <motion.div
             variants={itemVariants}
-            className="bg-white rounded-xl shadow-md p-10 text-center"
+            className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-12 text-center border border-gray-200/50"
           >
-            <BookOpen className="h-20 w-20 text-gray-300 mx-auto mb-6" />
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">
+            <div className="w-32 h-32 bg-gradient-to-r from-pink-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-8">
+              <BookOpen className="h-16 w-16 text-gray-400" />
+            </div>
+            <div className="text-3xl font-light text-gray-800 mb-4 font-serif">
+              学習記録なし
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
               {enrollments.length === 0
-                ? "Bạn chưa đăng ký lớp học nào"
-                : "Không tìm thấy lớp học"}
+                ? "Bạn Chưa Đăng Ký Lớp Học Nào"
+                : "Không Tìm Thấy Lớp Học"}
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-8 text-lg max-w-2xl mx-auto">
               {enrollments.length === 0
-                ? "Khám phá các lớp học của chúng tôi và bắt đầu hành trình fitness của bạn."
-                : "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm."}
+                ? "Khám phá các lớp học của chúng tôi và bắt đầu hành trình fitness của bạn ngay hôm nay."
+                : "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm để tìm lớp học phù hợp."}
             </p>
-            <button
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
               onClick={() => navigate("/classes")}
             >
-              <BookOpen className="h-5 w-5 mr-2" />
-              Đăng ký ngay
-            </button>
+              <BookOpen className="h-6 w-6 mr-3" />
+              Đăng Ký Ngay
+              <ArrowRight className="h-5 w-5 ml-3" />
+            </motion.button>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEnrollments.map((enrollment) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredEnrollments.map((enrollment, index) => {
               const statusInfo = getStatusInfo(enrollment);
               const attendanceStats = getAttendanceStats(enrollment.class?._id);
               const progressPercent = getProgressPercent(enrollment);
+              const remainingSessions = getRemainingSessionsCount(enrollment);
               const StatusIcon = statusInfo.icon;
 
               return (
                 <motion.div
                   key={enrollment._id}
                   variants={itemVariants}
-                  whileHover={{ y: -5 }}
-                  transition={{ duration: 0.2 }}
-                  className={`bg-white rounded-xl shadow-sm border-2 ${statusInfo.borderColor} overflow-hidden hover:shadow-md transition-all duration-200`}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ y: -12, scale: 1.02 }}
+                  className="group"
                 >
-                  {/* Header */}
-                  <div
-                    className={`${statusInfo.bgColor} px-5 py-3 border-b ${statusInfo.borderColor}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-gray-800 truncate">
-                        {enrollment.class?.className || "Lớp học"}
-                      </h3>
-                      <div
-                        className={`flex items-center px-2 py-1 rounded-full ${statusInfo.textColor} bg-white/50`}
-                      >
-                        <StatusIcon className="h-3 w-3 mr-1" />
-                        <span className="text-xs font-medium">
-                          {statusInfo.text}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {enrollment.class?.serviceName || "N/A"}
-                    </p>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-5">
-                    <div className="space-y-3">
-                      {/* Instructor */}
-                      <div className="flex items-center">
-                        <User className="h-4 w-4 text-gray-400 mr-3" />
-                        <div>
-                          <p className="text-xs text-gray-500">
-                            Huấn luyện viên
-                          </p>
-                          <p className="font-medium text-gray-800">
-                            {enrollment.class?.instructorName || "Chưa có"}
-                          </p>
+                  <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-lg border border-gray-200/50 overflow-hidden hover:shadow-2xl hover:border-gray-300/50 transition-all duration-500 h-full flex flex-col">
+                    {/* Header Section */}
+                    <div className="relative p-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
+                      {/* Status Badge */}
+                      <div className="absolute top-4 right-4">
+                        <div
+                          className={`flex items-center px-3 py-2 rounded-full border-2 ${statusInfo.bgColor} ${statusInfo.textColor} ${statusInfo.borderColor} backdrop-blur-md shadow-md`}
+                        >
+                          <StatusIcon className="h-4 w-4 mr-2" />
+                          <span className="text-sm font-bold whitespace-nowrap">
+                            {statusInfo.text}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Schedule */}
-                      <div className="flex items-start">
-                        <Clock className="h-4 w-4 text-gray-400 mr-3 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-500">Lịch học</p>
-                          <p className="font-medium text-gray-800 text-sm">
+                      <div className="pr-32">
+                        <h3 className="text-xl font-bold text-gray-800 mb-3 line-clamp-2 group-hover:text-pink-600 transition-colors">
+                          {enrollment.class?.className || "Tên Lớp Học"}
+                        </h3>
+                        <div className="flex items-center mb-2">
+                          <Star className="h-5 w-5 text-pink-500 mr-2 fill-current" />
+                          <span className="text-pink-600 font-semibold">
+                            {enrollment.class?.serviceName || "Dịch Vụ"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="flex-1 p-6">
+                      <div className="space-y-5">
+                        {/* Instructor & Location */}
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="flex items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center mr-3">
+                              <User className="h-5 w-5 text-pink-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-gray-500 font-medium">
+                                Huấn Luyện Viên
+                              </p>
+                              <p className="font-semibold text-gray-800 truncate">
+                                {enrollment.class?.instructorName || "Chưa Có"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                              <MapPin className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-gray-500 font-medium">
+                                Địa Điểm
+                              </p>
+                              <p className="font-semibold text-gray-800 truncate">
+                                {enrollment.class?.location ||
+                                  "Phòng Tập Chính"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Schedule */}
+                        <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                          <div className="flex items-center mb-2">
+                            <Clock className="h-5 w-5 text-blue-600 mr-2" />
+                            <span className="text-sm font-semibold text-blue-700">
+                              Lịch Học
+                            </span>
+                          </div>
+                          <p className="text-gray-700 font-medium text-sm">
                             {formatSchedule(enrollment.class?.schedule)}
                           </p>
                         </div>
-                      </div>
 
-                      {/* Location */}
-                      <div className="flex items-center">
-                        <MapPin className="h-4 w-4 text-gray-400 mr-3" />
-                        <div>
-                          <p className="text-xs text-gray-500">Địa điểm</p>
-                          <p className="font-medium text-gray-800">
-                            {enrollment.class?.location || "N/A"}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Progress */}
-                      <div className="flex items-center">
-                        <TrendingUp className="h-4 w-4 text-gray-400 mr-3" />
-                        <div className="flex-1">
-                          <div className="flex justify-between items-center mb-1">
-                            <p className="text-xs text-gray-500">Tiến độ học</p>
-                            <span className="text-xs font-medium text-gray-700">
-                              {enrollment.class?.currentSession || 0}/
-                              {enrollment.class?.totalSessions || 0}
+                        {/* Progress */}
+                        <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-semibold text-purple-700">
+                              Tiến Độ Học Tập
+                            </span>
+                            <span className="text-sm font-bold text-purple-600">
+                              {enrollment.class?.currentSession || 0} /{" "}
+                              {enrollment.class?.totalSessions || 0} buổi
                             </span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${progressPercent}%` }}
-                            ></div>
+                          <div className="w-full bg-purple-200 rounded-full h-3 overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progressPercent}%` }}
+                              transition={{ duration: 1, delay: index * 0.1 }}
+                              className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full relative overflow-hidden"
+                            >
+                              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                            </motion.div>
+                          </div>
+                          <div className="flex justify-between items-center mt-2">
+                            <span className="text-xs text-purple-600 font-medium">
+                              {progressPercent.toFixed(1)}% hoàn thành
+                            </span>
+                            <span className="text-xs font-semibold text-purple-600">
+                              Còn lại: {remainingSessions} buổi
+                            </span>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Attendance */}
-                      {attendanceStats.total > 0 && (
-                        <div className="flex items-center">
-                          <CheckCircle className="h-4 w-4 text-gray-400 mr-3" />
-                          <div className="flex-1">
-                            <div className="flex justify-between items-center mb-1">
-                              <p className="text-xs text-gray-500">Điểm danh</p>
-                              <span className="text-xs font-medium text-gray-700">
+                        {/* Attendance */}
+                        {attendanceStats.total > 0 && (
+                          <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-sm font-semibold text-green-700">
+                                Điểm Danh
+                              </span>
+                              <span className="text-sm font-bold text-green-600">
                                 {attendanceStats.rate}% (
                                 {attendanceStats.attended}/
                                 {attendanceStats.total})
                               </span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${attendanceStats.rate}%` }}
-                              ></div>
+                            <div className="w-full bg-green-200 rounded-full h-3">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${attendanceStats.rate}%` }}
+                                transition={{
+                                  duration: 1,
+                                  delay: index * 0.1 + 0.3,
+                                }}
+                                className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full"
+                              ></motion.div>
                             </div>
                           </div>
-                        </div>
-                      )}
-
-                      {/* Remaining Sessions */}
-                      {enrollment.remainingSessions !== undefined && (
-                        <div className="bg-blue-50 rounded-lg p-3">
-                          <div className="flex items-center">
-                            <Target className="h-4 w-4 text-blue-600 mr-2" />
-                            <span className="text-sm font-medium text-blue-800">
-                              Còn lại: {enrollment.remainingSessions} buổi
-                            </span>
-                          </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="mt-5 pt-4 border-t border-gray-100 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/classes/${enrollment.class?._id}/details`
-                            )
-                          }
-                          className="flex items-center text-indigo-600 hover:text-indigo-700 font-medium text-sm"
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Xem chi tiết
-                        </button>
+                    <div className="p-6 pt-0 mt-auto">
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div className="flex space-x-3">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() =>
+                              navigate(
+                                `/classes/${enrollment.class?._id}/details`
+                              )
+                            }
+                            className="flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Chi Tiết
+                          </motion.button>
 
-                        <button
-                          onClick={() => {
-                            setSelectedEnrollment(enrollment);
-                            setShowDetailModal(true);
-                          }}
-                          className="flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm"
-                        >
-                          <BarChart3 className="h-4 w-4 mr-1" />
-                          Thống kê
-                        </button>
-                      </div>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                              setSelectedEnrollment(enrollment);
+                              setShowDetailModal(true);
+                            }}
+                            className="flex items-center text-purple-600 hover:text-purple-700 font-medium text-sm transition-colors bg-purple-50 hover:bg-purple-100 px-3 py-2 rounded-lg"
+                          >
+                            <BarChart3 className="h-4 w-4 mr-1" />
+                            Thống Kê
+                          </motion.button>
+                        </div>
 
-                      <div className="flex items-center justify-between">
                         {!enrollment.paymentStatus && (
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => navigate("/payment")}
-                            className="flex items-center px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
+                            className="flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-300 text-sm font-semibold shadow-md hover:shadow-lg"
                           >
                             <CreditCard className="h-4 w-4 mr-1" />
-                            Thanh toán
-                          </button>
+                            Thanh Toán
+                          </motion.button>
                         )}
+                      </div>
 
+                      <div className="mt-3 text-right">
                         <span className="text-xs text-gray-500">
                           Đăng ký:{" "}
                           {new Date(
@@ -642,115 +828,155 @@ export default function UserClasses() {
           </div>
         )}
 
-        {/* Detail Modal */}
+        {/* Enhanced Detail Modal */}
         <AnimatePresence>
           {showDetailModal && selectedEnrollment && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
               onClick={() => setShowDetailModal(false)}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-auto"
+                className="bg-white/95 backdrop-blur-md rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-auto shadow-2xl border border-gray-200/50"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="p-6 border-b">
+                {/* Modal Header */}
+                <div className="p-8 border-b border-gray-200 bg-gradient-to-r from-pink-50 via-blue-50 to-purple-50">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">
+                      <div className="text-2xl font-light text-gray-800 mb-2 font-serif">
+                        学習詳細統計
+                      </div>
+                      <h2 className="text-3xl font-bold text-gray-800 mb-2">
                         {selectedEnrollment.class?.className}
                       </h2>
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 text-lg">
                         {selectedEnrollment.class?.serviceName}
                       </p>
                     </div>
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => setShowDetailModal(false)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-gray-400 hover:text-gray-600 transition-colors p-2"
                     >
-                      <XCircle className="h-6 w-6" />
-                    </button>
+                      <XCircle className="h-8 w-8" />
+                    </motion.button>
                   </div>
                 </div>
 
-                <div className="p-6">
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-xl font-bold text-blue-600">
-                        {selectedEnrollment.class?.currentSession || 0}
-                      </div>
-                      <div className="text-xs text-gray-600">Buổi đã học</div>
-                    </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-xl font-bold text-gray-600">
-                        {selectedEnrollment.class?.totalSessions || 0}
-                      </div>
-                      <div className="text-xs text-gray-600">Tổng buổi</div>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="text-xl font-bold text-green-600">
-                        {
-                          getAttendanceStats(selectedEnrollment.class?._id)
-                            .attended
-                        }
-                      </div>
-                      <div className="text-xs text-gray-600">Đã tham gia</div>
-                    </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <div className="text-xl font-bold text-purple-600">
-                        {getAttendanceStats(selectedEnrollment.class?._id).rate}
-                        %
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        Tỷ lệ tham gia
-                      </div>
-                    </div>
+                <div className="p-8">
+                  {/* Statistics Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-8">
+                    {[
+                      {
+                        value: selectedEnrollment.class?.currentSession || 0,
+                        label: "Buổi Đã Học",
+                        color: "blue",
+                        icon: BookOpen,
+                      },
+                      {
+                        value: selectedEnrollment.class?.totalSessions || 0,
+                        label: "Tổng Buổi Học",
+                        color: "gray",
+                        icon: Target,
+                      },
+                      {
+                        value: getRemainingSessionsCount(selectedEnrollment),
+                        label: "Buổi Còn Lại",
+                        color: "amber",
+                        icon: Clock,
+                      },
+                      {
+                        value: getAttendanceStats(selectedEnrollment.class?._id)
+                          .attended,
+                        label: "Đã Tham Gia",
+                        color: "green",
+                        icon: CheckCircle,
+                      },
+                      {
+                        value: `${
+                          getAttendanceStats(selectedEnrollment.class?._id).rate
+                        }%`,
+                        label: "Tỷ Lệ Tham Gia",
+                        color: "purple",
+                        icon: TrendingUp,
+                      },
+                    ].map((stat, index) => {
+                      const IconComponent = stat.icon;
+                      return (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={`text-center p-6 bg-${stat.color}-50 rounded-2xl border-2 border-${stat.color}-100 hover:shadow-lg transition-all duration-300`}
+                        >
+                          <div
+                            className={`w-12 h-12 bg-${stat.color}-500 rounded-xl flex items-center justify-center mx-auto mb-4`}
+                          >
+                            <IconComponent className="h-6 w-6 text-white" />
+                          </div>
+                          <div
+                            className={`text-3xl font-bold text-${stat.color}-600 mb-2`}
+                          >
+                            {stat.value}
+                          </div>
+                          <div className="text-sm text-gray-600 font-medium">
+                            {stat.label}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
                   </div>
 
-                  {/* Class Info */}
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">
-                        Thông tin lớp học
+                  {/* Additional Information */}
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {/* Class Information */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                      <h3 className="text-xl font-bold text-blue-800 mb-4 flex items-center">
+                        <Shield className="h-6 w-6 mr-2" />
+                        Thông Tin Lớp Học
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-500">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">
                             Huấn luyện viên:
                           </span>
-                          <span className="ml-2 font-medium">
-                            {selectedEnrollment.class?.instructorName || "N/A"}
+                          <span className="font-semibold text-gray-800">
+                            {selectedEnrollment.class?.instructorName ||
+                              "Chưa có"}
                           </span>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Địa điểm:</span>
-                          <span className="ml-2 font-medium">
-                            {selectedEnrollment.class?.location || "N/A"}
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">Địa điểm:</span>
+                          <span className="font-semibold text-gray-800">
+                            {selectedEnrollment.class?.location ||
+                              "Phòng tập chính"}
                           </span>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Học phí:</span>
-                          <span className="ml-2 font-bold text-green-600">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">Học phí:</span>
+                          <span className="font-semibold text-green-600">
                             {selectedEnrollment.class?.price?.toLocaleString() ||
                               0}
                             đ
                           </span>
                         </div>
-                        <div>
-                          <span className="text-gray-500">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">
                             Trạng thái thanh toán:
                           </span>
                           <span
-                            className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                            className={`font-semibold ${
                               selectedEnrollment.paymentStatus
-                                ? "bg-green-100 text-green-700"
-                                : "bg-amber-100 text-amber-700"
+                                ? "text-green-600"
+                                : "text-amber-600"
                             }`}
                           >
                             {selectedEnrollment.paymentStatus
@@ -761,58 +987,69 @@ export default function UserClasses() {
                       </div>
                     </div>
 
-                    {/* Schedule */}
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">
-                        Lịch học
+                    {/* Progress Information */}
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+                      <h3 className="text-xl font-bold text-purple-800 mb-4 flex items-center">
+                        <Activity className="h-6 w-6 mr-2" />
+                        Tiến Độ Học Tập
                       </h3>
-                      <p className="text-gray-600">
-                        {formatSchedule(selectedEnrollment.class?.schedule)}
-                      </p>
-                    </div>
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-gray-600">
+                              Tiến độ tổng thể:
+                            </span>
+                            <span className="font-bold text-purple-600">
+                              {getProgressPercent(selectedEnrollment).toFixed(
+                                1
+                              )}
+                              %
+                            </span>
+                          </div>
+                          <div className="w-full bg-purple-200 rounded-full h-3">
+                            <div
+                              className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-1000"
+                              style={{
+                                width: `${getProgressPercent(
+                                  selectedEnrollment
+                                )}%`,
+                              }}
+                            ></div>
+                          </div>
+                        </div>
 
-                    {/* Progress Bar */}
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">
-                        Tiến độ học tập
-                      </h3>
-                      <div className="bg-gray-100 rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <span>Buổi học đã hoàn thành</span>
-                          <span className="font-bold">
-                            {selectedEnrollment.class?.currentSession || 0}/
-                            {selectedEnrollment.class?.totalSessions || 0}
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div
-                            className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${getProgressPercent(
-                                selectedEnrollment
-                              )}%`,
-                            }}
-                          ></div>
-                        </div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {getProgressPercent(selectedEnrollment).toFixed(1)}%
-                          hoàn thành
-                        </div>
+                        {getAttendanceStats(selectedEnrollment.class?._id)
+                          .total > 0 && (
+                          <div>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-gray-600">
+                                Tỷ lệ tham gia:
+                              </span>
+                              <span className="font-bold text-green-600">
+                                {
+                                  getAttendanceStats(
+                                    selectedEnrollment.class?._id
+                                  ).rate
+                                }
+                                %
+                              </span>
+                            </div>
+                            <div className="w-full bg-green-200 rounded-full h-3">
+                              <div
+                                className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-1000"
+                                style={{
+                                  width: `${
+                                    getAttendanceStats(
+                                      selectedEnrollment.class?._id
+                                    ).rate
+                                  }%`,
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex justify-between items-center mt-6 pt-4 border-t">
-                    {!selectedEnrollment.paymentStatus && (
-                      <button
-                        onClick={() => navigate("/payment")}
-                        className="flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Thanh toán ngay
-                      </button>
-                    )}
                   </div>
                 </div>
               </motion.div>

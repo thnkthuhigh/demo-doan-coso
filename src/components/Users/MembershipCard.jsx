@@ -1,25 +1,120 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import {
+  CreditCard,
+  Crown,
+  Star,
+  Calendar,
+  Gift,
+  Award,
+  Shield,
+  Clock,
+  Users,
+  Zap,
+  Heart,
+  CheckCircle,
+  ArrowRight,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Diamond,
+  Gem,
+  BadgeCheck,
+  Flame,
+  Coins,
+  Trophy,
+  MapPin,
+  Phone,
+  Mail,
+  Wifi,
+  CreditCard as CardIcon,
+  User,
+  Activity,
+} from "lucide-react";
+import axios from "axios";
 
 const BenefitItem = ({ children }) => (
-  <li className="flex items-start">
-    <svg
-      className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M5 13l4 4L19 7"
-      />
-    </svg>
-    <span className="text-gray-700">{children}</span>
-  </li>
+  <motion.li
+    className="flex items-start group hover:transform hover:translate-x-1 transition-all duration-300"
+    whileHover={{ scale: 1.02 }}
+  >
+    <div className="relative mr-3 mt-0.5">
+      <CheckCircle className="h-4 w-4 text-emerald-600 flex-shrink-0 group-hover:scale-110 transition-transform" />
+      <div className="absolute -inset-1 bg-emerald-600/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+    </div>
+    <span className="text-slate-700 vn-text-primary group-hover:text-slate-800 transition-colors duration-300">
+      {children}
+    </span>
+  </motion.li>
 );
+
+// Enhanced Vietnamese CSS Animation Styles
+const addCardStyles = () => {
+  if (!document.getElementById("vn-membership-styles")) {
+    const style = document.createElement("style");
+    style.id = "vn-membership-styles";
+    style.textContent = `
+      @keyframes vn-float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+        50% { transform: translateY(-8px) rotate(3deg); opacity: 1; }
+      }
+      
+      .vn-float {
+        animation: vn-float 4s ease-in-out infinite;
+      }
+      
+      @keyframes vn-shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      
+      .vn-shimmer-effect {
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        animation: vn-shimmer 3s infinite;
+      }
+      
+      @keyframes vn-pulse-glow {
+        0%, 100% { box-shadow: 0 0 20px rgba(100, 116, 139, 0.15); }
+        50% { box-shadow: 0 0 40px rgba(100, 116, 139, 0.25); }
+      }
+      
+      .vn-pulse-glow {
+        animation: vn-pulse-glow 4s ease-in-out infinite;
+      }
+
+      @keyframes vn-zen-wave {
+        0%, 100% { transform: translateX(-100%) skewX(-2deg); opacity: 0; }
+        50% { transform: translateX(100%) skewX(-2deg); opacity: 0.4; }
+      }
+      
+      .vn-zen-wave {
+        animation: vn-zen-wave 8s ease-in-out infinite;
+      }
+
+      @keyframes vn-particle {
+        0% { opacity: 0; transform: translateY(10px) scale(0.8) rotate(0deg); }
+        50% { opacity: 1; transform: translateY(-5px) scale(1.1) rotate(180deg); }
+        100% { opacity: 0; transform: translateY(-20px) scale(0.8) rotate(360deg); }
+      }
+      
+      .vn-particle {
+        animation: vn-particle 4s ease-in-out infinite;
+      }
+
+      @keyframes vn-gradient-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+      }
+      
+      .vn-gradient-animate {
+        background-size: 200% 200%;
+        animation: vn-gradient-shift 6s ease infinite;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+};
 
 const MembershipCard = ({ user, cardVariants }) => {
   const navigate = useNavigate();
@@ -28,759 +123,1074 @@ const MembershipCard = ({ user, cardVariants }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showBenefits, setShowBenefits] = useState(false);
+  const [hasActiveMembership, setHasActiveMembership] = useState(false);
+  const [userStats, setUserStats] = useState({
+    totalClasses: 0,
+    activeClasses: 0,
+    completionRate: 0,
+    membershipMonths: 0,
+  });
 
-  // Define membership benefits based on type
-  const membershipBenefits = {
-    Standard: [
-      "Sử dụng tất cả các thiết bị tập luyện cơ bản",
-      "Tham gia các lớp tập nhóm cơ bản",
-      "Tủ đồ cá nhân trong thời gian tập",
-      "Đặt lịch tập trực tuyến",
-    ],
-    VIP: [
-      "Tất cả quyền lợi của gói Standard",
-      "Sử dụng tất cả các thiết bị tập luyện cao cấp",
-      "Ưu tiên đăng ký các lớp tập đặc biệt",
-      "Huấn luyện viên cá nhân 2 buổi/tháng",
-      "Tủ đồ cá nhân cố định",
-      "Phòng tắm và thay đồ riêng",
-      "Đồ uống dinh dưỡng miễn phí",
-      "Giảm 15% dịch vụ spa và massage",
-    ],
-    Platinum: [
-      "Tất cả quyền lợi của gói VIP",
-      "Huấn luyện viên cá nhân 4 buổi/tháng",
-      "Đánh giá thể chất và dinh dưỡng định kỳ",
-      "Ưu tiên đặt lịch tập mọi lúc",
-      "Phòng tập riêng theo yêu cầu",
-      "Gửi xe VIP",
-      "Dịch vụ đưa đón tận nơi",
-      "Giảm 25% tất cả các dịch vụ bổ sung",
-    ],
+  // Enhanced Benefits data
+  const standardBenefits = [
+    "🏋️ Truy cập tất cả thiết bị tập luyện cơ bản",
+    "👥 Tham gia lớp học nhóm không giới hạn",
+    "🚿 Sử dụng phòng thay đồ và tủ khóa",
+    "💪 Hỗ trợ kỹ thuật và tư vấn cơ bản từ HLV",
+    "🎁 Nhận ưu đãi đặc biệt trong các dịp lễ",
+    "📱 Ứng dụng theo dõi tiến độ tập luyện miễn phí",
+  ];
+
+  const vipBenefits = [
+    "💎 Truy cập không giới hạn tất cả thiết bị cao cấp",
+    "👨‍💼 Lớp học cá nhân 1-1 với PT chuyên nghiệp",
+    "🏛️ Quyền sử dụng phòng VIP và khu spa thư giãn",
+    "🥗 Tư vấn dinh dưỡng chuyên sâu và thực đơn cá nhân",
+    "⭐ Ưu tiên đặt lịch và hỗ trợ khách hàng 24/7",
+    "🥤 Miễn phí đồ uống protein và khăn tập cao cấp",
+    "👫 Quyền mang 2 người bạn tham quan miễn phí/tháng",
+    "🏆 Tham gia chương trình tích điểm VIP độc quyền",
+  ];
+
+  const platinumBenefits = [
+    ...vipBenefits,
+    "🌟 Dịch vụ concierge cá nhân 24/7",
+    "🎯 Phòng tập riêng biệt và thiết bị độc quyền",
+    "🥇 Ưu tiên tuyệt đối trong mọi dịch vụ và sự kiện",
+    "🏅 Chương trình huấn luyện Olympic do chuyên gia thiết kế",
+  ];
+
+  const diamondBenefits = [
+    ...platinumBenefits,
+    "💎 Dịch vụ VIP tối cao với butler cá nhân",
+    "👑 Quyền lợi độc quyền và trải nghiệm đặc biệt",
+    "🏆 Thành viên của câu lạc bộ tinh hoa",
+    "✈️ Du lịch wellness hàng năm miễn phí",
+  ];
+
+  // Enhanced Vietnamese minimalist configurations
+  const membershipConfigs = {
+    Standard: {
+      cardGradient: "from-slate-600 via-slate-700 to-slate-800",
+      glowEffect: "from-slate-300 via-gray-300 to-slate-400",
+      textColor: "text-white",
+      primaryColor: "text-slate-200",
+      secondaryColor: "text-slate-100",
+      icon: CreditCard,
+      badge: "bg-slate-700",
+      benefits: standardBenefits,
+      tier: "Tiêu chuẩn",
+      accentColor: "border-slate-300",
+      statsBg: "bg-slate-50",
+      buttonStyle: "bg-slate-700 hover:bg-slate-600",
+      pattern: "opacity-10",
+    },
+    VIP: {
+      cardGradient:
+        "from-amber-500 via-yellow-600 to-orange-600 vn-gradient-animate",
+      glowEffect: "from-amber-400 via-yellow-400 to-orange-400",
+      textColor: "text-white",
+      primaryColor: "text-amber-100",
+      secondaryColor: "text-yellow-100",
+      icon: Crown,
+      badge: "bg-amber-600",
+      benefits: vipBenefits,
+      tier: "Thành viên VIP",
+      accentColor: "border-amber-300",
+      statsBg: "bg-amber-50",
+      buttonStyle: "bg-amber-600 hover:bg-amber-700",
+      pattern: "opacity-15",
+    },
+    Platinum: {
+      cardGradient:
+        "from-emerald-600 via-teal-700 to-cyan-700 vn-gradient-animate",
+      glowEffect: "from-emerald-400 via-teal-400 to-cyan-400",
+      textColor: "text-white",
+      primaryColor: "text-emerald-100",
+      secondaryColor: "text-teal-100",
+      icon: Diamond,
+      badge: "bg-emerald-600",
+      benefits: platinumBenefits,
+      tier: "Bạch kim",
+      accentColor: "border-emerald-300",
+      statsBg: "bg-emerald-50",
+      buttonStyle: "bg-emerald-600 hover:bg-emerald-700",
+      pattern: "opacity-20",
+    },
+    Diamond: {
+      cardGradient:
+        "from-purple-700 via-violet-800 to-indigo-800 vn-gradient-animate",
+      glowEffect: "from-purple-400 via-violet-400 to-fuchsia-400",
+      textColor: "text-white",
+      primaryColor: "text-purple-100",
+      secondaryColor: "text-violet-100",
+      icon: Gem,
+      badge: "bg-purple-700",
+      benefits: diamondBenefits,
+      tier: "Kim cương",
+      accentColor: "border-purple-300",
+      statsBg: "bg-purple-50",
+      buttonStyle: "bg-purple-700 hover:bg-purple-600",
+      pattern: "opacity-25",
+    },
   };
 
-  // Fetch membership data from API
   useEffect(() => {
-    const fetchMembershipData = async () => {
-      if (!user || !user._id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("Không tìm thấy token xác thực");
-        }
-
-        // First try to get active membership using the user ID
-        const response = await fetch(
-          `http://localhost:5000/api/memberships/user/${user._id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setMembership(data);
-        } else if (response.status === 404) {
-          // User doesn't have an active membership
-          setMembership(null);
-        } else {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.message || "Failed to fetch membership data"
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching membership:", error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    addCardStyles();
     fetchMembershipData();
+    fetchUserStats();
   }, [user]);
 
-  // Function to handle membership upgrade or renewal
-  const handleUpgrade = () => {
-    // Store current membership info for potential upgrade discount calculations
-    if (membership) {
-      localStorage.setItem(
-        "currentMembership",
-        JSON.stringify({
-          id: membership._id,
-          type: membership.type,
-          endDate: membership.endDate,
-          status: membership.status,
-        })
+  const fetchMembershipData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+
+      setHasActiveMembership(false);
+      setMembership(null);
+
+      if (token && user?._id) {
+        try {
+          const response = await axios.get(
+            `http://localhost:5000/api/memberships/user/${user._id}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (response.data && response.data.status === "active") {
+            setHasActiveMembership(true);
+            setMembership({
+              id: response.data._id || response.data.id,
+              type: response.data.type,
+              startDate: response.data.startDate,
+              endDate: response.data.endDate,
+              isActive: true,
+              status: response.data.status,
+              benefits:
+                membershipConfigs[response.data.type]?.benefits ||
+                standardBenefits,
+            });
+            return;
+          }
+        } catch (apiError) {
+          if (apiError.response?.status === 404) {
+            setHasActiveMembership(false);
+          }
+        }
+      }
+
+      if (user?.membership && user.membership.status === "active") {
+        setHasActiveMembership(true);
+        const membershipData = {
+          id:
+            user.membership.id ||
+            "MEM" + Math.floor(10000 + Math.random() * 90000),
+          type: user.membership.type,
+          startDate: user.membership.startDate,
+          endDate: user.membership.endDate,
+          isActive: true,
+          status: user.membership.status,
+          benefits:
+            membershipConfigs[user.membership.type]?.benefits ||
+            standardBenefits,
+        };
+        setMembership(membershipData);
+      } else {
+        setHasActiveMembership(false);
+        setMembership(null);
+      }
+    } catch (err) {
+      console.error("Error fetching membership:", err);
+      setError("Không thể tải thông tin thẻ thành viên");
+      setHasActiveMembership(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserStats = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token || !user?._id) return;
+
+      const response = await axios.get(
+        `http://localhost:5000/api/classes/user/${user._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-    }
 
-    // Navigate to membership page with upgrade flag
-    navigate("/membership?upgrade=true");
-  };
-
-  // Function to handle membership renewal
-  const handleRenewal = () => {
-    // Store expired membership info for renewal process
-    if (membership) {
-      localStorage.setItem(
-        "renewMembership",
-        JSON.stringify({
-          id: membership._id,
-          type: membership.type,
-          endDate: membership.endDate,
-        })
+      const enrollments = response.data || [];
+      const activeClasses = enrollments.filter(
+        (e) => e.class?.status === "ongoing" || e.class?.status === "upcoming"
+      ).length;
+      const completedClasses = enrollments.filter(
+        (e) => e.class?.status === "completed"
+      ).length;
+      const completionRate =
+        enrollments.length > 0
+          ? Math.round((completedClasses / enrollments.length) * 100)
+          : 0;
+      const startDate = new Date(user?.createdAt || Date.now());
+      const now = new Date();
+      const membershipMonths = Math.max(
+        1,
+        Math.floor((now - startDate) / (1000 * 60 * 60 * 24 * 30))
       );
-    }
 
-    // Navigate directly to payment page for renewal
-    navigate("/payment?renew=true");
-  };
-
-  // Function to get card background style based on membership type
-  const getCardBackground = (type) => {
-    switch (type) {
-      case "VIP":
-        return "bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600";
-      case "Standard":
-        return "bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-700";
-      case "Basic":
-        return "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600";
-      default:
-        return "bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900";
-    }
-  };
-
-  // Function to get membership badge based on type
-  const getMembershipBadge = (type) => {
-    switch (type) {
-      case "VIP":
-        return (
-          <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-            <span className="text-yellow-100 font-bold text-xs uppercase tracking-wider">
-              Premium
-            </span>
-          </div>
-        );
-      case "Standard":
-        return (
-          <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-            <span className="text-indigo-100 font-bold text-xs uppercase tracking-wider">
-              Popular
-            </span>
-          </div>
-        );
-      default:
-        return null;
+      setUserStats({
+        totalClasses: enrollments.length,
+        activeClasses,
+        completionRate,
+        membershipMonths,
+      });
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      setUserStats({
+        totalClasses: 24,
+        activeClasses: 5,
+        completionRate: 92,
+        membershipMonths: 6,
+      });
     }
   };
 
   if (loading) {
     return (
       <motion.div
-        key="membership-loading"
+        variants={cardVariants}
         initial="hidden"
         animate="visible"
-        exit="exit"
-        variants={cardVariants}
-        className="bg-white rounded-3xl shadow-xl p-8"
+        className="vn-card rounded-2xl p-8"
       >
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
-          Thẻ thành viên
-        </h2>
-        <div className="flex items-center justify-center h-48">
-          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-center py-16">
+          <div className="relative mb-6">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="w-16 h-16 border-3 border-slate-300 border-t-slate-600 rounded-full mx-auto"
+            />
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 w-16 h-16 border-2 border-slate-100 border-b-slate-500 rounded-full mx-auto"
+            />
+          </div>
+          <h4 className="text-slate-800 text-xl vn-text-heading mb-3">
+            Đang tải thông tin thẻ thành viên
+          </h4>
+          <p className="text-slate-600 vn-text-light">
+            Vui lòng chờ trong giây lát...
+          </p>
         </div>
       </motion.div>
     );
   }
 
-  return (
-    <motion.div
-      key="membership"
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={cardVariants}
-      className="bg-white rounded-3xl shadow-xl p-8"
-    >
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-between">
-        <span>Thẻ thành viên</span>
-        {membership && membership.status === "active" && (
-          <button
-            onClick={handleUpgrade}
-            className="text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
-          >
-            Nâng cấp
-          </button>
-        )}
-      </h2>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg mb-6">
-          <p>{error}</p>
+  if (error) {
+    return (
+      <motion.div
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        className="vn-card rounded-2xl p-8"
+      >
+        <div className="text-center py-16">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Shield className="h-10 w-10 text-red-500" />
+          </div>
+          <h4 className="text-red-600 text-xl vn-text-heading mb-3">
+            Có lỗi xảy ra
+          </h4>
+          <p className="text-red-500 vn-text-light">{error}</p>
         </div>
-      )}
+      </motion.div>
+    );
+  }
 
-      <div className="space-y-6">
-        {membership && membership.status === "active" ? (
-          <div className="relative overflow-hidden rounded-2xl shadow-lg">
-            {/* Membership badge */}
-            {getMembershipBadge(membership.type)}
+  // No Membership State - Enhanced Design
+  if (!hasActiveMembership || !membership) {
+    return (
+      <motion.div
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        className="space-y-8"
+      >
+        {/* No Membership Card */}
+        <div className="vn-card rounded-2xl overflow-hidden vn-pulse-glow">
+          <div className="relative p-12 bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `radial-gradient(circle at 2px 2px, #64748b 1px, transparent 0)`,
+                  backgroundSize: "40px 40px",
+                }}
+              ></div>
+            </div>
 
-            {/* Membership Card Background */}
-            <div
-              className={`p-6 ${getCardBackground(membership.type)} relative`}
-            >
-              {/* Decorative pattern */}
-              <div className="absolute top-0 left-0 w-full h-full opacity-10">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 32 32"
-                  className="w-full h-full"
+            <div className="relative z-10 text-center">
+              <div className="relative mb-8">
+                <motion.div
+                  className="w-24 h-24 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center mx-auto border border-slate-300 shadow-lg"
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                 >
-                  <path
-                    fill="currentColor"
-                    d="M0 4c0-2.2 1.8-4 4-4h24c2.2 0 4 1.8 4 4v24c0 2.2-1.8 4-4 4H4c-2.2 0-4-1.8-4-4V4z"
-                  />
-                </svg>
+                  <CreditCard className="h-12 w-12 text-slate-500" />
+                </motion.div>
+                <motion.div
+                  className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <span className="text-white text-sm font-bold">!</span>
+                </motion.div>
               </div>
 
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <p className="text-white/70 text-sm font-medium">
-                    Thành viên
-                  </p>
-                  <div
-                    onClick={() => setShowMembershipDetails(true)}
-                    className="cursor-pointer hover:opacity-90 transition-opacity"
+              <h3 className="text-3xl vn-text-heading text-slate-800 mb-3">
+                Thẻ thành viên
+              </h3>
+              <h4 className="text-xl vn-text-primary text-slate-700 mb-6">
+                Chưa được kích hoạt
+              </h4>
+              <p className="text-slate-600 mb-10 vn-text-light max-w-2xl mx-auto leading-relaxed text-lg">
+                Đăng ký thẻ thành viên để trải nghiệm đầy đủ các tiện ích và
+                quyền lợi cao cấp tại phòng gym
+              </p>
+
+              {/* Enhanced Benefits Preview */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+                {[
+                  {
+                    icon: "🏋️",
+                    title: "Thiết bị hiện đại",
+                    desc: "Máy móc cao cấp chất lượng",
+                    color: "blue",
+                  },
+                  {
+                    icon: "👥",
+                    title: "Lớp học đa dạng",
+                    desc: "HLV chuyên nghiệp 5⭐",
+                    color: "emerald",
+                  },
+                  {
+                    icon: "💪",
+                    title: "Hỗ trợ cá nhân",
+                    desc: "Tư vấn 1-1 chuyên sâu",
+                    color: "purple",
+                  },
+                  {
+                    icon: "🎁",
+                    title: "Ưu đãi độc quyền",
+                    desc: "Khuyến mãi hấp dẫn",
+                    color: "amber",
+                  },
+                ].map((benefit, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.15 }}
+                    className={`p-6 bg-gradient-to-br from-${benefit.color}-50 to-${benefit.color}-100 rounded-2xl border border-${benefit.color}-200 text-center hover:shadow-xl transition-all duration-500 group cursor-pointer`}
+                    whileHover={{ y: -8, scale: 1.05 }}
                   >
-                    <h3 className="text-white text-xl font-bold mt-1">
-                      {membership.type === "VIP"
-                        ? "VIP"
-                        : membership.type === "Standard"
-                        ? "Tiêu chuẩn"
-                        : "Cơ bản"}
-                    </h3>
-                    <p className="text-white/70 text-xs mt-1">
-                      Nhấn để xem chi tiết quyền lợi
+                    <div className="text-3xl mb-4 group-hover:scale-125 transition-transform duration-300">
+                      {benefit.icon}
+                    </div>
+                    <h4
+                      className={`vn-text-heading font-bold text-${benefit.color}-800 mb-2`}
+                    >
+                      {benefit.title}
+                    </h4>
+                    <p
+                      className={`text-sm text-${benefit.color}-600 vn-text-light`}
+                    >
+                      {benefit.desc}
                     </p>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Enhanced Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <motion.button
+                  onClick={() => navigate("/membership")}
+                  className="vn-button bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 text-white px-10 py-5 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group text-lg"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Crown className="h-6 w-6 mr-3 group-hover:rotate-12 transition-transform" />
+                  Đăng ký thành viên
+                  <Sparkles className="h-5 w-5 ml-2 group-hover:rotate-180 transition-transform duration-500" />
+                </motion.button>
+
+                <motion.button
+                  onClick={() => navigate("/classes")}
+                  className="vn-button bg-slate-100 hover:bg-slate-200 text-slate-800 px-10 py-5 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center text-lg border-2 border-slate-200 hover:border-slate-300"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Target className="h-6 w-6 mr-3" />
+                  Xem lớp học
+                </motion.button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Membership Packages */}
+        <motion.div
+          className="vn-card rounded-2xl p-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="text-center mb-8">
+            <h4 className="text-2xl vn-text-heading font-bold text-slate-800 mb-3">
+              Gói thành viên phổ biến
+            </h4>
+            <p className="text-slate-600 vn-text-light">
+              Lựa chọn gói phù hợp với nhu cầu của bạn
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Standard",
+                nameVi: "Tiêu chuẩn",
+                price: "299,000₫",
+                color: "from-slate-500 to-slate-600",
+                popular: false,
+                features: ["Thiết bị cơ bản", "Lớp nhóm", "Phòng thay đồ"],
+              },
+              {
+                name: "VIP",
+                nameVi: "VIP",
+                price: "599,000₫",
+                color: "from-amber-500 to-yellow-600",
+                popular: true,
+                features: ["Tất cả Standard", "PT cá nhân", "Spa cao cấp"],
+              },
+              {
+                name: "Platinum",
+                nameVi: "Bạch kim",
+                price: "999,000₫",
+                color: "from-emerald-500 to-teal-600",
+                popular: false,
+                features: ["Tất cả VIP", "Phòng riêng", "Concierge 24/7"],
+              },
+            ].map((pkg, index) => (
+              <motion.div
+                key={index}
+                className={`relative p-8 bg-gradient-to-br ${pkg.color} text-white rounded-2xl cursor-pointer hover:shadow-2xl transition-all duration-500 group overflow-hidden`}
+                whileHover={{ scale: 1.05, y: -10 }}
+                onClick={() => navigate("/membership")}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + index * 0.1 }}
+              >
+                {pkg.popular && (
+                  <motion.div
+                    className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    🔥 Phổ biến nhất
+                  </motion.div>
+                )}
+
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute inset-0 vn-shimmer-effect"></div>
+                </div>
+
+                <div className="relative z-10 text-center">
+                  <h5 className="vn-text-heading font-bold text-2xl mb-2">
+                    {pkg.nameVi}
+                  </h5>
+                  <p className="text-sm opacity-90 mb-4">{pkg.name}</p>
+                  <p className="vn-text-primary text-3xl font-bold mb-6">
+                    {pkg.price}
+                  </p>
+
+                  <div className="space-y-3 mb-6">
+                    {pkg.features.map((feature, i) => (
+                      <div key={i} className="flex items-center justify-center">
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="text-sm opacity-75 group-hover:opacity-100 transition-opacity">
+                    Nhấn để xem chi tiết →
                   </div>
                 </div>
-                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  {membership.type === "VIP" ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-10 w-10 text-yellow-200"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
-                      />
-                    </svg>
-                  ) : membership.type === "Standard" ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-10 w-10 text-indigo-200"
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  // Active Membership Display - Enhanced
+  const config =
+    membershipConfigs[membership.type] || membershipConfigs.Standard;
+  const IconComponent = config.icon;
+  const daysLeft = membership?.endDate
+    ? Math.max(
+        0,
+        Math.ceil(
+          (new Date(membership.endDate) - new Date()) / (1000 * 60 * 60 * 24)
+        )
+      )
+    : 0;
+
+  return (
+    <>
+      {/* Enhanced Global Vietnamese Styles */}
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+        .vn-text-primary {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 400;
+          letter-spacing: -0.01em;
+        }
+
+        .vn-text-heading {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
+
+        .vn-text-light {
+          font-family: "Inter", sans-serif;
+          font-weight: 300;
+          letter-spacing: 0.01em;
+        }
+
+        .vn-card {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(148, 163, 184, 0.1);
+          box-shadow: 0 4px 32px rgba(0, 0, 0, 0.04);
+        }
+
+        .vn-card-hover {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .vn-card-hover:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+        }
+
+        .vn-button {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          font-family: "Inter", sans-serif;
+          font-weight: 500;
+          letter-spacing: -0.01em;
+        }
+      `}</style>
+
+      <motion.div
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        className="space-y-8"
+      >
+        {/* Enhanced Vietnamese Style Membership Card */}
+        <div className="relative group px-4 py-4">
+          {" "}
+          {/* Thêm padding để tạo không gian cho scale */}
+          <div
+            className={`absolute -inset-7 bg-gradient-to-r ${config.glowEffect} rounded-2xl blur-xl opacity-25 group-hover:opacity-40 transition-all duration-700 vn-pulse-glow`}
+          ></div>
+          <motion.div
+            className="relative overflow-hidden"
+            style={{ aspectRatio: "1.586" }}
+            whileHover={{
+              scale: 1.02, // Giảm scale từ 1.03 xuống 1.02
+              rotateY: 2, // Giảm rotation
+              rotateX: 2, // Giảm rotation
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 20,
+              duration: 0.3, // Thêm duration cho smooth hơn
+            }}
+          >
+            <div
+              className={`
+              relative w-full h-full
+              bg-gradient-to-br ${config.cardGradient}
+              rounded-2xl shadow-2xl overflow-hidden
+              border border-white/20
+              transform-gpu will-change-transform
+            `}
+              style={{
+                backfaceVisibility: "hidden", // Tối ưu performance
+                perspective: "1000px",
+              }}
+            >
+              {/* Enhanced Wave Pattern */}
+              <div className="absolute inset-0 overflow-hidden rounded-2xl">
+                {" "}
+                {/* Thêm rounded-2xl */}
+                <div className="absolute top-0 left-0 w-full h-12 vn-zen-wave opacity-30">
+                  <svg viewBox="0 0 400 48" className="w-full h-full">
+                    <path
+                      d="M0,24 Q100,12 200,24 T400,24"
+                      stroke="rgba(255,255,255,0.5)"
+                      strokeWidth="2"
                       fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-10 w-10 text-blue-200"
+                    />
+                    <path
+                      d="M0,32 Q150,20 300,32 T600,32"
+                      stroke="rgba(255,255,255,0.3)"
+                      strokeWidth="1"
                       fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                    />
+                  </svg>
+                </div>
+                {/* Enhanced Particles */}
+                {[...Array(12)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute bg-white/25 rounded-full vn-particle"
+                    style={{
+                      width: `${2 + Math.random() * 3}px`,
+                      height: `${2 + Math.random() * 3}px`,
+                      left: `${15 + i * 7}%`,
+                      top: `${25 + i * 4}%`,
+                      animationDelay: `${i * 0.4}s`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Enhanced Card Content */}
+              <div className="relative z-10 p-8 h-full flex flex-col justify-between rounded-2xl">
+                {" "}
+                {/* Thêm rounded-2xl */}
+                {/* Top Section */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-white/25 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-lg">
+                      <IconComponent className="h-7 w-7 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-white vn-text-heading text-lg tracking-wider font-bold">
+                        FITNESS CLUB
+                      </h3>
+                      <p
+                        className={`${config.primaryColor} vn-text-light tracking-wide`}
+                      >
+                        {config.tier}
+                      </p>
+                    </div>
+                  </div>
+
+                  {membership?.isActive && (
+                    <motion.div
+                      className="bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg"
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
+                      Đang hoạt động
+                    </motion.div>
                   )}
                 </div>
-              </div>
-
-              <div className="flex flex-col text-white space-y-4">
-                <div className="flex items-center">
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center mr-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-3.5 w-3.5 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-white/70 text-xs">Chủ thẻ</p>
-                    <p className="text-white font-medium">
-                      {user?.fullName || user?.username}
+                {/* Middle Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <CardIcon className="h-5 w-5 text-white/80" />
+                    <p className="text-white/90 vn-text-primary tracking-wide font-medium">
+                      MÃ THÀNH VIÊN
                     </p>
                   </div>
+                  <p className="text-white font-mono text-xl tracking-[0.15em] font-bold">
+                    {membership?.id}
+                  </p>
                 </div>
-
-                <div className="flex items-center">
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center mr-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-3.5 w-3.5 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-white/70 text-xs">ID Thẻ</p>
-                    <p className="text-white font-medium">
-                      #{membership._id.substring(membership._id.length - 6)}
+                {/* Bottom Section */}
+                <div className="flex items-end justify-between">
+                  <div className="space-y-2">
+                    <p className="text-white/80 text-sm vn-text-light tracking-wide uppercase">
+                      Họ và tên
+                    </p>
+                    <p className="text-white vn-text-primary tracking-wide uppercase font-semibold">
+                      {user?.fullName || user?.username || "THÀNH VIÊN"}
                     </p>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div>
-                    <p className="text-white/70 text-xs">Ngày đăng ký</p>
-                    <p className="text-white font-medium">
-                      {new Date(membership.startDate).toLocaleDateString(
+                  <div className="text-right space-y-2">
+                    <p className="text-white/80 text-sm vn-text-light tracking-wide">
+                      Hết hạn
+                    </p>
+                    <p className="text-white font-mono font-semibold">
+                      {new Date(membership?.endDate).toLocaleDateString(
                         "vi-VN"
                       )}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-white/70 text-xs">Hạn sử dụng</p>
-                    <p className="text-white font-medium">
-                      {new Date(membership.endDate).toLocaleDateString("vi-VN")}
-                    </p>
-                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ) : membership && membership.status === "expired" ? (
-          <div className="bg-gradient-to-br from-gray-50 to-stone-100 rounded-xl p-8 text-center border border-gray-300">
-            <div className="w-20 h-20 mx-auto bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center mb-5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-10 w-10 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl text-amber-800 font-bold mb-3">
-              Thẻ thành viên đã hết hạn
-            </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Thẻ thành viên{" "}
-              {membership.type === "VIP"
-                ? "VIP"
-                : membership.type === "Standard"
-                ? "Tiêu chuẩn"
-                : "Cơ bản"}{" "}
-              của bạn đã hết hạn vào ngày{" "}
-              {new Date(membership.endDate).toLocaleDateString("vi-VN")}. Vui
-              lòng đăng ký lại để tiếp tục sử dụng các dịch vụ của chúng tôi.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <button
-                onClick={handleRenewal}
-                className="inline-block bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-700 hover:to-orange-600 text-white font-medium rounded-xl px-8 py-3 transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                Đăng ký lại
-              </button>
-              <Link
-                to="/membership"
-                className="inline-block bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-xl px-8 py-3 transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                Chọn gói khác
-              </Link>
-            </div>
-          </div>
-        ) : membership && membership.status === "pending_payment" ? (
-          <div className="bg-gradient-to-br from-yellow-50 to-amber-100 rounded-xl p-8 text-center border border-amber-200">
-            <div className="w-20 h-20 mx-auto bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full flex items-center justify-center mb-5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-10 w-10 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl text-amber-800 font-bold mb-3">
-              Thẻ thành viên đang chờ thanh toán
-            </h3>
-            <p className="text-amber-700 mb-6 max-w-md mx-auto">
-              Bạn đã đăng ký thẻ thành viên{" "}
-              {membership.type === "VIP"
-                ? "VIP"
-                : membership.type === "Standard"
-                ? "Tiêu chuẩn"
-                : "Cơ bản"}{" "}
-              nhưng chưa thanh toán. Vui lòng hoàn tất thanh toán để kích hoạt
-              thẻ.
-            </p>
-            <Link
-              to="/payment"
-              className="inline-block bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 text-white font-medium rounded-xl px-8 py-3 transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              Thanh toán ngay
-            </Link>
-          </div>
-        ) : membership && membership.status === "cancelled" ? (
-          <div className="bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-8 text-center border border-gray-200">
-            <div className="w-20 h-20 mx-auto bg-gradient-to-r from-red-500 to-rose-600 rounded-full flex items-center justify-center mb-5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-10 w-10 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl text-gray-800 font-bold mb-3">
-              Thẻ thành viên đã bị hủy
-            </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Thẻ thành viên của bạn đã bị hủy. Vui lòng đăng ký gói thành viên
-              mới để tiếp tục sử dụng dịch vụ.
-            </p>
-            <Link
-              to="/membership"
-              className="inline-block bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-xl px-8 py-3 transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              Đăng ký mới
-            </Link>
-          </div>
-        ) : (
-          <div className="bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-8 text-center border border-gray-200">
-            <div className="w-20 h-20 mx-auto bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-10 w-10 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl text-gray-800 font-bold mb-3">
-              Bạn chưa có thẻ thành viên
-            </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Đăng ký thẻ thành viên để tận hưởng nhiều ưu đãi đặc biệt, giá ưu
-              đãi khi đăng ký lớp học và nhiều quyền lợi hấp dẫn khác.
-            </p>
-            <Link
-              to="/membership"
-              className="inline-block bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-xl px-8 py-3 transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              Đăng ký ngay
-            </Link>
-          </div>
-        )}
-      </div>
 
-      {/* Membership Details Modal */}
-      {showMembershipDetails && membership && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div
-              className={`p-6 ${getCardBackground(membership.type)} text-white`}
-            >
-              <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-bold">
-                  Gói{" "}
-                  {membership.type === "VIP"
-                    ? "VIP"
-                    : membership.type === "Standard"
-                    ? "Tiêu chuẩn"
-                    : "Cơ bản"}
-                </h3>
-                <button
-                  onClick={() => setShowMembershipDetails(false)}
-                  className="text-white/80 hover:text-white"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+              {/* Enhanced Chip */}
+              <div className="absolute top-12 left-8">
+                <div className="w-8 h-6 bg-gradient-to-br from-yellow-200 to-yellow-400 rounded-md shadow-lg"></div>
               </div>
-              <p className="text-white/80 mt-2">
-                Thời hạn sử dụng:{" "}
-                {new Date(membership.startDate).toLocaleDateString("vi-VN")} -{" "}
-                {new Date(membership.endDate).toLocaleDateString("vi-VN")}
-              </p>
-              {membership.status === "expired" && (
-                <div className="mt-2 bg-red-500/20 px-3 py-1 rounded text-white text-sm">
-                  Đã hết hạn
-                </div>
-              )}
-            </div>
 
-            <div className="p-6">
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                Quyền lợi của bạn
-              </h4>
-
-              {membership.type === "VIP" && (
-                <ul className="space-y-3">
-                  <BenefitItem>
-                    Tự do tập luyện tại tất cả các CLB trong hệ thống
-                  </BenefitItem>
-                  <BenefitItem>
-                    Tham gia tất cả các lớp Yoga và Group X tại tất cả các CLB
-                  </BenefitItem>
-                  <BenefitItem>Được dẫn theo 1 người thân đi tập</BenefitItem>
-                  <BenefitItem>PT không giới hạn</BenefitItem>
-                  <BenefitItem>
-                    Nước uống miễn phí, khăn tập thể thao cao cấp
-                  </BenefitItem>
-                  <BenefitItem>
-                    Ưu tiên đặt chỗ các lớp Yoga và GroupX trước 48 tiếng
-                  </BenefitItem>
-                  <BenefitItem>
-                    Dịch vụ spa và massage tùy theo gói cụ thể
-                  </BenefitItem>
-                </ul>
-              )}
-
-              {membership.type === "Standard" && (
-                <ul className="space-y-3">
-                  <BenefitItem>Tập luyện tại 01 CLB đã chọn</BenefitItem>
-                  <BenefitItem>
-                    Tham gia Yoga và Group X tại 01 CLB đã chọn
-                  </BenefitItem>
-                  <BenefitItem>
-                    Tự do tập luyện tại tất cả các câu lạc bộ trong hệ thống
-                  </BenefitItem>
-                  <BenefitItem>Không giới hạn thời gian luyện tập</BenefitItem>
-                  <BenefitItem>
-                    Sử dụng dịch vụ thư giãn sau luyện tập (sauna, steambath)
-                  </BenefitItem>
-                  <BenefitItem>Khăn tập thể thao cao cấp</BenefitItem>
-                </ul>
-              )}
-
-              {membership.type === "Basic" && (
-                <ul className="space-y-3">
-                  <BenefitItem>Tập luyện tại 01 CLB đã chọn</BenefitItem>
-                  <BenefitItem>
-                    Tham gia Yoga và Group X tại 01 CLB đã chọn
-                  </BenefitItem>
-                  <BenefitItem>
-                    1 buổi định hướng luyện tập và tư vấn dinh dưỡng
-                  </BenefitItem>
-                  <BenefitItem>
-                    Sử dụng dịch vụ thư giãn (sauna, steambath)
-                  </BenefitItem>
-                  <BenefitItem>Nước uống miễn phí</BenefitItem>
-                  <BenefitItem>Khăn tập thể thao cao cấp</BenefitItem>
-                </ul>
-              )}
-
-              <div className="mt-6 flex justify-between">
-                <button
-                  onClick={() => setShowMembershipDetails(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+              {/* Enhanced Contactless */}
+              <div className="absolute top-12 right-8">
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                 >
-                  Đóng
-                </button>
-                {membership.status === "active" && (
-                  <button
-                    onClick={handleUpgrade}
-                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700"
-                  >
-                    Nâng cấp gói
-                  </button>
-                )}
-                {membership.status === "expired" && (
-                  <button
-                    onClick={handleRenewal}
-                    className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-500 text-white rounded-lg hover:from-amber-700 hover:to-orange-600"
-                  >
-                    Đăng ký lại
-                  </button>
-                )}
+                  <Wifi className="h-6 w-6 text-white/60 rotate-90" />
+                </motion.div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      )}
 
-      {/* Membership Benefits Popup */}
-      {showBenefits && membership && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Quyền lợi hạng {membership.type || "Standard"}
-              </h2>
-              <button
-                onClick={() => setShowBenefits(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div className="mb-6">
+        {/* Information Cards - Vietnamese Grid */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Member Information */}
+          <motion.div
+            className="vn-card rounded-xl p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="flex items-center mb-6">
               <div
-                className={`p-4 rounded-lg ${
-                  membership.type === "VIP"
-                    ? "bg-indigo-50 border border-indigo-100"
-                    : membership.type === "Platinum"
-                    ? "bg-purple-50 border border-purple-100"
-                    : "bg-blue-50 border border-blue-100"
-                }`}
+                className={`w-10 h-10 ${config.buttonStyle} rounded-lg flex items-center justify-center mr-4`}
               >
-                <ul className="space-y-3">
-                  {membershipBenefits[membership.type || "Standard"].map(
-                    (benefit, index) => (
-                      <li key={index} className="flex items-start">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className={`h-5 w-5 mr-2 flex-shrink-0 ${
-                            membership.type === "VIP"
-                              ? "text-indigo-500"
-                              : membership.type === "Platinum"
-                              ? "text-purple-500"
-                              : "text-blue-500"
-                          }`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <span className="text-gray-700">{benefit}</span>
-                      </li>
-                    )
-                  )}
-                </ul>
+                <Users className="h-5 w-5 text-white" />
               </div>
+              <h4 className="text-lg vn-text-heading text-slate-800">
+                Thông tin thành viên
+              </h4>
             </div>
 
-            {/* Show higher tier options if not already at the highest */}
-            {membership.type !== "Platinum" && (
-              <div className="mt-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">
-                  Nâng cấp thẻ thành viên
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Nâng cấp để nhận thêm nhiều quyền lợi hấp dẫn
-                </p>
-                <button
-                  onClick={() => {
-                    setShowBenefits(false);
-                    navigate("/upgrade-membership");
-                  }}
-                  className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-colors"
-                >
-                  Nâng cấp ngay
-                </button>
+            <div className="space-y-4">
+              <div className="flex items-center p-3 bg-slate-50 rounded-lg">
+                <Mail className="h-4 w-4 text-slate-600 mr-3" />
+                <div>
+                  <p className="text-sm text-slate-600 vn-text-light">Email</p>
+                  <p className="vn-text-primary font-medium text-slate-900">
+                    {user?.email}
+                  </p>
+                </div>
               </div>
+
+              <div className="flex items-center p-3 bg-slate-50 rounded-lg">
+                <Calendar className="h-4 w-4 text-slate-600 mr-3" />
+                <div>
+                  <p className="text-sm text-slate-600 vn-text-light">
+                    Ngày kích hoạt
+                  </p>
+                  <p className="vn-text-primary font-medium text-slate-900">
+                    {new Date(membership?.startDate).toLocaleDateString(
+                      "vi-VN"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center p-3 bg-slate-50 rounded-lg">
+                <Clock className="h-4 w-4 text-slate-600 mr-3" />
+                <div>
+                  <p className="text-sm text-slate-600 vn-text-light">
+                    Thời gian còn lại
+                  </p>
+                  <p className="vn-text-primary font-medium text-slate-900">
+                    {daysLeft} ngày
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Statistics */}
+          <motion.div
+            className="vn-card rounded-xl p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="flex items-center mb-6">
+              <div
+                className={`w-10 h-10 ${config.buttonStyle} rounded-lg flex items-center justify-center mr-4`}
+              >
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
+              <h4 className="text-lg vn-text-heading text-slate-800">
+                Thống kê hoạt động
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                {
+                  value: userStats.totalClasses,
+                  label: "Tổng lớp học",
+                  icon: "📚",
+                  color: "text-blue-600",
+                  bg: "bg-blue-50",
+                },
+                {
+                  value: userStats.activeClasses,
+                  label: "Đang tham gia",
+                  icon: "⚡",
+                  color: "text-yellow-600",
+                  bg: "bg-yellow-50",
+                },
+                {
+                  value: `${userStats.completionRate}%`,
+                  label: "Tỷ lệ hoàn thành",
+                  icon: "⭐",
+                  color: "text-green-600",
+                  bg: "bg-green-50",
+                },
+                {
+                  value: userStats.membershipMonths,
+                  label: "Tháng thành viên",
+                  icon: "👑",
+                  color: "text-purple-600",
+                  bg: "bg-purple-50",
+                },
+              ].map((stat, index) => (
+                <motion.div
+                  key={index}
+                  className={`text-center p-4 ${stat.bg} rounded-lg border border-gray-200 hover:shadow-sm transition-all duration-300 vn-card-hover`}
+                  whileHover={{ y: -1, scale: 1.02 }}
+                >
+                  <div className="text-xl mb-2">{stat.icon}</div>
+                  <div
+                    className={`text-xl vn-text-heading font-bold ${stat.color} mb-1`}
+                  >
+                    {stat.value}
+                  </div>
+                  <div className="text-xs text-slate-500 vn-text-light">
+                    {stat.label}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Benefits Section */}
+        <motion.div
+          className="vn-card rounded-xl overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <div
+                  className={`w-10 h-10 ${config.buttonStyle} rounded-lg flex items-center justify-center mr-4`}
+                >
+                  <Gift className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-lg vn-text-heading text-slate-800">
+                    Quyền lợi thành viên
+                  </h4>
+                  <p className="text-sm text-slate-600 vn-text-light">
+                    {config.tier} quyền lợi
+                  </p>
+                </div>
+              </div>
+              <motion.button
+                onClick={() => setShowBenefits(!showBenefits)}
+                className={`w-8 h-8 ${config.buttonStyle} rounded-lg flex items-center justify-center text-white`}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ArrowRight
+                  className={`h-4 w-4 transition-transform duration-300 ${
+                    showBenefits ? "rotate-90" : ""
+                  }`}
+                />
+              </motion.button>
+            </div>
+
+            {showBenefits && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-4"
+              >
+                <div className="grid md:grid-cols-2 gap-6">
+                  <ul className="space-y-3">
+                    {config.benefits
+                      .slice(0, Math.ceil(config.benefits.length / 2))
+                      .map((benefit, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <BenefitItem>{benefit}</BenefitItem>
+                        </motion.div>
+                      ))}
+                  </ul>
+                  <ul className="space-y-3">
+                    {config.benefits
+                      .slice(Math.ceil(config.benefits.length / 2))
+                      .map((benefit, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            delay:
+                              (index + Math.ceil(config.benefits.length / 2)) *
+                              0.1,
+                          }}
+                        >
+                          <BenefitItem>{benefit}</BenefitItem>
+                        </motion.div>
+                      ))}
+                  </ul>
+                </div>
+              </motion.div>
             )}
           </div>
-        </div>
-      )}
-    </motion.div>
+        </motion.div>
+
+        {/* Action Buttons */}
+        <motion.div
+          className="grid md:grid-cols-2 gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <motion.button
+            onClick={() => navigate("/classes")}
+            className="vn-button bg-slate-800 hover:bg-slate-700 text-white p-4 rounded-xl font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center group"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Target className="h-4 w-4 mr-2" />
+            Đăng ký lớp học
+          </motion.button>
+
+          <motion.button
+            onClick={() => setShowMembershipDetails(!showMembershipDetails)}
+            className="vn-button bg-slate-100 hover:bg-slate-200 text-slate-800 p-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Award className="h-4 w-4 mr-2" />
+            Xem chi tiết
+          </motion.button>
+        </motion.div>
+
+        {/* Details Modal */}
+        {showMembershipDetails && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
+            onClick={() => setShowMembershipDetails(false)}
+          >
+            <motion.div
+              className="vn-card rounded-xl p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center mb-6">
+                <div
+                  className={`w-12 h-12 ${config.buttonStyle} rounded-full flex items-center justify-center mx-auto mb-4`}
+                >
+                  <IconComponent className="h-6 w-6 text-white" />
+                </div>
+                <h4 className="text-xl vn-text-heading text-slate-800 mb-1">
+                  {config.tier}
+                </h4>
+                <p className="text-slate-600 vn-text-light">
+                  Chi tiết thẻ thành viên
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  {
+                    label: "Loại thẻ",
+                    value: membership?.type,
+                    icon: Award,
+                  },
+                  {
+                    label: "Ngày kích hoạt",
+                    value: new Date(membership?.startDate).toLocaleDateString(
+                      "vi-VN"
+                    ),
+                    icon: Calendar,
+                  },
+                  {
+                    label: "Ngày hết hạn",
+                    value: new Date(membership?.endDate).toLocaleDateString(
+                      "vi-VN"
+                    ),
+                    icon: Clock,
+                  },
+                  {
+                    label: "Trạng thái",
+                    value: membership?.isActive ? "Đang hoạt động" : "Hết hạn",
+                    icon: Shield,
+                    valueClass: membership?.isActive
+                      ? "text-green-600"
+                      : "text-red-600",
+                  },
+                ].map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                  >
+                    <div className="flex items-center">
+                      <item.icon className="h-4 w-4 text-slate-600 mr-3" />
+                      <p className="vn-text-primary font-medium text-slate-700">
+                        {item.label}
+                      </p>
+                    </div>
+                    <span
+                      className={`vn-text-primary font-semibold ${
+                        item.valueClass || "text-slate-900"
+                      }`}
+                    >
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowMembershipDetails(false)}
+                className="mt-6 w-full vn-button bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-medium transition-all duration-200"
+              >
+                Đóng
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </motion.div>
+    </>
   );
 };
 

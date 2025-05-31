@@ -13,6 +13,7 @@ import membershipRoutes from "./routes/membershipRoutes.js"; // New import
 import imageRoutes from "./routes/imageRoutes.js"; // New import
 import classRoutes from "./routes/classRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
+import statsRoutes from "./routes/statsRoutes.js"; // New import
 
 // Load environment variables
 dotenv.config({ path: "./backend/.env" });
@@ -33,6 +34,8 @@ app.use("/api/memberships", membershipRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/images", imageRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/clubs", clubRoutes);
+app.use("/api/stats", statsRoutes); // New route
 
 // MongoDB URI and PORT
 const PORT = process.env.PORT || 5000;

@@ -137,6 +137,7 @@ export default function UserAttendance() {
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header không đổi */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Báo cáo điểm danh của tôi
@@ -146,8 +147,8 @@ export default function UserAttendance() {
           </p>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Statistics Cards - thêm số buổi còn lại */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -206,10 +207,35 @@ export default function UserAttendance() {
             </div>
           </motion.div>
 
+          {/* Thêm card số buổi còn lại */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
+            className="bg-white rounded-lg shadow-md p-6"
+          >
+            <div className="flex items-center">
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <Clock className="h-8 w-8 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Còn lại</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {Math.max(
+                    0,
+                    (attendanceData.totalPlannedSessions ||
+                      attendanceData.totalSessions) -
+                      attendanceData.totalSessions
+                  )}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
             className="bg-white rounded-lg shadow-md p-6"
           >
             <div className="flex items-center">
@@ -228,7 +254,7 @@ export default function UserAttendance() {
           </motion.div>
         </div>
 
-        {/* Attendance Records */}
+        {/* Attendance Records không đổi */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 bg-gray-50 border-b">
             <h2 className="text-lg font-semibold text-gray-800">
