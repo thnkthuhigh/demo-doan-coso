@@ -3,17 +3,6 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
 import {
-  VintageContainer,
-  VintageSection,
-  VintageHero,
-  VintageCard,
-  VintageHeading,
-  VintageText,
-  VintageButton,
-  VintageGrid,
-  VintageDivider,
-} from "../Templates/VintageLayout";
-import {
   Crown,
   ArrowRight,
   Shield,
@@ -25,17 +14,22 @@ import {
   Heart,
   Award,
   CheckCircle,
-  MapPin, // Thêm MapPin vào import
+  MapPin,
   Dumbbell,
   Activity,
   Zap,
+  Cherry,
+  Mountain,
+  Waves,
+  Flame,
+  Gem,
+  Flower2,
 } from "lucide-react";
-import VintageBanner from "../Club/Banner";
 
 export default function ServicePage() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedService, setSelectedService] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -45,34 +39,66 @@ export default function ServicePage() {
         setServices(res.data);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách dịch vụ:", error);
-        // Fallback data nếu API lỗi
         setServices([
           {
             id: 1,
-            name: "Personal Training",
+            name: "Huấn Luyện Zen Cá Nhân",
+            category: "training",
             description:
-              "Huấn luyện cá nhân với chương trình tập luyện được thiết kế riêng cho bạn",
+              "Huấn luyện cá nhân với triết lý thiền Zen - Tìm sự cân bằng giữa thể chất và tinh thần",
             image:
               "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
             price: "500000",
+            features: [
+              "Chương trình cá nhân hoá",
+              "Thiền tập kết hợp",
+              "Huấn luyện viên chuyên nghiệp",
+            ],
+            icon: <Target className="h-6 w-6" />,
           },
           {
             id: 2,
-            name: "Group Classes",
+            name: "Lớp Học Nhóm Sakura",
+            category: "classes",
             description:
-              "Các lớp học nhóm đa dạng: Yoga, Zumba, Cardio và nhiều hơn nữa",
+              "Các lớp học nhóm đầy năng lượng: Yoga, Pilates và các bài tập truyền thống Nhật Bản",
             image:
               "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800",
             price: "200000",
+            features: [
+              "Nhiều lớp học đa dạng",
+              "Cộng đồng thân thiện",
+              "Giáo viên có chứng chỉ",
+            ],
+            icon: <Users className="h-6 w-6" />,
           },
           {
             id: 3,
-            name: "Nutrition Consulting",
+            name: "Dinh Dưỡng Kaizen",
+            category: "nutrition",
             description:
-              "Tư vấn dinh dưỡng chuyên nghiệp để tối ưu hóa kết quả tập luyện",
+              "Tư vấn dinh dưỡng theo triết lý Kaizen - Cải thiện liên tục từng ngày",
             image:
               "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800",
             price: "300000",
+            features: [
+              "Kế hoạch dinh dưỡng cá nhân",
+              "Theo dõi tiến độ",
+              "Tư vấn 24/7",
+            ],
+            icon: <Heart className="h-6 w-6" />,
+          },
+          {
+            id: 4,
+            name: "Chăm Sóc Wabi-Sabi",
+            category: "wellness",
+            description:
+              "Dịch vụ chăm sóc toàn diện - Tìm vẻ đẹp trong sự không hoàn hảo của cơ thể",
+            image:
+              "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800",
+            price: "400000",
+            features: ["Massage thư giãn", "Spa trị liệu", "Thiền mindfulness"],
+            icon: <Flower2 className="h-6 w-6" />,
           },
         ]);
       } finally {
@@ -83,432 +109,564 @@ export default function ServicePage() {
     fetchServices();
   }, []);
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
+  const categories = [
+    { id: "all", name: "Tất Cả", icon: <Sparkles className="h-5 w-5" /> },
+    {
+      id: "training",
+      name: "Huấn Luyện",
+      icon: <Dumbbell className="h-5 w-5" />,
     },
-  };
+    { id: "classes", name: "Lớp Học", icon: <Users className="h-5 w-5" /> },
+    {
+      id: "nutrition",
+      name: "Dinh Dưỡng",
+      icon: <Heart className="h-5 w-5" />,
+    },
+    { id: "wellness", name: "Chăm Sóc", icon: <Flower2 className="h-5 w-5" /> },
+  ];
 
-  const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
+  const filteredServices =
+    selectedCategory === "all"
+      ? services
+      : services.filter((service) => service.category === selectedCategory);
 
   const features = [
     {
       icon: <Shield className="h-8 w-8" />,
-      title: "Chất lượng hàng đầu",
+      title: "An Tâm Tuyệt Đối",
+      subtitle: "Anshin (安心)",
       description:
-        "Cam kết mang đến dịch vụ tốt nhất với đội ngũ chuyên gia hàng đầu trong ngành thể hình và chăm sóc sức khỏe",
+        "Chất lượng dịch vụ được đảm bảo với tiêu chuẩn Nhật Bản nghiêm ngặt",
+      color: "from-blue-500 to-indigo-600",
     },
     {
-      icon: <Clock className="h-8 w-8" />,
-      title: "Tiết kiệm thời gian",
+      icon: <Gem className="h-8 w-8" />,
+      title: "Tinh Tế Hoàn Hảo",
+      subtitle: "Shokunin (職人)",
       description:
-        "Quy trình đơn giản, hiệu quả giúp bạn tiết kiệm thời gian tối đa và tập trung vào mục tiêu sức khỏe của mình",
+        "Từng chi tiết được chăm chút tỉ mỉ với tinh thần nghệ nhân Nhật Bản",
+      color: "from-purple-500 to-pink-600",
     },
     {
+      icon: <Mountain className="h-8 w-8" />,
+      title: "Bền Vững Lâu Dài",
+      subtitle: "Kaizen (改善)",
+      description:
+        "Phương pháp cải tiến liên tục mang lại kết quả bền vững theo thời gian",
+      color: "from-green-500 to-emerald-600",
+    },
+  ];
+
+  const stats = [
+    {
+      number: "万人",
+      translation: "10K+",
+      label: "Khách Hàng Tin Tưởng",
       icon: <Users className="h-8 w-8" />,
-      title: "Hỗ trợ chuyên nghiệp",
-      description:
-        "Đội ngũ tư vấn viên luôn sẵn sàng hỗ trợ bạn 24/7, giải đáp mọi thắc mắc và đồng hành cùng bạn trên hành trình",
-    },
-  ];
-
-  const premiumFeatures = [
-    {
-      icon: <Dumbbell className="h-6 w-6" />,
-      title: "Trang thiết bị hiện đại",
-      description: "Máy tập nhập khẩu từ các thương hiệu hàng đầu thế giới",
+      color: "from-pink-400 to-rose-500",
     },
     {
-      icon: <Activity className="h-6 w-6" />,
-      title: "Chương trình cá nhân hóa",
-      description: "Lộ trình tập luyện được thiết kế riêng cho từng cá nhân",
+      number: "十五",
+      translation: "15+",
+      label: "Chi Nhánh Toàn Quốc",
+      icon: <MapPin className="h-8 w-8" />,
+      color: "from-blue-400 to-cyan-500",
     },
     {
-      icon: <Zap className="h-6 w-6" />,
-      title: "Kết quả nhanh chóng",
-      description:
-        "Phương pháp khoa học giúp đạt mục tiêu trong thời gian ngắn",
+      number: "百人",
+      translation: "100+",
+      label: "Chuyên Gia Hàng Đầu",
+      icon: <Award className="h-8 w-8" />,
+      color: "from-amber-400 to-orange-500",
     },
-  ];
-
-  const serviceImages = [
-    "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920",
-    "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920",
-    "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920",
+    {
+      number: "五星",
+      translation: "5★",
+      label: "Đánh Giá Xuất Sắc",
+      icon: <Star className="h-8 w-8" />,
+      color: "from-yellow-400 to-amber-500",
+    },
   ];
 
   return (
-    <div className="bg-vintage-cream min-h-screen">
-      {/* Replace VintageHero with VintageBanner */}
-      <VintageBanner
-        images={serviceImages}
-        title="Dịch Vụ Hàng Đầu"
-        subtitle="Chăm Sóc Bạn Từ Tâm - Thay Đổi Từ Hình Thể Đến Cuộc Sống! Khám phá các dịch vụ cao cấp được thiết kế đặc biệt cho sức khỏe và vóc dáng của bạn."
-        height="h-screen"
-        autoPlay={true}
-        autoPlayInterval={6000}
-      >
-        <VintageButton
-          variant="gold"
-          size="lg"
-          onClick={() =>
-            document
-              .getElementById("services-section")
-              ?.scrollIntoView({ behavior: "smooth" })
-          }
-          className="group"
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-pink-50">
+      {/* Floating Japanese Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <motion.div
+          animate={{
+            y: [0, -30, 0],
+            rotate: [0, 10, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute top-20 left-10"
         >
-          <Sparkles className="mr-2 h-5 w-5" />
-          <span>Khám phá ngay</span>
-          <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-        </VintageButton>
-        <Link to="/membership">
-          <VintageButton
-            variant="secondary"
-            size="lg"
-            className="group border-white text-white hover:bg-white hover:text-vintage-dark"
+          <Cherry className="h-16 w-16 text-pink-300 opacity-40" />
+        </motion.div>
+
+        <motion.div
+          animate={{
+            y: [0, 20, 0],
+            rotate: [0, -15, 0],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 3,
+          }}
+          className="absolute top-40 right-20"
+        >
+          <Mountain className="h-20 w-20 text-blue-300 opacity-30" />
+        </motion.div>
+
+        <motion.div
+          animate={{
+            y: [0, -15, 0],
+            x: [0, 10, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 6,
+          }}
+          className="absolute bottom-40 left-1/4"
+        >
+          <Waves className="h-14 w-14 text-cyan-300 opacity-35" />
+        </motion.div>
+      </div>
+
+      {/* Hero Section - Japanese Zen Style */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage:
+              "url(https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-gray-900/70 to-indigo-900/60 z-10" />
+
+        {/* Japanese Pattern Overlay */}
+        <div className="absolute inset-0 z-15 opacity-30">
+          <div className="absolute top-1/4 left-1/4 w-40 h-40 border-2 border-pink-300/50 rounded-none rotate-45 animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/3 w-32 h-32 border-2 border-blue-300/50 rounded-full animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/4 w-24 h-24 border-2 border-green-300/50 rotate-12 animate-pulse delay-2000"></div>
+        </div>
+
+        <div className="relative z-20 max-w-6xl mx-auto px-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.5 }}
           >
-            <Crown className="mr-2 h-5 w-5" />
-            <span>Đăng ký thành viên</span>
-          </VintageButton>
-        </Link>
-      </VintageBanner>
+            {/* Japanese Title */}
+            <div className="mb-8">
+              <div className="text-6xl md:text-8xl font-light text-white mb-4 tracking-wider font-serif">
+                <span className="text-pink-400">サービス</span>
+              </div>
+              <h1 className="text-4xl md:text-6xl font-light text-white mb-6">
+                <span className="text-blue-400">Dịch</span>
+                <span className="mx-4 text-yellow-400">•</span>
+                <span className="text-pink-400">Vụ</span>
+              </h1>
+              <div className="w-32 h-1 bg-gradient-to-r from-pink-400 via-blue-400 to-green-400 mx-auto rounded-full"></div>
+            </div>
+
+            <div className="space-y-6 mb-12">
+              <p className="text-xl md:text-3xl text-white/90 font-light font-serif">
+                おもてなしの心
+              </p>
+              <p className="text-lg md:text-xl text-white/80 mb-4">
+                Tinh Thần Phục Vụ Từ Trái Tim
+              </p>
+              <p className="text-base text-white/70 max-w-3xl mx-auto leading-relaxed">
+                Khám phá những dịch vụ được thiết kế với triết lý Omotenashi -
+                tinh thần hiếu khách Nhật Bản, nơi mỗi chi tiết đều được chăm
+                chút để mang đến trải nghiệm hoàn hảo
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <motion.button
+                whileHover={{ scale: 1.05, rotate: 1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() =>
+                  document.getElementById("services-section")?.scrollIntoView({
+                    behavior: "smooth",
+                  })
+                }
+                className="px-8 py-4 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group whitespace-nowrap"
+              >
+                <Cherry className="inline mr-3 h-5 w-5" />
+                <span>Khám Phá Dịch Vụ</span>
+                <ArrowRight className="inline ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </motion.button>
+
+              <Link to="/membership">
+                <motion.button
+                  whileHover={{ scale: 1.05, rotate: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap"
+                >
+                  <Crown className="inline mr-3 h-5 w-5" />
+                  <span>Đăng Ký Thành Viên</span>
+                </motion.button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Service Categories Filter */}
+      <section className="py-12 bg-white/80 backdrop-blur-sm border-y border-gray-200">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex flex-wrap justify-center gap-4">
+            {categories.map((category) => (
+              <motion.button
+                key={category.id}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${
+                  selectedCategory === category.id
+                    ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg"
+                    : "bg-white text-gray-700 border border-gray-200 hover:border-pink-300 hover:text-pink-600"
+                }`}
+              >
+                {category.icon}
+                <span>{category.name}</span>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Services Section */}
-      <VintageSection background="warm" id="services-section">
-        <VintageContainer>
-          <div className="text-center mb-16">
-            <VintageHeading level={2} className="mb-6" ornament>
+      <section
+        className="py-20 bg-gradient-to-br from-white via-pink-50 to-blue-50"
+        id="services-section"
+      >
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-20">
+            <div className="text-4xl md:text-5xl text-gray-800 mb-4 font-serif">
+              私たちのサービス
+            </div>
+            <h2 className="text-3xl md:text-4xl font-light text-gray-800 mb-6">
               Khám Phá Các Dịch Vụ Của Chúng Tôi
-            </VintageHeading>
-            <VintageDivider />
-            <VintageText variant="lead" className="max-w-3xl mx-auto">
-              Chúng tôi cung cấp các dịch vụ chất lượng cao, được thiết kế riêng
-              để đáp ứng mọi nhu cầu về thể hình và sức khỏe của bạn
-            </VintageText>
+            </h2>
+            <p className="text-pink-500 font-medium tracking-wider mb-4 uppercase text-sm">
+              Chất Lượng Nhật Bản
+            </p>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Mỗi dịch vụ đều được thiết kế với tinh thần Monozukuri - nghệ
+              thuật tạo ra sản phẩm hoàn hảo
+            </p>
           </div>
 
           {loading ? (
             <div className="flex justify-center items-center py-20">
-              <VintageCard className="p-8 text-center">
-                <div className="w-12 h-12 border-4 border-vintage-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <VintageText
-                  variant="body"
-                  className="text-vintage-neutral font-medium"
-                >
-                  Đang tải dịch vụ...
-                </VintageText>
-              </VintageCard>
+              <div className="text-center">
+                <div className="w-12 h-12 border-2 border-pink-300 border-t-pink-500 rounded-full animate-spin mx-auto mb-6"></div>
+                <p className="text-gray-600">Đang tải dịch vụ...</p>
+              </div>
             </div>
           ) : (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <VintageGrid cols={{ sm: 1, md: 2, lg: 3 }} gap={8}>
-                {services.map((service, index) => (
-                  <motion.div
-                    key={index}
-                    variants={itemVariants}
-                    whileHover={{ y: -8 }}
-                    className="h-full group"
-                  >
-                    <Link
-                      to={`/services/detail/${service.id || service._id}`}
-                      className="hover:no-underline block h-full"
-                    >
-                      <VintageCard className="h-full flex flex-col overflow-hidden group-hover:shadow-elegant transition-all duration-500">
-                        <div className="relative overflow-hidden h-64">
-                          <img
-                            src={service.image}
-                            alt={service.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                          />
-
-                          {/* Overlay với gradient */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-vintage-dark/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                          {/* Hot Badge */}
-                          <div className="absolute top-4 right-4">
-                            <div className="bg-vintage-gold text-vintage-dark px-3 py-1 rounded-full text-xs font-bold vintage-sans flex items-center shadow-golden">
-                              <Star className="h-3 w-3 mr-1 fill-current" />
-                              Hot
-                            </div>
-                          </div>
-
-                          {/* Hover Icon */}
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                            <div className="w-16 h-16 bg-vintage-gold rounded-full flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300 delay-100 shadow-golden">
-                              <ArrowRight className="h-6 w-6 text-vintage-dark" />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="p-6 space-y-4 flex-grow flex flex-col">
-                          <div className="flex items-center justify-between">
-                            <VintageHeading
-                              level={4}
-                              className="group-hover:text-vintage-primary transition-colors"
-                            >
-                              {service.name}
-                            </VintageHeading>
-                          </div>
-
-                          <VintageText
-                            variant="body"
-                            className="flex-grow line-clamp-3"
-                          >
-                            {service.description}
-                          </VintageText>
-
-                          <div className="flex justify-between items-center pt-4 border-t border-vintage-primary/20">
-                            <div className="text-vintage-primary font-bold group-hover:text-vintage-gold transition-colors flex items-center vintage-sans">
-                              <span>Chi tiết</span>
-                              <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                            </div>
-
-                            {service.price && (
-                              <div className="bg-vintage-warm text-vintage-primary px-3 py-1 rounded-lg font-medium vintage-sans text-sm">
-                                {typeof service.price === "number"
-                                  ? service.price.toLocaleString("vi-VN") + " đ"
-                                  : service.price}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </VintageCard>
-                    </Link>
-                  </motion.div>
-                ))}
-              </VintageGrid>
-            </motion.div>
-          )}
-        </VintageContainer>
-      </VintageSection>
-
-      {/* Features Section - Tại sao chọn chúng tôi */}
-      <VintageSection className="why-choose-section">
-        <VintageContainer>
-          <div className="why-choose-content">
-            <div className="text-center mb-16">
-              <VintageHeading
-                level={2}
-                className="mb-6 text-vintage-dark"
-                ornament
-              >
-                Tại Sao Chọn Dịch Vụ Của Chúng Tôi?
-              </VintageHeading>
-              <VintageText
-                variant="lead"
-                className="max-w-3xl mx-auto text-vintage-neutral"
-              >
-                Chúng tôi cam kết mang đến trải nghiệm tuyệt vời nhất cho khách
-                hàng với những ưu điểm vượt trội
-              </VintageText>
-            </div>
-
-            <VintageGrid cols={{ sm: 1, md: 3 }} gap={8}>
-              {features.map((feature, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {filteredServices.map((service, index) => (
                 <motion.div
-                  key={index}
-                  variants={itemVariants}
-                  initial="hidden"
-                  whileInView="visible"
+                  key={service.id}
+                  initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.8, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="feature-card-enhanced"
+                  whileHover={{ y: -15 }}
+                  className="h-full group"
                 >
-                  <div className="feature-icon text-4xl mb-4">
-                    {feature.icon}
-                  </div>
-                  <VintageHeading level={4} className="feature-title">
-                    {feature.title}
-                  </VintageHeading>
-                  <VintageText className="feature-description">
-                    {feature.description}
-                  </VintageText>
+                  <Link
+                    to={`/services/detail/${service.id}`}
+                    className="block h-full"
+                  >
+                    <div className="bg-white rounded-2xl overflow-hidden h-full shadow-lg hover:shadow-2xl transition-all duration-700 group-hover:transform group-hover:scale-105 border border-gray-100 flex flex-col">
+                      {/* Image Section */}
+                      <div className="relative overflow-hidden h-56">
+                        <img
+                          src={service.image}
+                          alt={service.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                          onError={(e) => {
+                            e.target.src =
+                              "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800";
+                          }}
+                        />
+
+                        {/* Japanese Pattern Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                        {/* Service Category Badge */}
+                        <div className="absolute top-4 left-4">
+                          <div className="bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-md whitespace-nowrap">
+                            {service.icon}
+                            <span className="ml-2">
+                              {categories.find(
+                                (cat) => cat.id === service.category
+                              )?.name || "Dịch Vụ"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Premium Badge */}
+                        <div className="absolute top-4 right-4">
+                          <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-md whitespace-nowrap">
+                            <Star className="h-3 w-3 mr-1 fill-current" />
+                            Cao Cấp
+                          </div>
+                        </div>
+
+                        {/* Hover Action */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                          <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300 delay-100 shadow-lg">
+                            <ArrowRight className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content Section */}
+                      <div className="p-6 space-y-4 flex-grow flex flex-col">
+                        <div>
+                          <h3 className="text-xl font-semibold text-gray-800 group-hover:text-pink-600 transition-colors mb-2">
+                            {service.name}
+                          </h3>
+                          <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                            {service.description}
+                          </p>
+                        </div>
+
+                        {/* Features */}
+                        {service.features && (
+                          <div className="space-y-2 flex-grow">
+                            {service.features
+                              .slice(0, 3)
+                              .map((feature, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center text-xs text-gray-600"
+                                >
+                                  <CheckCircle className="h-3 w-3 text-pink-500 mr-2 flex-shrink-0" />
+                                  <span>{feature}</span>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+
+                        {/* Footer */}
+                        <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
+                          <div className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors flex items-center whitespace-nowrap">
+                            <span>Xem Chi Tiết</span>
+                            <ArrowRight className="h-3 w-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                          </div>
+
+                          {service.price && (
+                            <div className="text-pink-600 font-bold text-sm whitespace-nowrap">
+                              {typeof service.price === "number"
+                                ? service.price.toLocaleString("vi-VN") + "đ"
+                                : parseInt(service.price).toLocaleString(
+                                    "vi-VN"
+                                  ) + "đ"}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
                 </motion.div>
               ))}
-            </VintageGrid>
-          </div>
-        </VintageContainer>
-      </VintageSection>
+            </div>
+          )}
+        </div>
+      </section>
 
-      {/* Premium Experience Section - Trải nghiệm đẳng cấp */}
-      <VintageSection className="premium-experience-section">
-        <VintageContainer>
-          <div className="premium-experience-content">
-            <div className="premium-text-content">
-              <VintageHeading
-                level={2}
-                className="mb-6 text-vintage-dark"
-                ornament
+      {/* Features Section - Why Choose Us */}
+      <section className="py-20 bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+              backgroundSize: "50px 50px",
+            }}
+          ></div>
+        </div>
+
+        <div className="relative max-w-6xl mx-auto px-4">
+          <div className="text-center mb-20">
+            <div className="text-4xl md:text-5xl text-white mb-4 font-serif">
+              なぜ選ぶのか
+            </div>
+            <h2 className="text-3xl md:text-4xl font-light text-white mb-6">
+              Tại Sao Chọn Chúng Tôi?
+            </h2>
+            <div className="w-24 h-px bg-gradient-to-r from-transparent via-pink-400 to-transparent mx-auto mb-6"></div>
+            <p className="text-lg text-white/80 max-w-3xl mx-auto">
+              Chúng tôi mang đến sự khác biệt với triết lý và chất lượng dịch vụ
+              Nhật Bản
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.2 }}
+                viewport={{ once: true }}
+                className="group"
               >
-                Trải Nghiệm Dịch Vụ Đẳng Cấp
-              </VintageHeading>
-              <VintageText variant="lead" className="mb-8 text-vintage-neutral">
-                Khám phá không gian sang trọng với trang thiết bị hiện đại và
-                dịch vụ chăm sóc khách hàng tận tình
-              </VintageText>
-
-              <div className="space-y-6">
-                {premiumFeatures.map((feature, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -30 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    className="flex items-start space-x-4"
+                <div className="relative p-8 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-500 h-full">
+                  {/* Icon with gradient background */}
+                  <div
+                    className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r ${feature.color} rounded-full text-white mb-6 group-hover:scale-110 transition-transform duration-300`}
                   >
-                    <div className="flex-shrink-0 w-12 h-12 bg-vintage-gold rounded-lg flex items-center justify-center text-vintage-dark">
-                      {feature.icon}
-                    </div>
-                    <div>
-                      <VintageHeading
-                        level={5}
-                        className="mb-2 text-vintage-dark"
-                      >
-                        {feature.title}
-                      </VintageHeading>
-                      <VintageText
-                        variant="body"
-                        className="text-vintage-neutral"
-                      >
-                        {feature.description}
-                      </VintageText>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    {feature.icon}
+                  </div>
 
-              <div className="mt-8">
-                <Link to="/club">
-                  <VintageButton variant="primary" size="lg" className="group">
-                    <span>Tham quan cơ sở</span>
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </VintageButton>
-                </Link>
-              </div>
-            </div>
+                  {/* Japanese subtitle */}
+                  <div className="text-2xl text-pink-300 mb-2 font-serif">
+                    {feature.subtitle}
+                  </div>
 
-            <div className="premium-image-container">
-              <img
-                src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800"
-                alt="Premium Experience"
-                className="premium-image"
-              />
-              <div className="premium-image-overlay"></div>
-            </div>
+                  <h3 className="text-xl font-semibold text-white mb-4">
+                    {feature.title}
+                  </h3>
+
+                  <p className="text-white/70 leading-relaxed">
+                    {feature.description}
+                  </p>
+
+                  {/* Decorative element */}
+                  <div className="absolute top-6 right-6 w-8 h-8 border border-pink-300/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        </VintageContainer>
-      </VintageSection>
+        </div>
+      </section>
 
-      {/* Stats Section - Những con số ấn tượng */}
-      <VintageSection className="stats-section">
-        <VintageContainer>
-          <div className="stats-content text-center">
-            <VintageHeading level={2} className="stats-title mb-6" ornament>
+      {/* Stats Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <div className="text-4xl md:text-5xl text-gray-800 mb-4 font-serif">
+              実績
+            </div>
+            <h2 className="text-3xl md:text-4xl font-light text-gray-800 mb-6">
               Những Con Số Ấn Tượng
-            </VintageHeading>
-            <VintageText
-              variant="lead"
-              className="stats-subtitle max-w-3xl mx-auto"
-            >
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto mt-6">
               Minh chứng cho chất lượng dịch vụ và sự tin tưởng của khách hàng
-            </VintageText>
-
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              <VintageGrid cols={{ sm: 2, md: 4 }} gap={6}>
-                {[
-                  {
-                    number: "50K+",
-                    label: "Thành viên",
-                    icon: <Users className="h-8 w-8" />,
-                  },
-                  {
-                    number: "15+",
-                    label: "Chi nhánh",
-                    icon: <MapPin className="h-8 w-8" />,
-                  },
-                  {
-                    number: "100+",
-                    label: "HLV chuyên nghiệp",
-                    icon: <Award className="h-8 w-8" />,
-                  },
-                  {
-                    number: "5★",
-                    label: "Đánh giá trung bình",
-                    icon: <Star className="h-8 w-8" />,
-                  },
-                ].map((stat, index) => (
-                  <motion.div
-                    key={index}
-                    variants={itemVariants}
-                    className="stat-card"
-                  >
-                    <div className="stat-icon">{stat.icon}</div>
-                    <div className="stat-number">{stat.number}</div>
-                    <div className="stat-label">{stat.label}</div>
-                  </motion.div>
-                ))}
-              </VintageGrid>
-            </motion.div>
+            </p>
           </div>
-        </VintageContainer>
-      </VintageSection>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="text-center group"
+              >
+                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 group-hover:transform group-hover:scale-105">
+                  {/* Icon */}
+                  <div
+                    className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r ${stat.color} rounded-full text-white mb-4 group-hover:scale-110 transition-transform duration-300`}
+                  >
+                    {stat.icon}
+                  </div>
+
+                  {/* Japanese Number */}
+                  <div className="text-3xl text-gray-800 mb-2 group-hover:text-pink-600 transition-colors font-serif">
+                    {stat.number}
+                  </div>
+
+                  {/* Translation */}
+                  <div className="text-2xl font-bold text-pink-600 mb-2">
+                    {stat.translation}
+                  </div>
+
+                  {/* Label */}
+                  <div className="text-gray-600 text-sm">{stat.label}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* CTA Section */}
-      <VintageSection background="warm">
-        <VintageContainer>
+      <section className="py-20 bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50 relative overflow-hidden">
+        {/* Floating Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <Cherry className="absolute top-20 left-10 h-12 w-12 text-pink-300 opacity-40" />
+          <Mountain className="absolute bottom-20 right-10 h-16 w-16 text-blue-300 opacity-30" />
+          <Waves className="absolute top-1/2 left-1/4 h-10 w-10 text-cyan-300 opacity-35" />
+        </div>
+
+        <div className="relative max-w-6xl mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center"
           >
-            <VintageHeading level={2} className="mb-6">
-              Sẵn sàng khám phá dịch vụ tuyệt vời?
-            </VintageHeading>
-            <VintageText variant="lead" className="mb-8 max-w-3xl mx-auto">
-              Hãy để chúng tôi đồng hành cùng bạn trong hành trình chinh phục
-              sức khỏe và vóc dáng lý tưởng
-            </VintageText>
+            <div className="text-4xl md:text-5xl text-gray-800 mb-4 font-serif">
+              始めましょう
+            </div>
+            <h2 className="text-3xl md:text-4xl font-light text-gray-800 mb-6">
+              Sẵn Sàng Bắt Đầu Hành Trình?
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-12">
+              Hãy để chúng tôi đồng hành cùng bạn trong việc khám phá và trải
+              nghiệm những dịch vụ tuyệt vời với chất lượng Nhật Bản
+            </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link to="/membership">
-                <VintageButton variant="gold" size="lg" className="group">
-                  <Crown className="mr-2 h-5 w-5" />
-                  <span>Đăng ký ngay</span>
-                  <Sparkles className="ml-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
-                </VintageButton>
+                <motion.button
+                  whileHover={{ scale: 1.05, rotate: 1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group whitespace-nowrap"
+                >
+                  <Crown className="inline mr-3 h-6 w-6" />
+                  <span>Đăng Ký Ngay</span>
+                  <Sparkles className="inline ml-3 h-6 w-6 group-hover:rotate-12 transition-transform" />
+                </motion.button>
               </Link>
+
               <Link to="/club">
-                <VintageButton variant="secondary" size="lg" className="group">
-                  <span>Tham quan CLB</span>
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </VintageButton>
+                <motion.button
+                  whileHover={{ scale: 1.05, rotate: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group whitespace-nowrap"
+                >
+                  <span>Tham Quan Cơ Sở</span>
+                  <ArrowRight className="inline ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
               </Link>
             </div>
           </motion.div>
-        </VintageContainer>
-      </VintageSection>
+        </div>
+      </section>
     </div>
   );
 }

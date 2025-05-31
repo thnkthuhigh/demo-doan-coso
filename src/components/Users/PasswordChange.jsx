@@ -1,6 +1,17 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Save, Eye, EyeOff, Shield, Lock } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Save,
+  Eye,
+  EyeOff,
+  Shield,
+  Lock,
+  CheckCircle,
+  AlertCircle,
+  Key,
+  Zap,
+  Star,
+} from "lucide-react";
 import axios from "axios";
 
 const PasswordChange = ({
@@ -78,221 +89,476 @@ const PasswordChange = ({
   };
 
   return (
-    <motion.div
-      key="password"
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={cardVariants}
-      className="bg-white/95 backdrop-blur-sm border-2 border-vintage-accent/30 shadow-elegant rounded-3xl overflow-hidden"
-    >
-      {/* Header */}
-      <div className="px-8 py-6 bg-gradient-to-r from-vintage-warm to-vintage-cream border-b border-vintage-accent/30">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-luxury rounded-xl flex items-center justify-center shadow-golden">
-            <Shield className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-vintage-dark vintage-heading">
-              Đổi mật khẩu
-            </h2>
-            <p className="text-vintage-neutral vintage-body text-sm">
-              Cập nhật mật khẩu để bảo vệ tài khoản của bạn
-            </p>
-          </div>
-        </div>
-      </div>
+    <>
+      {/* Enhanced Japanese Styles */}
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
-      <div className="p-8">
-        {/* Security Notice */}
-        <div className="mb-6 p-4 bg-gradient-to-r from-vintage-warm to-vintage-cream rounded-xl border border-vintage-accent/30">
-          <div className="flex items-start gap-3">
-            <Lock className="h-5 w-5 text-vintage-primary mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-vintage-dark vintage-body">
-                Bảo mật tài khoản
-              </h4>
-              <p className="text-sm text-vintage-neutral vintage-body mt-1">
-                Mật khẩu mạnh nên có ít nhất 8 ký tự, bao gồm chữ hoa, chữ
-                thường, số và ký tự đặc biệt.
-              </p>
+        .jp-text-primary {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 400;
+          letter-spacing: -0.01em;
+        }
+
+        .jp-text-heading {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
+
+        .jp-text-light {
+          font-family: "Inter", sans-serif;
+          font-weight: 300;
+          letter-spacing: 0.01em;
+        }
+
+        .jp-card {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(148, 163, 184, 0.1);
+          box-shadow: 0 4px 32px rgba(0, 0, 0, 0.04);
+        }
+
+        .jp-button {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          font-family: "Inter", sans-serif;
+          font-weight: 500;
+          letter-spacing: -0.01em;
+        }
+
+        .jp-input {
+          font-family: "Inter", sans-serif;
+          transition: all 0.2s ease;
+          border: 2px solid rgba(148, 163, 184, 0.2);
+          background: rgba(248, 250, 252, 0.8);
+        }
+
+        .jp-input:focus {
+          border-color: rgba(100, 116, 139, 0.4);
+          box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
+          background: rgba(255, 255, 255, 1);
+        }
+
+        .jp-gradient-bg {
+          background: linear-gradient(
+            135deg,
+            #f8fafc 0%,
+            #f1f5f9 50%,
+            #e2e8f0 100%
+          );
+        }
+
+        .jp-security-pattern {
+          background-image: radial-gradient(
+            circle at 1px 1px,
+            rgba(100, 116, 139, 0.05) 1px,
+            transparent 0
+          );
+          background-size: 20px 20px;
+        }
+
+        @keyframes jp-float {
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-4px);
+          }
+        }
+
+        .jp-float {
+          animation: jp-float 3s ease-in-out infinite;
+        }
+
+        @keyframes jp-pulse-ring {
+          0% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1.5);
+            opacity: 0;
+          }
+        }
+
+        .jp-pulse-ring {
+          animation: jp-pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955)
+            infinite;
+        }
+      `}</style>
+
+      <motion.div
+        key="password"
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        variants={cardVariants}
+        className="jp-card rounded-2xl overflow-hidden"
+      >
+        {/* Japanese Minimalist Header */}
+        <div className="relative px-8 py-8 jp-gradient-bg jp-security-pattern">
+          <div className="relative z-10">
+            {/* Floating Security Icons */}
+            <div className="absolute top-4 right-4 opacity-20">
+              <motion.div className="jp-float">
+                <Lock className="h-8 w-8 text-slate-600" />
+              </motion.div>
+            </div>
+            <div className="absolute top-8 right-12 opacity-15">
+              <motion.div className="jp-float" style={{ animationDelay: "1s" }}>
+                <Key className="h-6 w-6 text-slate-500" />
+              </motion.div>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Shield className="h-8 w-8 text-white" />
+                </div>
+                {/* Pulse Ring Effect */}
+                <div className="absolute inset-0 w-16 h-16 border-2 border-slate-300 rounded-2xl jp-pulse-ring"></div>
+              </div>
+              <div>
+                <h2 className="text-3xl jp-text-heading text-slate-800 mb-2">
+                  Bảo mật tài khoản
+                </h2>
+                <p className="text-slate-600 jp-text-light">
+                  Cập nhật mật khẩu để bảo vệ thông tin của bạn
+                </p>
+                <div className="flex items-center mt-2 text-sm">
+                  <Star className="h-4 w-4 text-amber-500 mr-2" />
+                  <span className="text-slate-500 jp-text-light">
+                    Bảo mật cấp độ cao
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Notification */}
-        {notification.message && (
+        <div className="p-8">
+          {/* Security Guidelines - Japanese Card Style */}
+          <div className="mb-8 p-6 jp-card rounded-xl border border-slate-200">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Zap className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="jp-text-heading font-semibold text-slate-800 mb-3">
+                  Hướng dẫn bảo mật
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    {
+                      icon: "🔢",
+                      title: "8+ ký tự",
+                      desc: "Độ dài tối thiểu",
+                    },
+                    {
+                      icon: "🔤",
+                      title: "Kết hợp ký tự",
+                      desc: "Hoa, thường, số",
+                    },
+                    {
+                      icon: "🚫",
+                      title: "Tránh thông tin cá nhân",
+                      desc: "Tên, ngày sinh, SĐT",
+                    },
+                    {
+                      icon: "🔄",
+                      title: "Thay đổi định kỳ",
+                      desc: "3-6 tháng/lần",
+                    },
+                  ].map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg"
+                    >
+                      <span className="text-lg">{item.icon}</span>
+                      <div>
+                        <p className="jp-text-heading font-medium text-slate-800 text-sm">
+                          {item.title}
+                        </p>
+                        <p className="jp-text-light text-xs text-slate-600">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notification */}
+          <AnimatePresence>
+            {notification.message && (
+              <motion.div
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                className={`mb-6 p-4 rounded-xl border-2 ${
+                  notification.type === "success"
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    : "bg-red-50 text-red-800 border-red-200"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {notification.type === "success" ? (
+                    <CheckCircle className="w-5 h-5 text-emerald-600" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                  )}
+                  <span className="jp-text-primary font-medium">
+                    {notification.message}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Current Password */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <label className="block text-sm jp-text-heading font-semibold text-slate-800 mb-4">
+                Mật khẩu hiện tại
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="relative group">
+                <input
+                  name="currentPassword"
+                  type={showPassword.current ? "text" : "password"}
+                  value={passwordForm.currentPassword}
+                  onChange={handlePasswordChange}
+                  required
+                  className="jp-input w-full rounded-xl px-4 py-4 pr-12 text-slate-800 focus:outline-none transition-all duration-200"
+                  placeholder="Nhập mật khẩu hiện tại"
+                />
+                <motion.button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("current")}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors p-1 rounded-lg hover:bg-slate-100"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  {showPassword.current ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
+
+            {/* New Password */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <label className="block text-sm jp-text-heading font-semibold text-slate-800 mb-4">
+                Mật khẩu mới
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="relative group">
+                <input
+                  name="newPassword"
+                  type={showPassword.new ? "text" : "password"}
+                  value={passwordForm.newPassword}
+                  onChange={handlePasswordChange}
+                  required
+                  minLength="6"
+                  className="jp-input w-full rounded-xl px-4 py-4 pr-12 text-slate-800 focus:outline-none transition-all duration-200"
+                  placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
+                />
+                <motion.button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("new")}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors p-1 rounded-lg hover:bg-slate-100"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  {showPassword.new ? <EyeOff size={20} /> : <Eye size={20} />}
+                </motion.button>
+              </div>
+            </motion.div>
+
+            {/* Confirm New Password */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <label className="block text-sm jp-text-heading font-semibold text-slate-800 mb-4">
+                Xác nhận mật khẩu mới
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="relative group">
+                <input
+                  name="confirmPassword"
+                  type={showPassword.confirm ? "text" : "password"}
+                  value={passwordForm.confirmPassword}
+                  onChange={handlePasswordChange}
+                  required
+                  className="jp-input w-full rounded-xl px-4 py-4 pr-12 text-slate-800 focus:outline-none transition-all duration-200"
+                  placeholder="Nhập lại mật khẩu mới"
+                />
+                <motion.button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("confirm")}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors p-1 rounded-lg hover:bg-slate-100"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  {showPassword.confirm ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
+
+            {/* Submit Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="pt-4"
+            >
+              <motion.button
+                type="submit"
+                disabled={isSubmitting}
+                className={`jp-button w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-medium transition-all duration-200 ${
+                  isSubmitting
+                    ? "bg-slate-400 cursor-not-allowed text-white"
+                    : "bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 text-white shadow-lg hover:shadow-xl"
+                }`}
+                whileHover={!isSubmitting ? { scale: 1.02, y: -2 } : {}}
+                whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+              >
+                {isSubmitting ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                    />
+                    <span className="jp-text-primary">Đang xử lý...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={20} />
+                    <span className="jp-text-primary">Cập nhật mật khẩu</span>
+                  </>
+                )}
+              </motion.button>
+            </motion.div>
+          </form>
+
+          {/* Password Strength Meter - Japanese Style */}
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-6 p-4 rounded-xl border-2 ${
-              notification.type === "success"
-                ? "bg-green-50 text-green-800 border-green-200"
-                : "bg-red-50 text-red-800 border-red-200"
-            }`}
+            transition={{ delay: 0.5 }}
+            className="mt-8 p-6 jp-card rounded-xl border border-slate-200"
           >
-            <div className="flex items-center gap-2">
-              {notification.type === "success" ? (
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
+            <h4 className="jp-text-heading font-semibold text-slate-800 mb-6 flex items-center">
+              <Shield className="h-5 w-5 mr-2 text-slate-600" />
+              Mức độ bảo mật
+            </h4>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                {
+                  icon: "📏",
+                  text: "Độ dài phù hợp",
+                  desc: "Tối thiểu 8 ký tự",
+                  color: "emerald",
+                },
+                {
+                  icon: "🔤",
+                  text: "Kết hợp ký tự",
+                  desc: "Chữ hoa và thường",
+                  color: "blue",
+                },
+                {
+                  icon: "🔢",
+                  text: "Có chứa số",
+                  desc: "Ít nhất 1 số",
+                  color: "purple",
+                },
+                {
+                  icon: "🔣",
+                  text: "Ký tự đặc biệt",
+                  desc: "!@#$%^&* ...",
+                  color: "amber",
+                },
+              ].map((req, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6 + index * 0.1 }}
+                  className={`p-4 bg-gradient-to-br from-${req.color}-50 to-${req.color}-100 rounded-xl border border-${req.color}-200 hover:shadow-md transition-all duration-300 group cursor-pointer`}
+                  whileHover={{ y: -2, scale: 1.02 }}
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
-              <span className="font-medium">{notification.message}</span>
+                  <div className="text-center">
+                    <div className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-200">
+                      {req.icon}
+                    </div>
+                    <h5
+                      className={`jp-text-heading font-semibold text-${req.color}-800 text-sm mb-1`}
+                    >
+                      {req.text}
+                    </h5>
+                    <p
+                      className={`jp-text-light text-xs text-${req.color}-600`}
+                    >
+                      {req.desc}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Security Tips */}
+            <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-slate-600">💡</span>
+                </div>
+                <div>
+                  <h5 className="jp-text-heading font-medium text-slate-800 mb-2">
+                    Mẹo bảo mật
+                  </h5>
+                  <ul className="space-y-1 text-sm text-slate-600 jp-text-light">
+                    <li>• Không sử dụng thông tin cá nhân dễ đoán</li>
+                    <li>
+                      • Tránh sử dụng mật khẩu giống với các tài khoản khác
+                    </li>
+                    <li>• Thay đổi mật khẩu định kỳ để đảm bảo an toàn</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </motion.div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Current Password */}
-          <div>
-            <label className="block text-sm font-semibold text-vintage-dark mb-2 vintage-body">
-              Mật khẩu hiện tại <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                name="currentPassword"
-                type={showPassword.current ? "text" : "password"}
-                value={passwordForm.currentPassword}
-                onChange={handlePasswordChange}
-                required
-                className="w-full rounded-xl border-2 border-vintage-accent bg-white/90 backdrop-blur-sm px-4 py-3 pr-12 text-vintage-dark focus:border-vintage-gold focus:ring-4 focus:ring-vintage-gold/30 transition-all duration-300 vintage-body"
-                placeholder="Nhập mật khẩu hiện tại"
-              />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility("current")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-vintage-neutral hover:text-vintage-primary transition-colors"
-              >
-                {showPassword.current ? (
-                  <EyeOff size={20} />
-                ) : (
-                  <Eye size={20} />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* New Password */}
-          <div>
-            <label className="block text-sm font-semibold text-vintage-dark mb-2 vintage-body">
-              Mật khẩu mới <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                name="newPassword"
-                type={showPassword.new ? "text" : "password"}
-                value={passwordForm.newPassword}
-                onChange={handlePasswordChange}
-                required
-                minLength="6"
-                className="w-full rounded-xl border-2 border-vintage-accent bg-white/90 backdrop-blur-sm px-4 py-3 pr-12 text-vintage-dark focus:border-vintage-gold focus:ring-4 focus:ring-vintage-gold/30 transition-all duration-300 vintage-body"
-                placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
-              />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility("new")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-vintage-neutral hover:text-vintage-primary transition-colors"
-              >
-                {showPassword.new ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Confirm New Password */}
-          <div>
-            <label className="block text-sm font-semibold text-vintage-dark mb-2 vintage-body">
-              Xác nhận mật khẩu mới <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                name="confirmPassword"
-                type={showPassword.confirm ? "text" : "password"}
-                value={passwordForm.confirmPassword}
-                onChange={handlePasswordChange}
-                required
-                className="w-full rounded-xl border-2 border-vintage-accent bg-white/90 backdrop-blur-sm px-4 py-3 pr-12 text-vintage-dark focus:border-vintage-gold focus:ring-4 focus:ring-vintage-gold/30 transition-all duration-300 vintage-body"
-                placeholder="Nhập lại mật khẩu mới"
-              />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility("confirm")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-vintage-neutral hover:text-vintage-primary transition-colors"
-              >
-                {showPassword.confirm ? (
-                  <EyeOff size={20} />
-                ) : (
-                  <Eye size={20} />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300 ${
-              isSubmitting
-                ? "bg-gray-400 cursor-not-allowed text-white"
-                : "bg-gradient-luxury hover:shadow-golden text-white"
-            }`}
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Đang xử lý...</span>
-              </>
-            ) : (
-              <>
-                <Save size={20} />
-                <span>Lưu mật khẩu mới</span>
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Password Requirements */}
-        <div className="mt-6 p-4 bg-vintage-warm rounded-xl border border-vintage-accent/30">
-          <h4 className="font-semibold text-vintage-dark mb-2 vintage-body">
-            Yêu cầu mật khẩu:
-          </h4>
-          <ul className="space-y-1 text-sm text-vintage-neutral vintage-body">
-            <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-vintage-gold rounded-full"></div>
-              Ít nhất 6 ký tự
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-vintage-gold rounded-full"></div>
-              Nên bao gồm chữ hoa và chữ thường
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-vintage-gold rounded-full"></div>
-              Nên có ít nhất một số hoặc ký tự đặc biệt
-            </li>
-          </ul>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 

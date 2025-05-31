@@ -111,10 +111,13 @@ export const login = async (req, res) => {
   }
 };
 
-// Lấy profile user hiện tại
+// Cập nhật function getProfile
 export const getProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id || req.user.userId;
+
+    console.log("getProfile - User from token:", req.user);
+    console.log("getProfile - userId:", userId);
 
     const user = await User.findById(userId).select("-password");
     if (!user) {
@@ -128,11 +131,14 @@ export const getProfile = async (req, res) => {
   }
 };
 
-// Cập nhật profile user hiện tại
+// Cập nhật function updateProfile để admin có thể cập nhật profile của mình
 export const updateProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id || req.user.userId;
     const { username, email, phone, dob, gender, fullName, address } = req.body;
+
+    console.log("updateProfile - User from token:", req.user);
+    console.log("updateProfile - userId:", userId);
 
     // Kiểm tra user tồn tại
     const user = await User.findById(userId);
@@ -189,10 +195,20 @@ export const updateProfile = async (req, res) => {
   }
 };
 
-// Lấy thông tin user theo ID (cho admin)
+// Cập nhật getUserById để cho phép admin xem user khác
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
+    const currentUserId = req.user.id || req.user.userId;
+    const userRole = req.user.role;
+
+    console.log(
+      "getUserById - Current user:",
+      currentUserId,
+      "Role:",
+      userRole
+    );
+    console.log("getUserById - Requested user ID:", id);
 
     // Validate input
     if (!id || id === "undefined") {
@@ -205,6 +221,13 @@ export const getUserById = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         message: "Invalid user ID format",
+      });
+    }
+
+    // Kiểm tra quyền: chỉ admin hoặc chính user đó mới có thể xem
+    if (userRole !== "admin" && currentUserId !== id) {
+      return res.status(403).json({
+        message: "Không có quyền truy cập thông tin này",
       });
     }
 
@@ -291,7 +314,10 @@ export const updateUserById = async (req, res) => {
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.id || req.user.userId;
+
+    console.log("changePassword - User from token:", req.user);
+    console.log("changePassword - userId:", userId);
 
     // Validate input
     if (!currentPassword || !newPassword) {

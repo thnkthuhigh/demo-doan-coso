@@ -1,16 +1,24 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "react-toastify";
-import { User, Crown, Shield, Star } from "lucide-react";
-
-// Import components
+import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import ProfileSidebar from "./ProfileSidebar";
 import ProfileInfo from "./ProfileInfo";
-import PasswordChange from "./PasswordChange";
 import MembershipCard from "./MembershipCard";
+import PasswordChange from "./PasswordChange";
+import {
+  User,
+  Settings,
+  Camera,
+  Edit3,
+  Save,
+  X,
+  Loader2,
+  Cherry,
+  Mountain,
+  Waves,
+  Leaf,
+} from "lucide-react";
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -28,77 +36,127 @@ const UserProfile = () => {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
     const fetchUser = async () => {
       try {
-        const decoded = jwtDecode(token);
-        const res = await axios.get(
-          `http://localhost:5000/api/users/${decoded.userId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const token = localStorage.getItem("token");
 
-        console.log("Fetched user data:", res.data);
-
-        // Chỉ lấy membership thực từ API, không tạo giả
-        let userData = res.data;
-
-        try {
-          const membershipResponse = await axios.get(
-            `http://localhost:5000/api/memberships/user/${decoded.userId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-
-          if (
-            membershipResponse.data &&
-            membershipResponse.data.status === "active"
-          ) {
-            console.log(
-              "Real active membership found:",
-              membershipResponse.data
-            );
-            userData = {
-              ...userData,
-              membership: {
-                id: membershipResponse.data._id || membershipResponse.data.id,
-                type: membershipResponse.data.type,
-                startDate: membershipResponse.data.startDate,
-                endDate: membershipResponse.data.endDate,
-                status: membershipResponse.data.status,
-                price: membershipResponse.data.price,
-              },
-            };
-          } else {
-            // Không tạo membership giả, để null hoặc undefined
-            console.log("No active membership found");
-            userData.membership = null;
-          }
-        } catch (membershipError) {
-          console.log("No membership found for user:", membershipError.message);
-          // Không tạo membership giả
-          userData.membership = null;
+        // Kiểm tra token có tồn tại không
+        if (!token) {
+          console.log("No token found, redirecting to login");
+          navigate("/login");
+          return;
         }
 
-        console.log("Final user data:", userData);
+        // Kiểm tra token có hợp lệ không
+        let decoded;
+        try {
+          decoded = jwtDecode(token);
+          const currentTime = Date.now() / 1000;
+
+          console.log("Decoded token:", decoded);
+          console.log("Current time:", currentTime);
+          console.log("Token exp:", decoded.exp);
+
+          if (decoded.exp < currentTime) {
+            console.log("Token expired, redirecting to login");
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navigate("/login");
+            return;
+          }
+        } catch (tokenError) {
+          console.log("Invalid token format, redirecting to login");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return;
+        }
+
+        console.log(
+          "Making API request with token:",
+          token.substring(0, 20) + "..."
+        );
+        console.log("User ID from token:", decoded.userId || decoded.id);
+
+        // Thử cả 2 endpoints - profile trực tiếp hoặc user by ID
+        let response;
+
+        // Thử endpoint profile trước
+        response = await fetch("http://localhost:5000/api/auth/profile", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        // Nếu profile endpoint không work, thử user endpoint với ID
+        if (!response.ok && (decoded.userId || decoded.id)) {
+          console.log("Profile endpoint failed, trying user endpoint");
+          const userId = decoded.userId || decoded.id;
+          response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+        }
+
+        console.log("API Response status:", response.status);
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.log("Unauthorized, token might be invalid");
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navigate("/login");
+            return;
+          }
+
+          // Log error response
+          const errorText = await response.text();
+          console.log("Error response:", errorText);
+          throw new Error(
+            `HTTP error! status: ${response.status}, message: ${errorText}`
+          );
+        }
+
+        const userData = await response.json();
+        console.log("User data received:", userData);
 
         setUser(userData);
         setForm({
-          ...userData,
-          dob: userData.dob ? userData.dob.split("T")[0] : "",
+          username: userData.username || "",
+          email: userData.email || "",
+          fullName: userData.fullName || "",
+          phone: userData.phone || "",
+          address: userData.address || "",
+          dateOfBirth: userData.dateOfBirth
+            ? new Date(userData.dateOfBirth).toISOString().split("T")[0]
+            : "",
+        });
+      } catch (err) {
+        console.error("Error fetching user:", err);
+
+        // Nếu là lỗi network hoặc server, không redirect ngay lập tức
+        if (err.message.includes("fetch") || err.message.includes("network")) {
+          console.log("Network error, retrying...");
+          setLoading(false);
+          return;
+        }
+
+        // Log chi tiết lỗi
+        console.error("Full error details:", {
+          message: err.message,
+          stack: err.stack,
+          name: err.name,
         });
 
-        localStorage.setItem("user", JSON.stringify(userData));
-      } catch (err) {
-        console.error("Lỗi khi lấy thông tin:", err);
-        toast.error("Không thể tải thông tin người dùng.");
+        // Chỉ redirect khi có lỗi authentication
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
       } finally {
         setLoading(false);
       }
@@ -106,6 +164,61 @@ const UserProfile = () => {
 
     fetchUser();
   }, [navigate]);
+
+  // Thêm function để debug token
+  const debugToken = () => {
+    const token = localStorage.getItem("token");
+    console.log("=== TOKEN DEBUG ===");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        console.log("Token exists:", !!token);
+        console.log("Token length:", token.length);
+        console.log("Token preview:", token.substring(0, 50) + "...");
+        console.log("Decoded payload:", decoded);
+        console.log(
+          "User ID field:",
+          decoded.userId || decoded.id || "NOT FOUND"
+        );
+        console.log("Email:", decoded.email);
+        console.log("Role:", decoded.role);
+        console.log("Expires:", new Date(decoded.exp * 1000));
+        console.log("Is expired:", decoded.exp < Date.now() / 1000);
+        console.log(
+          "Time until expiry:",
+          (decoded.exp - Date.now() / 1000) / 3600,
+          "hours"
+        );
+      } catch (e) {
+        console.log("Token decode error:", e);
+      }
+    } else {
+      console.log("No token found in localStorage");
+    }
+    console.log("=================");
+  };
+
+  // Test API connection
+  const testAPI = async () => {
+    console.log("=== API TEST ===");
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/test", {
+        method: "GET",
+      });
+      console.log("Test API status:", response.status);
+      const result = await response.text();
+      console.log("Test API response:", result);
+    } catch (error) {
+      console.log("API test failed:", error);
+    }
+    console.log("===============");
+  };
+
+  // Gọi debug khi component mount
+  useEffect(() => {
+    debugToken();
+    testAPI();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -132,67 +245,48 @@ const UserProfile = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await axios.put(
-        `http://localhost:5000/api/users/${user._id}`,
-        {
-          username: form.username,
-          email: form.email,
-          phone: form.phone,
-          dob: form.dob,
-          gender: form.gender,
-          fullName: form.fullName,
-          address: form.address,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      let updatedUser = response.data;
-
-      if (!avatar && user.avatar) {
-        updatedUser.avatar = user.avatar;
+      if (!token) {
+        navigate("/login");
+        return;
       }
+
+      const formData = new FormData();
+      Object.keys(form).forEach((key) => {
+        formData.append(key, form[key]);
+      });
 
       if (avatar) {
-        const formData = new FormData();
         formData.append("avatar", avatar);
-
-        try {
-          const avatarResponse = await axios.post(
-            `http://localhost:5000/api/images/avatar/${user._id}`,
-            formData,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          );
-
-          updatedUser = {
-            ...updatedUser,
-            avatar: avatarResponse.data.avatar,
-          };
-        } catch (avatarError) {
-          console.error("Error uploading avatar:", avatarError);
-          toast.error("Cập nhật ảnh đại diện thất bại");
-        }
       }
 
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      const response = await fetch("http://localhost:5000/api/auth/profile", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
-      setEditMode(false);
-      setAvatar(null);
-      setPreviewUrl("");
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
 
-      toast.success("Cập nhật thông tin thành công");
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUser(updatedUser);
+        setEditMode(false);
+        setAvatar(null);
+        setPreviewUrl("");
+        alert("Cập nhật thông tin thành công!");
+      } else {
+        throw new Error("Failed to update profile");
+      }
     } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error(
-        error.response?.data?.message || "Cập nhật thông tin thất bại"
-      );
+      console.error("Update error:", error);
+      alert("Có lỗi xảy ra khi cập nhật thông tin!");
     } finally {
       setLoading(false);
     }
@@ -200,59 +294,120 @@ const UserProfile = () => {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       alert("Mật khẩu mới không khớp!");
       return;
     }
 
-    const token = localStorage.getItem("token");
     try {
-      await axios.put(
-        `http://localhost:5000/api/users/${user._id}/password`,
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/auth/change-password",
         {
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            currentPassword: passwordForm.currentPassword,
+            newPassword: passwordForm.newPassword,
+          }),
         }
       );
 
-      alert("Cập nhật mật khẩu thành công!");
-      setPasswordForm({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch (err) {
-      console.error("Lỗi cập nhật mật khẩu:", err);
-      alert("Cập nhật mật khẩu thất bại.");
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
+
+      if (response.ok) {
+        alert("Đổi mật khẩu thành công!");
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to change password");
+      }
+    } catch (error) {
+      console.error("Password change error:", error);
+      alert("Có lỗi xảy ra: " + error.message);
     }
   };
 
+  // Enhanced loading state với debug tools
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-warm to-vintage-cream pt-24 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex justify-center items-center py-20"
-          >
-            <div className="p-12 text-center bg-white/95 backdrop-blur-sm border-2 border-vintage-accent/50 shadow-elegant rounded-3xl">
-              <div className="relative mb-8">
-                <div className="w-20 h-20 border-4 border-vintage-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <div className="absolute inset-0 w-20 h-20 border-4 border-vintage-accent rounded-full mx-auto animate-pulse"></div>
-              </div>
-              <h4 className="mb-3 text-vintage-dark text-xl font-bold vintage-heading">
-                Đang tải thông tin người dùng
-              </h4>
-              <p className="text-vintage-neutral vintage-body">
-                Vui lòng đợi trong giây lát...
-              </p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-gray-50 to-stone-100">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center space-y-6"
+        >
+          {/* Japanese-inspired loading animation */}
+          <div className="relative">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              className="w-16 h-16 border-3 border-slate-200 border-t-slate-600 rounded-full"
+            />
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-2 border-2 border-gray-300 border-b-gray-700 rounded-full"
+            />
+          </div>
+          <div className="text-center">
+            <h3
+              className="text-xl font-light text-slate-700 mb-2"
+              style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+            >
+              Đang tải thông tin...
+            </h3>
+            <p className="text-slate-500">Vui lòng chờ trong giây lát</p>
+
+            {/* Enhanced Debug tools */}
+            <div className="mt-6 space-y-2">
+              <button
+                onClick={debugToken}
+                className="block mx-auto text-xs text-slate-400 hover:text-slate-600 bg-slate-100 px-3 py-1 rounded"
+              >
+                🔍 Debug Token
+              </button>
+              <button
+                onClick={testAPI}
+                className="block mx-auto text-xs text-slate-400 hover:text-slate-600 bg-slate-100 px-3 py-1 rounded"
+              >
+                🌐 Test API
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.clear();
+                  window.location.reload();
+                }}
+                className="block mx-auto text-xs text-red-400 hover:text-red-600 bg-red-50 px-3 py-1 rounded"
+              >
+                🗑️ Clear & Reload
+              </button>
             </div>
-          </motion.div>
-        </div>
+
+            <div className="mt-4 text-xs text-slate-400">
+              <p>Nếu tải quá lâu, hãy click Debug Token để kiểm tra</p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -263,202 +418,275 @@ const UserProfile = () => {
     exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 30, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.25, 0, 1],
+      },
+    },
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen bg-gradient-to-br from-vintage-cream via-vintage-warm to-vintage-cream pt-24 pb-16"
-    >
-      {/* Luxury Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <div className="bg-white/95 backdrop-blur-sm border-2 border-vintage-accent/30 shadow-elegant rounded-3xl p-12 relative overflow-hidden">
-            {/* Decorative Background Pattern */}
-            <div className="absolute inset-0 opacity-5">
-              <div className="vintage-pattern h-full w-full"></div>
-            </div>
+    <>
+      {/* Japanese CSS Styles */}
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
-            <div className="relative z-10">
-              <div className="flex items-center justify-center mb-8">
-                <div className="w-20 h-20 bg-gradient-luxury rounded-2xl flex items-center justify-center mr-6 shadow-golden">
-                  <User className="h-10 w-10 text-white" />
-                </div>
-                <div className="text-left">
-                  <h1 className="text-4xl md:text-5xl font-bold text-vintage-dark mb-3 vintage-heading">
-                    Hồ Sơ Cá Nhân
-                  </h1>
-                  <div className="w-32 h-2 bg-gradient-golden rounded-full shadow-md"></div>
-                </div>
-              </div>
+        .jp-text-primary {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 400;
+          letter-spacing: -0.01em;
+        }
 
-              <p className="text-vintage-neutral text-xl leading-relaxed max-w-3xl mx-auto vintage-body mb-8">
-                Quản lý thông tin cá nhân, bảo mật tài khoản và theo dõi thành
-                tích của bạn tại phòng tập luxury.
-              </p>
+        .jp-text-heading {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
 
-              {/* Trust Indicators */}
-              <div className="flex justify-center items-center space-x-12 pt-8 border-t-2 border-vintage-accent/30">
-                {[
-                  {
-                    icon: Shield,
-                    text: "Bảo mật cao",
-                    color: "text-vintage-primary",
-                  },
-                  {
-                    icon: Crown,
-                    text: "Thành viên VIP",
-                    color: "text-vintage-gold",
-                  },
-                  {
-                    icon: Star,
-                    text: "Dịch vụ 5 sao",
-                    color: "text-vintage-primary",
-                  },
-                ].map((item, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
-                    className="flex items-center space-x-3 group"
-                  >
-                    <div className="w-12 h-12 bg-vintage-warm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-soft">
-                      <item.icon className={`h-6 w-6 ${item.color}`} />
-                    </div>
-                    <span className="text-vintage-dark font-semibold vintage-body">
-                      {item.text}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
+        .jp-text-light {
+          font-family: "Inter", sans-serif;
+          font-weight: 300;
+          letter-spacing: 0.01em;
+        }
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Enhanced Sidebar */}
+        .jp-card {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(148, 163, 184, 0.1);
+          box-shadow: 0 4px 32px rgba(0, 0, 0, 0.04);
+        }
+
+        .jp-card-hover {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .jp-card-hover:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .jp-button {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          font-family: "Inter", sans-serif;
+          font-weight: 500;
+          letter-spacing: -0.01em;
+        }
+
+        .jp-input {
+          font-family: "Inter", sans-serif;
+          transition: all 0.2s ease;
+          border: 2px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .jp-input:focus {
+          border-color: rgba(100, 116, 139, 0.4);
+          box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
+        }
+
+        .jp-divider {
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(148, 163, 184, 0.3),
+            transparent
+          );
+          height: 1px;
+        }
+
+        .jp-zen-bg {
+          background: linear-gradient(
+            135deg,
+            #f8fafc 0%,
+            #f1f5f9 25%,
+            #e2e8f0 50%,
+            #f1f5f9 75%,
+            #f8fafc 100%
+          );
+        }
+
+        .jp-glass {
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(16px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+      `}</style>
+
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="min-h-screen jp-zen-bg pt-16 pb-20"
+      >
+        {/* Floating Japanese Elements */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:w-1/3"
+            animate={{
+              y: [0, -20, 0],
+              rotate: [0, 5, 0],
+              opacity: [0.05, 0.15, 0.05],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute top-20 left-20"
           >
-            <ProfileSidebar
-              user={user}
-              previewUrl={previewUrl}
-              section={section}
-              setSection={setSection}
-              editMode={editMode}
-              handleAvatarChange={handleAvatarChange}
-              cardVariants={cardVariants}
-            />
+            <Cherry className="h-24 w-24 text-pink-300" />
           </motion.div>
 
-          {/* Enhanced Main Content */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:w-2/3"
+            animate={{
+              y: [0, 30, 0],
+              x: [0, -15, 0],
+              opacity: [0.08, 0.18, 0.08],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 5,
+            }}
+            className="absolute top-40 right-32"
           >
-            <AnimatePresence mode="wait">
-              {section === "profile" ? (
-                <ProfileInfo
-                  user={user}
-                  form={form}
-                  editMode={editMode}
-                  setEditMode={setEditMode}
-                  handleChange={handleChange}
-                  handleSave={handleSave}
-                  setForm={setForm}
-                  setPreviewUrl={setPreviewUrl}
-                  previewUrl={previewUrl}
-                  setAvatar={setAvatar}
-                  avatar={avatar}
-                  cardVariants={cardVariants}
-                />
-              ) : section === "membership" ? (
-                <MembershipCard user={user} cardVariants={cardVariants} />
-              ) : (
-                <PasswordChange
-                  passwordForm={passwordForm}
-                  handlePasswordChange={handlePasswordChange}
-                  handlePasswordSubmit={handlePasswordSubmit}
-                  cardVariants={cardVariants}
-                />
-              )}
-            </AnimatePresence>
+            <Mountain className="h-32 w-32 text-slate-200" />
+          </motion.div>
+
+          <motion.div
+            animate={{
+              x: [0, 25, 0],
+              opacity: [0.06, 0.16, 0.06],
+            }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 10,
+            }}
+            className="absolute bottom-32 left-1/3"
+          >
+            <Waves className="h-20 w-20 text-blue-200" />
+          </motion.div>
+
+          <motion.div
+            animate={{
+              y: [0, -15, 0],
+              opacity: [0.1, 0.2, 0.1],
+            }}
+            transition={{
+              duration: 18,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 3,
+            }}
+            className="absolute bottom-20 right-1/4"
+          >
+            <Leaf className="h-16 w-16 text-green-200" />
           </motion.div>
         </div>
 
-        {/* Enhanced Stats Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-16"
-        >
-          <div className="bg-white/95 backdrop-blur-sm border-2 border-vintage-accent/30 shadow-elegant rounded-3xl p-12">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-vintage-dark mb-4 vintage-heading">
-                Thành Tích Của Bạn
-              </h2>
-              <div className="w-24 h-1 bg-gradient-golden rounded-full mx-auto"></div>
-            </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Minimalist Header */}
+          <motion.div variants={itemVariants} className="text-center mb-16">
+            <div className="jp-card rounded-2xl p-12 max-w-4xl mx-auto">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-slate-700 p-4 rounded-xl shadow-sm">
+                  <User className="h-7 w-7 text-white" />
+                </div>
+              </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[
-                {
-                  value: "24",
-                  label: "Lớp đã tham gia",
-                  icon: "🏆",
-                  color: "from-vintage-warm to-vintage-cream",
-                },
-                {
-                  value: "5",
-                  label: "Lớp đang học",
-                  icon: "📚",
-                  color: "from-vintage-accent to-vintage-warm",
-                },
-                {
-                  value: "92%",
-                  label: "Tỷ lệ hoàn thành",
-                  icon: "⭐",
-                  color: "from-vintage-gold/20 to-vintage-warm",
-                },
-                {
-                  value: "6",
-                  label: "Tháng thành viên",
-                  icon: "👑",
-                  color: "from-vintage-primary/10 to-vintage-cream",
-                },
-              ].map((stat, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                  whileHover={{ y: -5, scale: 1.05 }}
-                  className={`text-center p-6 bg-gradient-to-br ${stat.color} rounded-2xl border-2 border-vintage-accent/20 hover:shadow-golden transition-all duration-300`}
-                >
-                  <div className="text-3xl mb-3">{stat.icon}</div>
-                  <div className="text-3xl font-bold text-vintage-dark mb-2 vintage-heading">
-                    {stat.value}
-                  </div>
-                  <div className="text-vintage-neutral font-medium vintage-body">
-                    {stat.label}
-                  </div>
-                </motion.div>
-              ))}
+              <h1 className="text-4xl lg:text-5xl jp-text-heading text-slate-800 mb-4">
+                Thông tin tài khoản
+              </h1>
+              <h2 className="text-2xl jp-text-primary text-slate-600 mb-6">
+                Quản lý hồ sơ cá nhân
+              </h2>
+              <div className="jp-divider w-24 mx-auto mb-6"></div>
+              <p className="text-lg jp-text-light text-slate-500 max-w-2xl mx-auto leading-relaxed">
+                Quản lý thông tin cá nhân và cài đặt tài khoản của bạn
+              </p>
             </div>
+          </motion.div>
+
+          {/* Main Content Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Sidebar - 1 column */}
+            <motion.div variants={itemVariants} className="lg:col-span-1">
+              <ProfileSidebar
+                user={user}
+                previewUrl={previewUrl}
+                section={section}
+                setSection={setSection}
+                editMode={editMode}
+                handleAvatarChange={handleAvatarChange}
+                cardVariants={cardVariants}
+              />
+            </motion.div>
+
+            {/* Main Content - 3 columns */}
+            <motion.div variants={itemVariants} className="lg:col-span-3">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={section}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {section === "profile" && (
+                    <ProfileInfo
+                      user={user}
+                      form={form}
+                      editMode={editMode}
+                      setEditMode={setEditMode}
+                      handleChange={handleChange}
+                      handleSave={handleSave}
+                      setForm={setForm}
+                      setPreviewUrl={setPreviewUrl}
+                      previewUrl={previewUrl}
+                      setAvatar={setAvatar}
+                      avatar={avatar}
+                      cardVariants={cardVariants}
+                    />
+                  )}
+
+                  {section === "membership" && (
+                    <MembershipCard user={user} cardVariants={cardVariants} />
+                  )}
+
+                  {section === "password" && (
+                    <PasswordChange
+                      passwordForm={passwordForm}
+                      handlePasswordChange={handlePasswordChange}
+                      handlePasswordSubmit={handlePasswordSubmit}
+                      cardVariants={cardVariants}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
           </div>
-        </motion.div>
-      </div>
-    </motion.div>
+        </div>
+      </motion.div>
+    </>
   );
 };
 
