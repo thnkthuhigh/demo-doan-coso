@@ -481,7 +481,7 @@ export default function ClassDetails() {
                         </div>
                         <div>
                           <div className="text-xl font-light mb-2 opacity-90 tracking-wide">
-                            フィットネスクラス
+                            Lớp học thể dục
                           </div>
                           <h1 className="text-4xl md:text-5xl font-bold leading-tight">
                             {classData.className}

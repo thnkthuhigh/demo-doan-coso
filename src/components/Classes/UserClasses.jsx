@@ -849,8 +849,8 @@ export default function UserClasses() {
                 <div className="p-8 border-b border-gray-200 bg-gradient-to-r from-pink-50 via-blue-50 to-purple-50">
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="text-2xl font-light text-gray-800 mb-2 font-serif">
-                        学習詳細統計
+                      <div className="text-2xl font-light text-gray-800 mb-2 ">
+                        Chi Tiết Lớp Học
                       </div>
                       <h2 className="text-3xl font-bold text-gray-800 mb-2">
                         {selectedEnrollment.class?.className}
