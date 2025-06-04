@@ -325,7 +325,7 @@ export default function Club() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gradient-to-br from-pink-50 via-white to-blue-50">
+      <section className="features-section section-spacing py-20 bg-gradient-to-br from-pink-50 via-white to-blue-50">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light text-gray-800 mb-6">
@@ -368,8 +368,11 @@ export default function Club() {
       </section>
 
       {/* Club List Section */}
-      <section className="py-20 bg-white" id="clubs-section">
-        <div className="max-w-6xl mx-auto px-4">
+      <section
+        className="club-section section-spacing py-20 bg-white"
+        id="clubs-section"
+      >
+        <div className="club-container max-w-6xl mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-5xl font-light text-gray-800 mb-6">
               Khám Phá Các Câu Lạc Bộ
@@ -394,7 +397,7 @@ export default function Club() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="club-grid">
               {clubs.map((club, index) => (
                 <motion.div
                   key={club.id || `club-${index}`}
@@ -402,74 +405,76 @@ export default function Club() {
                   whileInView={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.8, delay: index * 0.15 }}
                   viewport={{ once: true }}
-                  whileHover={{ y: -10 }}
-                  className="h-full group"
+                  className="club-card-wrapper"
                 >
-                  <div className="bg-white rounded-2xl overflow-hidden h-full shadow-lg hover:shadow-2xl transition-all duration-700 group-hover:transform group-hover:scale-105 border border-gray-100">
-                    {/* Image Section */}
-                    <div className="relative overflow-hidden h-64">
-                      <img
-                        src={club.image}
-                        alt={club.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                        onError={handleImageError}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="club-card group h-full">
+                    <div className="bg-white rounded-2xl overflow-hidden h-full shadow-lg hover:shadow-2xl transition-all duration-700 border border-gray-100">
+                      {/* Image Section */}
+                      <div className="relative overflow-hidden h-64">
+                        <img
+                          src={club.image}
+                          alt={club.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                          onError={handleImageError}
+                          style={{ borderRadius: "inherit" }} // Kế thừa border radius
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                      {/* Status Indicator */}
-                      <div className="absolute top-4 right-4">
-                        <div className="flex items-center space-x-2 bg-black/20 backdrop-blur-sm rounded-full px-3 py-1">
-                          <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                          <span className="text-white font-medium text-sm">
-                            Đang hoạt động
-                          </span>
+                        {/* Status Indicator */}
+                        <div className="absolute top-4 right-4">
+                          <div className="flex items-center space-x-2 bg-black/20 backdrop-blur-sm rounded-full px-3 py-1">
+                            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-white font-medium text-sm">
+                              Đang hoạt động
+                            </span>
+                          </div>
                         </div>
+
+                        {/* Pattern Overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-blue-500 to-green-500 opacity-80"></div>
                       </div>
 
-                      {/* Pattern Overlay */}
-                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-blue-500 to-green-500 opacity-80"></div>
-                    </div>
-
-                    {/* Content Section */}
-                    <div className="p-6 space-y-4">
-                      <div className="flex items-start justify-between">
-                        <h3 className="text-xl font-semibold text-gray-800 group-hover:text-pink-600 transition-colors flex-1">
-                          {club.name}
-                        </h3>
-                        <div className="flex ml-4">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={`star-${i}`}
-                              className="h-4 w-4 text-yellow-400 fill-current"
-                            />
-                          ))}
+                      {/* Content Section */}
+                      <div className="p-6 space-y-4">
+                        <div className="flex items-start justify-between">
+                          <h3 className="text-xl font-semibold text-gray-800 group-hover:text-pink-600 transition-colors flex-1">
+                            {club.name}
+                          </h3>
+                          <div className="flex ml-4">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={`star-${i}`}
+                                className="h-4 w-4 text-yellow-400 fill-current"
+                              />
+                            ))}
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="flex items-center text-gray-600">
-                        <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-pink-500" />
-                        <span className="text-sm">{club.address}</span>
-                      </div>
+                        <div className="flex items-center text-gray-600">
+                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-pink-500" />
+                          <span className="text-sm">{club.address}</span>
+                        </div>
 
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        {club.description}
-                      </p>
+                        <p className="text-gray-600 text-sm leading-relaxed">
+                          {club.description}
+                        </p>
 
-                      <div className="pt-4 space-y-3 border-t border-gray-100">
-                        <button
-                          onClick={() => openClubDetails(club)}
-                          className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 px-4 rounded-lg font-medium hover:shadow-lg transition-all duration-300 group flex items-center justify-center"
-                        >
-                          <span>Xem Chi Tiết</span>
-                          <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                        </button>
-
-                        <Link to="/membership" className="block">
-                          <button className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3 px-4 rounded-lg font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center">
-                            <Crown className="h-4 w-4 mr-2" />
-                            <span>Đăng Ký Ngay</span>
+                        <div className="pt-4 space-y-3 border-t border-gray-100">
+                          <button
+                            onClick={() => openClubDetails(club)}
+                            className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 px-4 rounded-lg font-medium hover:shadow-lg transition-all duration-300 group flex items-center justify-center"
+                          >
+                            <span>Xem Chi Tiết</span>
+                            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                           </button>
-                        </Link>
+
+                          <Link to="/membership" className="block">
+                            <button className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3 px-4 rounded-lg font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center">
+                              <Crown className="h-4 w-4 mr-2" />
+                              <span>Đăng Ký Ngay</span>
+                            </button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -481,7 +486,7 @@ export default function Club() {
       </section>
 
       {/* Membership Section */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+      <section className="membership-section py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light text-gray-800 mb-6">
@@ -547,12 +552,12 @@ export default function Club() {
 
       {/* Club Details Modal */}
       {selectedClub && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="modal-overlay fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200"
+            className="modal-content bg-white rounded-2xl max-w-4xl w-full"
           >
             <div className="p-8 space-y-8">
               {/* Header */}
@@ -675,7 +680,7 @@ export default function Club() {
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 2, duration: 0.5 }}
-        className="fixed bottom-8 right-8 z-40"
+        className="floating-button fixed bottom-8 right-8 z-40"
       >
         <Link to="/membership">
           <motion.button

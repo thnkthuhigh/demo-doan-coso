@@ -621,8 +621,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trainers Section - Carousel with 3D Cards */}
-      <section className="relative py-32 bg-gradient-to-br from-red-900 via-pink-900 to-purple-900 overflow-hidden">
+      {/* Trainers Section - Fixed Overflow */}
+      <section className="trainers-section relative py-32 bg-gradient-to-br from-red-900 via-pink-900 to-purple-900">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -636,19 +636,19 @@ export default function HomePage() {
             <div className="w-40 h-2 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 mx-auto rounded-full shadow-lg"></div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Fixed Grid Container với overflow visible */}
+          <div
+            className="cards-grid trainer-cards-container"
+            style={{ overflow: "visible" }}
+          >
             {trainers.map((trainer, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 100, rotateX: -90 }}
                 whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.2 }}
-                whileHover={{
-                  y: -20,
-                  rotateY: 15,
-                  scale: 1.05,
-                }}
-                className="transform-gpu"
+                className="trainer-card-wrapper"
+                style={{ overflow: "visible" }} // Inline style để đảm bảo
               >
                 <UltraTrainerCard {...trainer} index={index} />
               </motion.div>
@@ -672,10 +672,15 @@ export default function HomePage() {
             <div className="w-40 h-2 bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 mx-auto rounded-full shadow-lg"></div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          <div
+            className="grid grid-cols-1 md:grid-cols-3 gap-10"
+            style={{ overflow: "visible", padding: "2rem 1rem" }}
+          >
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
+                className="testimonial-card transform-gpu"
+                style={{ overflow: "visible", padding: "1rem" }}
                 initial={{
                   opacity: 0,
                   y: 100,
@@ -692,7 +697,6 @@ export default function HomePage() {
                   rotateZ: index % 2 === 0 ? 3 : -3,
                   scale: 1.05,
                 }}
-                className="transform-gpu"
               >
                 <UltraTestimonialCard {...testimonial} index={index} />
               </motion.div>
@@ -864,10 +868,10 @@ function UltraTrainerCard({
   };
 
   return (
-    <div className="group relative overflow-hidden rounded-3xl bg-white shadow-2xl hover:shadow-4xl transition-all duration-700 transform hover:scale-105 hover:rotate-3">
-      {/* Glow Effect */}
+    <div className="trainer-card group relative overflow-hidden rounded-3xl bg-white shadow-2xl hover:shadow-4xl transition-all duration-700 transform-gpu">
+      {/* Glow Effect - Fixed positioning */}
       <div
-        className={`absolute -inset-0.5 bg-gradient-to-r ${colors[accentColor]} rounded-3xl blur opacity-0 group-hover:opacity-75 transition-opacity duration-500`}
+        className={`absolute -inset-1 bg-gradient-to-r ${colors[accentColor]} rounded-3xl blur opacity-0 group-hover:opacity-75 transition-opacity duration-500 -z-10`}
       ></div>
 
       <div className="relative bg-white rounded-3xl overflow-hidden">
@@ -900,15 +904,24 @@ function UltraTrainerCard({
 
           {/* Social Icons */}
           <div className="flex justify-center gap-3 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">f</span>
-            </div>
-            <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">@</span>
-            </div>
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">in</span>
-            </div>
+            <motion.div
+              whileHover={{ scale: 1.2, rotate: 360 }}
+              className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer"
+            >
+              <span className="text-white text-xs font-bold">f</span>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.2, rotate: 360 }}
+              className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center cursor-pointer"
+            >
+              <span className="text-white text-xs font-bold">@</span>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.2, rotate: 360 }}
+              className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center cursor-pointer"
+            >
+              <span className="text-white text-xs font-bold">in</span>
+            </motion.div>
           </div>
         </div>
       </div>

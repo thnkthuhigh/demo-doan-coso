@@ -1,17 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
   Lock,
   Mail,
-  ArrowRight,
   Crown,
   Shield,
   Eye,
   EyeOff,
   UserCheck,
+  ChevronRight,
 } from "lucide-react";
 
 export default function Login({ setUser }) {
@@ -23,30 +23,26 @@ export default function Login({ setUser }) {
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
+  // Đảm bảo body không có padding khi vào trang Login
+  useEffect(() => {
+    document.body.style.paddingTop = "0";
+    document.body.classList.remove("with-navbar"); // Phòng trường hợp còn sót
+
+    return () => {
+      // Không cần restore gì vì CSS đã bỏ rồi
+    };
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // Debug: Log request data
-    console.log("🔍 Login Request Data:", {
-      identifier,
-      password: password ? "***" : "empty",
-      email: identifier, // API expects 'email' field
-    });
-
     try {
-      // Improved request - ensure proper data format
       const loginData = {
         email: identifier.trim(),
         password: password,
       };
-
-      console.log(
-        "📤 Sending login request to:",
-        "http://localhost:5000/api/auth/login"
-      );
-      console.log("📤 Request payload:", { ...loginData, password: "***" });
 
       const response = await axios.post(
         "http://localhost:5000/api/auth/login",
@@ -55,15 +51,12 @@ export default function Login({ setUser }) {
           headers: {
             "Content-Type": "application/json",
           },
-          timeout: 10000, // 10 second timeout
+          timeout: 10000,
         }
       );
 
-      console.log("✅ Login response:", response.data);
-
       const { token, user } = response.data;
 
-      // Validate response data
       if (!token) {
         throw new Error("Token không được trả về từ server");
       }
@@ -72,19 +65,12 @@ export default function Login({ setUser }) {
         throw new Error("Thông tin user không được trả về từ server");
       }
 
-      console.log("👤 User data from login:", user);
-      console.log("🔑 Token received:", token ? "Yes" : "No");
-
-      // Store basic info first
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Check if user has valid ID for profile fetch
       if (user._id || user.id) {
         try {
           const userId = user._id || user.id;
-          console.log("🔍 Fetching user profile for ID:", userId);
-
           const userResponse = await axios.get(
             `http://localhost:5000/api/users/${userId}`,
             {
@@ -96,35 +82,22 @@ export default function Login({ setUser }) {
             }
           );
 
-          console.log("✅ User profile response:", userResponse.data);
-
           const fullUserData = userResponse.data;
           localStorage.setItem("user", JSON.stringify(fullUserData));
           setUser(fullUserData);
         } catch (profileError) {
           console.error("❌ Error fetching complete profile:", profileError);
-          console.log("⚠️ Using basic user data from login response");
           setUser(user);
         }
       } else {
-        console.log("⚠️ No valid user ID found, using basic user data");
         setUser(user);
       }
 
-      console.log("🎉 Login successful, redirecting to home");
       navigate("/");
     } catch (error) {
-      console.error("❌ Login error:", error);
-
-      // Enhanced error handling
       let errorMessage = "Đăng nhập thất bại, vui lòng thử lại sau.";
 
       if (error.response) {
-        // Server responded with error status
-        console.error("📥 Error response:", error.response);
-        console.error("📊 Error status:", error.response.status);
-        console.error("📄 Error data:", error.response.data);
-
         switch (error.response.status) {
           case 400:
             errorMessage =
@@ -147,13 +120,9 @@ export default function Login({ setUser }) {
             errorMessage = error.response.data?.message || errorMessage;
         }
       } else if (error.request) {
-        // Network error
-        console.error("🌐 Network error:", error.request);
         errorMessage =
           "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.";
       } else {
-        // Other error
-        console.error("❓ Other error:", error.message);
         errorMessage = error.message || errorMessage;
       }
 
@@ -163,161 +132,280 @@ export default function Login({ setUser }) {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        when: "beforeChildren",
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.3 } },
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-20 left-20 w-32 h-32 bg-pink-300 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-20 w-40 h-40 bg-blue-300 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-300 rounded-full blur-3xl opacity-30"></div>
-      </div>
+    <>
+      <style jsx global>{`
+        /* Đảm bảo Login full screen */
+        body {
+          padding-top: 0 !important;
+          margin: 0 !important;
+        }
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Header */}
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+        .royal-font {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 400;
+          letter-spacing: -0.02em;
+          line-height: 1.5;
+        }
+
+        .royal-heading {
+          font-family: "Inter", sans-serif;
+          font-weight: 700;
+          letter-spacing: -0.04em;
+          line-height: 1.2;
+        }
+
+        /* Static Background */
+        .royal-aurora {
+          background: linear-gradient(
+            135deg,
+            #667eea 0%,
+            #764ba2 25%,
+            #f093fb 50%,
+            #f5576c 75%,
+            #4facfe 100%
+          );
+        }
+
+        .royal-glass {
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.25) 0%,
+            rgba(255, 255, 255, 0.05) 100%
+          );
+          backdrop-filter: blur(30px) saturate(200%);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15),
+            0 0 0 1px rgba(255, 255, 255, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .royal-input {
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.9) 0%,
+            rgba(255, 255, 255, 0.7) 100%
+          );
+          backdrop-filter: blur(20px);
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          border-radius: 20px;
+          transition: all 0.3s ease;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+            0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        .royal-input:focus {
+          border: 2px solid rgba(99, 102, 241, 0.5);
+          box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1),
+            0 15px 35px -5px rgba(99, 102, 241, 0.2),
+            0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .royal-button {
+          background: linear-gradient(
+            135deg,
+            #667eea 0%,
+            #764ba2 50%,
+            #f093fb 100%
+          );
+          border: none;
+          border-radius: 20px;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .royal-button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 30px -5px rgba(102, 126, 234, 0.4);
+        }
+      `}</style>
+
+      {/* FULL SCREEN LOGIN */}
+      <div className="min-h-screen royal-aurora relative overflow-hidden flex">
+        {/* Left Panel - Branding */}
         <motion.div
-          className="text-center mb-10"
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
         >
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-blue-400 rounded-3xl blur-2xl opacity-30"></div>
-            <div className="relative bg-white/90 backdrop-blur-sm rounded-3xl p-8 border-2 border-pink-200/30 shadow-2xl">
-              {/* Logo Icon */}
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                className="relative w-24 h-24 mx-auto mb-6"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-blue-500 rounded-full blur-lg opacity-40 animate-pulse"></div>
-                <div className="relative w-full h-full bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-2xl border-4 border-white/20">
-                  <div className="absolute inset-2 border-2 border-white/30 rounded-full"></div>
-                  <Crown className="h-12 w-12 text-white drop-shadow-lg relative z-10" />
-                  <div className="absolute top-1 right-2 w-2 h-2 bg-white rounded-full opacity-80 animate-ping"></div>
-                  <div className="absolute bottom-2 left-1 w-1.5 h-1.5 bg-white rounded-full opacity-60 animate-pulse"></div>
-                </div>
-              </motion.div>
+          {/* Static decorative elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 right-1/4 w-32 h-32 border-2 border-white/20 rounded-full opacity-60"></div>
+            <div className="absolute bottom-1/4 right-1/3 w-24 h-24 border-2 border-purple-300/30 rounded-lg rotate-45 opacity-50"></div>
+            <div className="absolute top-3/4 left-1/4 w-16 h-16 border-2 border-pink-300/40 rounded-full opacity-40"></div>
+          </div>
 
-              {/* Brand Name */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="relative"
-              >
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 relative">
-                  <span className="relative z-10">Fitness Club</span>
-                  <div className="absolute inset-0 text-pink-500/20 blur-sm">
-                    Fitness Club
+          {/* Content */}
+          <div className="relative z-10 flex flex-col justify-center px-16 xl:px-24">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              {/* Logo & Brand */}
+              <div className="mb-12">
+                <div className="relative inline-block mb-8">
+                  <div className="absolute inset-0 bg-white/20 rounded-3xl blur-xl"></div>
+                  <div className="relative royal-glass rounded-3xl p-6 border-2 border-white/30">
+                    <div className="flex items-center space-x-4">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur-lg opacity-75"></div>
+                        <div className="relative w-16 h-16 bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 rounded-2xl flex items-center justify-center">
+                          <Crown className="h-8 w-8 text-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <h1 className="royal-heading text-3xl text-white mb-1">
+                          Sakura Club
+                        </h1>
+                        <p className="royal-font text-white/80">
+                          Premium Fitness
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </h1>
-
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-8 h-px bg-pink-500"></div>
-                  <div className="w-2 h-2 bg-pink-500 rotate-45 mx-3"></div>
-                  <div className="w-8 h-px bg-pink-500"></div>
                 </div>
 
-                <p className="text-lg text-gray-600 font-medium">Royal Gym</p>
-              </motion.div>
+                {/* Hero Text */}
+                <div>
+                  <h2 className="royal-heading text-6xl xl:text-7xl text-white mb-6 leading-tight">
+                    Chào mừng
+                    <br />
+                    <span className="bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+                      trở lại
+                    </span>
+                  </h2>
+                  <p className="royal-font text-xl text-white/80 mb-8 leading-relaxed max-w-md">
+                    Tiếp tục hành trình chinh phục bản thân và đạt được những
+                    mục tiêu fitness tuyệt vời
+                  </p>
+                </div>
 
-              {/* Welcome Message */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="mt-6"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-                  Chào Mừng Trở Lại
-                </h2>
-                <p className="text-gray-600 text-base leading-relaxed">
-                  Đăng nhập để tiếp tục hành trình fitness của bạn
-                </p>
-              </motion.div>
-            </div>
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-6">
+                  {[
+                    {
+                      number: "10K+",
+                      label: "Thành viên",
+                    },
+                    {
+                      number: "50+",
+                      label: "Huấn luyện viên",
+                    },
+                    {
+                      number: "24/7",
+                      label: "Hoạt động",
+                    },
+                  ].map((stat, index) => (
+                    <div
+                      key={index}
+                      className="royal-glass rounded-2xl p-4 text-center border border-white/20"
+                    >
+                      <div className="royal-heading text-2xl text-white mb-1">
+                        {stat.number}
+                      </div>
+                      <div className="royal-font text-sm text-white/70">
+                        {stat.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
 
+        {/* Right Panel - Login Form */}
         <motion.div
-          className="relative"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          className="w-full lg:w-1/2 xl:w-2/5 relative flex items-center justify-center p-8 lg:p-12"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-400/20 to-blue-400/20 rounded-3xl blur-xl"></div>
-          <div className="relative bg-white/95 backdrop-blur-lg shadow-2xl rounded-3xl overflow-hidden border-2 border-pink-200/20">
-            {/* Login Form */}
-            <div className="p-8">
-              <motion.form
-                onSubmit={handleLogin}
-                className="space-y-6"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                <motion.div variants={itemVariants}>
-                  <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                    <User size={16} className="mr-2 text-pink-500" />
-                    Email / Username
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      className="pl-12 w-full p-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-300 placeholder-gray-400 backdrop-blur-sm"
-                      placeholder="Nhập email hoặc username"
-                      required
-                      autoComplete="email"
-                    />
-                  </div>
-                </motion.div>
+          {/* Background Overlay */}
+          <div className="absolute inset-0 bg-black/20 lg:bg-transparent"></div>
 
-                <motion.div variants={itemVariants}>
-                  <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                    <Lock size={16} className="mr-2 text-pink-500" />
-                    Mật khẩu
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+          {/* Form Container */}
+          <div className="relative z-10 w-full max-w-md">
+            {/* Header Mobile Only */}
+            <div className="lg:hidden text-center mb-8">
+              <div className="inline-flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                  <Crown className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="royal-heading text-2xl text-white">
+                    Sakura Club
+                  </h1>
+                  <p className="royal-font text-white/80 text-sm">
+                    Premium Fitness
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Form Card */}
+            <div className="royal-glass rounded-3xl overflow-hidden border border-white/20">
+              {/* Form Header */}
+              <div className="p-8 pb-6">
+                <div className="text-center mb-8">
+                  <h2 className="royal-heading text-3xl text-gray-800 mb-2">
+                    Đăng nhập
+                  </h2>
+                  <p className="royal-font text-gray-600">
+                    Chào mừng bạn quay trở lại
+                  </p>
+                </div>
+
+                {/* Login Form */}
+                <form onSubmit={handleLogin} className="space-y-6">
+                  {/* Email Field */}
+                  <div>
+                    <label className="royal-font text-sm font-medium text-gray-700 mb-3 flex items-center">
+                      <Mail size={16} className="mr-2 text-purple-500" />
+                      Email hoặc tên đăng nhập
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
+                        className="royal-input w-full pl-12 pr-4 py-4 royal-font text-gray-800 placeholder-gray-400 focus:outline-none"
+                        placeholder="Nhập email hoặc username"
+                        required
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <User className="h-5 w-5 text-gray-400" />
+                      </div>
                     </div>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-12 pr-12 w-full p-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-300 placeholder-gray-400 backdrop-blur-sm"
-                      placeholder="••••••••"
-                      required
-                      autoComplete="current-password"
-                    />
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                  </div>
+
+                  {/* Password Field */}
+                  <div>
+                    <label className="royal-font text-sm font-medium text-gray-700 mb-3 flex items-center">
+                      <Lock size={16} className="mr-2 text-purple-500" />
+                      Mật khẩu
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="royal-input w-full pl-12 pr-12 py-4 royal-font text-gray-800 placeholder-gray-400 focus:outline-none"
+                        placeholder="••••••••••"
+                        required
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-gray-400" />
+                      </div>
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="text-gray-400 hover:text-pink-500 focus:outline-none transition-colors"
+                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-purple-500 transition-colors"
                       >
                         {showPassword ? (
                           <EyeOff className="h-5 w-5" />
@@ -327,111 +415,107 @@ export default function Login({ setUser }) {
                       </button>
                     </div>
                   </div>
-                </motion.div>
 
-                <motion.div
-                  className="flex items-center justify-between"
-                  variants={itemVariants}
-                >
-                  <div className="flex items-center">
-                    <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 text-pink-500 focus:ring-pink-500 border-gray-300 rounded"
-                    />
-                    <label
-                      htmlFor="remember-me"
-                      className="ml-2 block text-gray-600"
-                    >
-                      Ghi nhớ đăng nhập
+                  {/* Options Row */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      />
+                      <span className="ml-2 royal-font text-sm text-gray-600">
+                        Ghi nhớ tôi
+                      </span>
                     </label>
-                  </div>
-                  <div>
                     <Link
                       to="/forgot-password"
-                      className="font-medium text-pink-600 hover:text-pink-500 transition-colors"
+                      className="royal-font text-sm text-purple-600 hover:text-purple-500 transition-colors"
                     >
                       Quên mật khẩu?
                     </Link>
                   </div>
-                </motion.div>
 
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-4 bg-red-50 text-red-600 text-sm rounded-2xl border-2 border-red-200 flex items-start"
-                  >
-                    <Shield className="h-5 w-5 mr-2 flex-shrink-0" />
-                    <span>{error}</span>
-                  </motion.div>
-                )}
+                  {/* Error Message */}
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="royal-glass bg-red-50/80 border border-red-200/50 rounded-2xl p-4 flex items-start"
+                      >
+                        <Shield className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                        <span className="royal-font text-sm text-red-700">
+                          {error}
+                        </span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                <motion.div variants={itemVariants}>
+                  {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`w-full py-4 px-6 flex justify-center items-center bg-gradient-to-r from-pink-500 to-blue-500 hover:from-pink-600 hover:to-blue-600 text-white rounded-2xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl text-lg group ${
-                      loading ? "opacity-70 cursor-not-allowed" : ""
+                    className={`royal-button w-full py-4 px-6 text-white royal-font font-semibold text-lg relative overflow-hidden group ${
+                      loading ? "opacity-75 cursor-not-allowed" : ""
                     }`}
                   >
-                    {loading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                        <span>Đang đăng nhập...</span>
-                      </>
-                    ) : (
-                      <>
-                        <UserCheck className="mr-2 h-5 w-5" />
-                        <span>Đăng nhập</span>
-                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                      </>
-                    )}
+                    <div className="relative z-10 flex items-center justify-center">
+                      {loading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                          <span>Đang đăng nhập...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserCheck className="mr-3 h-5 w-5" />
+                          <span>Đăng nhập ngay</span>
+                          <ChevronRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </div>
                   </button>
-                </motion.div>
-              </motion.form>
+                </form>
+              </div>
+
+              {/* Footer */}
+              <div className="bg-gradient-to-r from-gray-50/80 to-purple-50/80 px-8 py-6 text-center border-t border-white/20">
+                <p className="royal-font text-gray-600">
+                  Chưa có tài khoản?{" "}
+                  <Link
+                    to="/sign-up"
+                    className="font-semibold text-purple-600 hover:text-purple-500 transition-colors"
+                  >
+                    Đăng ký miễn phí
+                  </Link>
+                </p>
+              </div>
             </div>
 
-            {/* Sign Up Link */}
-            <motion.div
-              className="bg-gray-50 px-8 py-6 border-t-2 border-gray-100"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-            >
-              <p className="text-center text-gray-600">
-                Chưa có tài khoản?{" "}
-                <Link
-                  to="/sign-up"
-                  className="font-semibold text-pink-600 hover:text-pink-500 transition-colors"
+            {/* Bottom Links */}
+            <div className="mt-8 text-center">
+              <p className="royal-font text-sm text-white/70 lg:text-gray-500">
+                Bằng cách đăng nhập, bạn đồng ý với{" "}
+                <a
+                  href="#"
+                  className="text-purple-400 lg:text-purple-600 hover:underline"
                 >
-                  Đăng ký ngay
-                </Link>
+                  Điều khoản
+                </a>{" "}
+                và{" "}
+                <a
+                  href="#"
+                  className="text-purple-400 lg:text-purple-600 hover:underline"
+                >
+                  Chính sách bảo mật
+                </a>
               </p>
-            </motion.div>
+            </div>
           </div>
         </motion.div>
-
-        {/* Footer */}
-        <motion.div
-          className="mt-8 text-center text-sm text-gray-500"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-        >
-          Bằng việc đăng nhập, bạn đồng ý với{" "}
-          <a href="#" className="text-pink-600 hover:text-pink-500">
-            Điều khoản dịch vụ
-          </a>{" "}
-          và{" "}
-          <a href="#" className="text-pink-600 hover:text-pink-500">
-            Chính sách bảo mật
-          </a>
-        </motion.div>
       </div>
-    </div>
+    </>
   );
 }
