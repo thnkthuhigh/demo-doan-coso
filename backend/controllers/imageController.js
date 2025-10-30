@@ -192,23 +192,26 @@ export const uploadImage = async (req, res) => {
         .json({ message: "No URL found in upload response" });
     }
 
-    // Create image object
-    const imageData = {
-      public_id: publicId,
-      url: imageUrl,
-    };
+    // Log more details for debugging
+    console.log("Image uploaded successfully:");
+    console.log("- URL:", imageUrl);
+    console.log("- Public ID:", publicId);
+    console.log("- Original name:", req.file.originalname);
 
-    console.log("General image data:", imageData);
-
+    // Đảm bảo format trả về giống với getAllImages để frontend hiển thị đồng nhất
     return res.status(200).json({
       message: "Image uploaded successfully",
-      imageUrl: imageUrl,
       publicId: publicId,
-      filename: req.file.originalname || `image-${Date.now()}`,
-      size: req.file.size,
-      format: req.file.mimetype?.split("/")[1],
-      width: req.file.width,
-      height: req.file.height,
+      filename:
+        req.file.originalname ||
+        publicId.split("/").pop() ||
+        `image-${Date.now()}`,
+      url: imageUrl, // Phải trả về đúng field này
+      size: req.file.size || 0,
+      format: req.file.mimetype?.split("/")[1] || "png",
+      width: req.file.width || 800,
+      height: req.file.height || 600,
+      uploadDate: new Date().toISOString(),
     });
   } catch (error) {
     console.error("Error uploading general image:", error);
@@ -223,7 +226,7 @@ export const uploadImage = async (req, res) => {
 export const getAllImages = async (req, res) => {
   try {
     // Get images from Cloudinary
-    const { max_results = 20, next_cursor } = req.query;
+    const { max_results = 50, next_cursor } = req.query; // Tăng max_results để hiển thị nhiều ảnh hơn
 
     const options = {
       resource_type: "image",
@@ -236,17 +239,20 @@ export const getAllImages = async (req, res) => {
     }
 
     const result = await cloudinary.api.resources(options);
+    console.log(`Retrieved ${result.resources.length} images from Cloudinary`);
 
-    // Filter gym-images sau khi lấy về (không bao gồm avatars)
+    // QUAN TRỌNG: Bỏ phần lọc folder để hiển thị tất cả ảnh, chỉ loại trừ avatars
     const filteredResources = result.resources.filter(
-      (resource) =>
-        resource.public_id.startsWith("gym-images/") ||
-        (!resource.public_id.startsWith("avatars/") && !resource.folder)
+      (resource) => !resource.public_id.includes("avatars/")
+    );
+
+    console.log(
+      `Filtered to ${filteredResources.length} images (excluding avatars)`
     );
 
     const images = filteredResources.map((resource) => ({
       publicId: resource.public_id,
-      filename: resource.filename || resource.public_id.split("/").pop(),
+      filename: resource.public_id.split("/").pop() || `image-${Date.now()}`,
       url: resource.secure_url,
       size: resource.bytes,
       width: resource.width,

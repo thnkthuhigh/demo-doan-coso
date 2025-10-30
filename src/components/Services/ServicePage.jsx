@@ -379,7 +379,7 @@ export default function ServicePage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 py-6">
               {filteredServices.map((service, index) => (
                 <motion.div
                   key={service.id}
@@ -391,7 +391,7 @@ export default function ServicePage() {
                   className="h-full group"
                 >
                   <Link
-                    to={`/services/detail/${service.id}`}
+                    to={`/services/detail/${service.slug || service.id}`}
                     className="block h-full"
                   >
                     <div className="bg-white rounded-2xl overflow-hidden h-full shadow-lg hover:shadow-2xl transition-all duration-700 group-hover:transform group-hover:scale-105 border border-gray-100 flex flex-col">

@@ -111,27 +111,37 @@ const ImageManager = () => {
         }
       );
 
+      // Tạo đúng định dạng ảnh như từ API getAllImages trả về
       const newImage = {
         publicId: response.data.publicId,
-        filename: response.data.filename,
-        url: response.data.imageUrl,
-        size: response.data.size,
-        width: response.data.width,
-        height: response.data.height,
-        format: response.data.format,
-        uploadDate: new Date().toISOString(),
+        filename: response.data.filename || file.name,
+        url: response.data.url, // Đảm bảo dùng đúng field name
+        size: response.data.size || file.size,
+        width: response.data.width || 800,
+        height: response.data.height || 600,
+        format: response.data.format || file.type.split("/")[1],
+        uploadDate: response.data.uploadDate || new Date().toISOString(),
       };
 
-      setImages([newImage, ...images]);
+      console.log("Ảnh đã upload:", newImage);
+
+      // Thêm ảnh mới vào đầu danh sách
+      setImages((prevImages) => [newImage, ...prevImages]);
       setTotalCount((prev) => prev + 1);
       toast.success("Tải lên ảnh thành công");
+
+      // Làm mới toàn bộ danh sách để đảm bảo hiện thị đúng
+      setTimeout(() => fetchImages(), 1500);
 
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      toast.error("Tải lên ảnh thất bại");
+      toast.error(
+        "Tải lên ảnh thất bại: " +
+          (error.response?.data?.message || error.message)
+      );
     } finally {
       setUploading(false);
     }
