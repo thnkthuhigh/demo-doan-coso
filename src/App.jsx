@@ -3,6 +3,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import Login from "./components/Login/index";
@@ -78,94 +79,110 @@ function App() {
     <div className="min-h-screen jp-bg-paper font-japanese">
       <Router>
         <ScrollToTop />
-
-        {/* Japanese Layout Structure */}
-        <div className="app-container flex flex-col min-h-screen relative">
-          {/* Zen top border */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-300 to-transparent z-50"></div>
-
-          {/* Navigation với Japanese style */}
-          <JapaneseNav user={user} setUser={setUser} />
-
-          {/* Main Content với Ma (negative space) */}
-          <main className="flex-1 relative pt-20">
-            {/* Zen divider line */}
-            <div className="absolute top-20 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
-
-            <Routes>
-              {/* Main routes - giữ nguyên logic */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<Login setUser={setUser} />} />
-              <Route path="/sign-up" element={<SignUp />} />
-              <Route path="/club" element={<Club />} />
-              <Route path="/services" element={<ServicePage />} />
-              <Route path="/services/detail/:id" element={<ServiceDetail />} />
-              <Route path="/services/:id" element={<ServiceDetail />} />
-              <Route path="/membership" element={<MembershipPage />} />
-              <Route path="/payment" element={<PaymentPage />} />
-              <Route path="/bill" element={<BillPage />} />
-              <Route path="/user" element={<UserProfile />} />
-              <Route path="/classes" element={<ViewClasses />} />
-              <Route path="/my-classes" element={<UserClasses />} />
-              <Route path="/classes/:id/details" element={<ClassDetails />} />
-
-              {/* Admin routes với Japanese styling */}
-              <Route
-                path="/admin/*"
-                element={
-                  <div className="jp-bg-subtle min-h-screen">
-                    <AdminLayout>
-                      <AdminDashboard />
-                    </AdminLayout>
-                  </div>
-                }
-              />
-
-              {/* Legacy admin routes */}
-              <Route path="/qlclb" element={<AdminClubManager />} />
-              <Route path="/qldv" element={<AdminServiceManager />} />
-
-              {/* Default admin route */}
-              <Route path="/admin" element={<Navigate to="/admin" replace />} />
-
-              {/* 404 Route với Japanese style */}
-              <Route
-                path="*"
-                element={
-                  <div className="min-h-screen flex items-center justify-center jp-bg-subtle">
-                    <div className="text-center">
-                      <div className="text-9xl jp-text-sakura mb-4 font-light">
-                        404
-                      </div>
-                      <h1 className="jp-heading-2 jp-text-primary mb-4">
-                        Không tìm thấy trang
-                      </h1>
-                      <p className="jp-body jp-text-secondary mb-8">
-                        Trang bạn tìm kiếm không tồn tại
-                      </p>
-                      <button
-                        onClick={() => (window.location.href = "/")}
-                        className="jp-btn jp-btn-sakura"
-                      >
-                        Về trang chủ
-                      </button>
-                    </div>
-                  </div>
-                }
-              />
-            </Routes>
-
-            {/* Bottom zen divider */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
-          </main>
-
-          {/* Footer với Japanese style */}
-          <JapaneseFooter />
-
-          {/* Bottom border */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-300 to-transparent"></div>
-        </div>
+        <AppContent user={user} setUser={setUser} />
       </Router>
+    </div>
+  );
+}
+
+// Component riêng để xử lý location
+function AppContent({ user, setUser }) {
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
+
+  return (
+    <div className="app-container flex flex-col min-h-screen relative">
+      {/* Zen top border - chỉ hiện khi không phải Login */}
+      {!isLoginPage && (
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-300 to-transparent z-50"></div>
+      )}
+
+      {/* Navigation với Japanese style - Ẩn trên trang Login */}
+      {!isLoginPage && <JapaneseNav user={user} setUser={setUser} />}
+
+      {/* Main Content - BỎ padding-top */}
+      <main className="flex-1 relative">
+        {/* Zen divider line - chỉ hiện khi không phải Login */}
+        {!isLoginPage && (
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+        )}
+
+        <Routes>
+          {/* Main routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<Login setUser={setUser} />} />
+          <Route path="/sign-up" element={<SignUp />} />
+          <Route path="/club" element={<Club />} />
+          <Route path="/services" element={<ServicePage />} />
+          <Route path="/services/detail/:id" element={<ServiceDetail />} />
+          <Route path="/services/:id" element={<ServiceDetail />} />
+          <Route path="/membership" element={<MembershipPage />} />
+          <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/bill" element={<BillPage />} />
+          <Route path="/user" element={<UserProfile />} />
+          <Route path="/classes" element={<ViewClasses />} />
+          <Route path="/my-classes" element={<UserClasses />} />
+          <Route path="/classes/:id/details" element={<ClassDetails />} />
+
+          {/* Admin routes với Japanese styling */}
+          <Route
+            path="/admin/*"
+            element={
+              <div className="jp-bg-subtle min-h-screen">
+                <AdminLayout>
+                  <AdminDashboard />
+                </AdminLayout>
+              </div>
+            }
+          />
+
+          {/* Legacy admin routes */}
+          <Route path="/qlclb" element={<AdminClubManager />} />
+          <Route path="/qldv" element={<AdminServiceManager />} />
+
+          {/* Default admin route */}
+          <Route path="/admin" element={<Navigate to="/admin" replace />} />
+
+          {/* 404 Route với Japanese style */}
+          <Route
+            path="*"
+            element={
+              <div className="min-h-screen flex items-center justify-center jp-bg-subtle">
+                <div className="text-center">
+                  <div className="text-9xl jp-text-sakura mb-4 font-light">
+                    404
+                  </div>
+                  <h1 className="jp-heading-2 jp-text-primary mb-4">
+                    Không tìm thấy trang
+                  </h1>
+                  <p className="jp-body jp-text-secondary mb-8">
+                    Trang bạn tìm kiếm không tồn tại
+                  </p>
+                  <button
+                    onClick={() => (window.location.href = "/")}
+                    className="jp-btn jp-btn-sakura"
+                  >
+                    Về trang chủ
+                  </button>
+                </div>
+              </div>
+            }
+          />
+        </Routes>
+
+        {/* Bottom zen divider - chỉ hiện khi không phải Login */}
+        {!isLoginPage && (
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+        )}
+      </main>
+
+      {/* Footer với Japanese style - Ẩn trên trang Login */}
+      {!isLoginPage && <JapaneseFooter />}
+
+      {/* Bottom border - chỉ hiện khi không phải Login */}
+      {!isLoginPage && (
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-300 to-transparent"></div>
+      )}
     </div>
   );
 }

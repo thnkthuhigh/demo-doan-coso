@@ -2,6 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import servicesData from "./data/services.json";
 import {
   VintageContainer,
   VintageSection,
@@ -48,17 +49,87 @@ export default function ServiceDetail() {
     const fetchServiceDetail = async () => {
       try {
         setLoading(true);
+        console.log("Fetching service with ID/slug:", id);
+
+        // Thử lấy dữ liệu từ API
         const response = await axios.get(
           `http://localhost:5000/api/services/${id}`
         );
         setService(response.data);
       } catch (error) {
         console.error("Error fetching service detail:", error);
-        const mockService = generateMockService(id);
-        if (mockService) {
-          setService(mockService);
+        console.log("Trying to find service in local JSON data:", id);
+
+        // Tìm trong JSON theo ID, slug, hoặc title
+        const jsonService = servicesData.services.find(
+          (service) =>
+            service.id === id ||
+            service.id.toString() === id ||
+            service.slug === id.toLowerCase() ||
+            service.slug.toLowerCase() === id.toLowerCase() ||
+            service.title.toLowerCase() === id.toLowerCase()
+        );
+
+        console.log(
+          "Search result:",
+          jsonService ? jsonService.title : "Not found"
+        );
+
+        if (jsonService) {
+          console.log("Found service in JSON:", jsonService.title);
+
+          // Biến đổi dữ liệu từ JSON sang định dạng phù hợp với component
+          setService({
+            id: jsonService.id,
+            name: jsonService.title,
+            shortDescription:
+              jsonService.shortDescription ||
+              "Dịch vụ cao cấp tại phòng tập của chúng tôi",
+            fullDescription:
+              jsonService.fullDescription ||
+              "Chi tiết về dịch vụ sẽ được cập nhật sớm.",
+            image: jsonService.mainImage || jsonService.images?.[0],
+            price: extractPrice(jsonService.priceRanges?.[0]?.price),
+            duration: jsonService.priceRanges?.[0]?.duration || "60 phút/buổi",
+            level: jsonService.level || "Tất cả cấp độ",
+            category: jsonService.slug || jsonService.category || "fitness",
+            rating: jsonService.rating || 4.8,
+            sessions: jsonService.sessions || 12,
+            features: jsonService.advantages || jsonService.features || [],
+            images: jsonService.images || [],
+            instructors: jsonService.instructors || [],
+            schedule: jsonService.schedule || [],
+            reviews: jsonService.reviews || [],
+            faq: jsonService.faq || [],
+            priceRanges: jsonService.priceRanges || [],
+          });
         } else {
-          setError("Không tìm thấy dịch vụ");
+          // Tìm kiếm không phân biệt chữ hoa/thường
+          const looseMatch = servicesData.services.find(
+            (service) =>
+              (service.title &&
+                service.title.toLowerCase().includes(id.toLowerCase())) ||
+              (service.slug &&
+                service.slug.toLowerCase().includes(id.toLowerCase()))
+          );
+
+          if (looseMatch) {
+            console.log("Found loose match:", looseMatch.title);
+            // Xử lý tương tự như ở trên
+            setService({
+              id: looseMatch.id,
+              name: looseMatch.title,
+              // các trường khác tương tự
+              // ...
+            });
+          } else {
+            console.warn(
+              "Service not found in JSON, using mock data for ID:",
+              id
+            );
+            const mockService = generateMockService(id);
+            setService(mockService);
+          }
         }
       } finally {
         setLoading(false);
@@ -70,7 +141,15 @@ export default function ServiceDetail() {
     }
   }, [id]);
 
+  // Hàm chuyển đổi giá từ chuỗi sang số
+  const extractPrice = (priceString) => {
+    if (!priceString) return 1000000;
+    const numberOnly = priceString.replace(/[^\d]/g, "");
+    return parseInt(numberOnly);
+  };
+
   const generateMockService = (serviceId) => {
+    // Đầu tiên kiểm tra trong kho mẫu cố định
     const serviceTemplates = {
       1: {
         id: "1",
@@ -184,11 +263,19 @@ export default function ServiceDetail() {
       },
     };
 
+    // Nếu có trong kho mẫu cố định, trả về mẫu đó
     if (serviceTemplates[serviceId]) {
+      console.log("Using predefined template for service ID:", serviceId);
       return serviceTemplates[serviceId];
     }
 
-    // Generic fallback
+    // Nếu không có trong kho mẫu, tạo dịch vụ giả dựa trên ID
+    console.log("Creating dynamic mock service for ID:", serviceId);
+
+    // Chuyển ID thành chuỗi để xử lý nhất quán
+    const idStr = serviceId.toString();
+
+    // Danh sách các loại dịch vụ mẫu
     const serviceTypes = [
       {
         name: "CrossFit Intensive",
@@ -217,13 +304,43 @@ export default function ServiceDetail() {
           "https://images.unsplash.com/photo-1555597673-b21d5c935d16?w=1200",
         rating: 4.7,
       },
+      {
+        name: "Yoga & Meditation",
+        description: "Kết hợp yoga và thiền định cho tâm trí cân bằng",
+        category: "Wellness",
+        price: 950000,
+        image:
+          "https://images.unsplash.com/photo-1593811167562-9cef47bfc4d7?w=1200",
+        rating: 4.9,
+      },
+      {
+        name: "Strength Training",
+        description: "Tập trung phát triển sức mạnh và cơ bắp",
+        category: "Strength",
+        price: 1250000,
+        image:
+          "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=1200",
+        rating: 4.6,
+      },
     ];
 
-    const index =
-      Math.abs(serviceId.split("").reduce((a, b) => a + b.charCodeAt(0), 0)) %
-      serviceTypes.length;
+    // Tạo số hash từ ID để chọn dịch vụ
+    // Mục đích: luôn trả về cùng loại dịch vụ cho cùng một ID
+    let hash = 0;
+    for (let i = 0; i < idStr.length; i++) {
+      hash = (hash << 5) - hash + idStr.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+
+    // Lấy index dương từ hash để chọn loại dịch vụ
+    const index = Math.abs(hash) % serviceTypes.length;
     const selectedType = serviceTypes[index];
 
+    console.log(
+      `Selected service type ${index} (${selectedType.name}) for ID: ${serviceId}`
+    );
+
+    // Trả về dịch vụ với thông tin từ loại được chọn
     return {
       id: serviceId,
       name: selectedType.name,
@@ -242,6 +359,21 @@ export default function ServiceDetail() {
         "Theo dõi tiến độ",
         "Hỗ trợ 24/7",
         "Chế độ dinh dưỡng",
+      ],
+      // Thêm trường reviews giả để hiển thị phần đánh giá
+      reviews: [
+        {
+          user: "Người dùng ẩn danh",
+          rating: 5,
+          comment:
+            "Dịch vụ tuyệt vời, đúng như mô tả và đáp ứng mọi nhu cầu của tôi.",
+        },
+        {
+          user: "Khách hàng",
+          rating: 4,
+          comment:
+            "Tôi rất hài lòng với kết quả đạt được sau khi sử dụng dịch vụ này.",
+        },
       ],
     };
   };
@@ -287,8 +419,8 @@ export default function ServiceDetail() {
                 Oops! Không tìm thấy dịch vụ
               </VintageHeading>
               <VintageText variant="lead" className="mb-8 text-vintage-neutral">
-                Dịch vụ bạn đang tìm kiếm có thể đã được cập nhật hoặc không còn
-                khả dụng. Hãy khám phá các dịch vụ tuyệt vời khác của chúng tôi.
+                Dịch vụ với ID: <strong>{id}</strong> không tồn tại hoặc đã được
+                cập nhật. Hãy khám phá các dịch vụ tuyệt vời khác của chúng tôi.
               </VintageText>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <VintageButton
@@ -737,24 +869,19 @@ export default function ServiceDetail() {
                         Điểm nổi bật
                       </VintageHeading>
                       <ul className="space-y-3">
-                        {(
-                          service.features || [
-                            "Huấn luyện viên chuyên nghiệp",
-                            "Thiết bị hiện đại",
-                            "Theo dõi tiến độ",
-                            "Hỗ trợ 24/7",
-                          ]
-                        ).map((feature, index) => (
-                          <li
-                            key={index}
-                            className="flex items-start space-x-3"
-                          >
-                            <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span className="text-vintage-neutral">
-                              {feature}
-                            </span>
-                          </li>
-                        ))}
+                        {(service.features || service.advantages || []).map(
+                          (feature, index) => (
+                            <li
+                              key={index}
+                              className="flex items-start space-x-3"
+                            >
+                              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span className="text-vintage-neutral">
+                                {feature}
+                              </span>
+                            </li>
+                          )
+                        )}
                       </ul>
                     </div>
 
@@ -790,6 +917,83 @@ export default function ServiceDetail() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Nếu có lịch trình từ JSON */}
+                  {service.schedule && service.schedule.length > 0 && (
+                    <div className="mt-8 border-t border-vintage-gold/20 pt-6">
+                      <VintageHeading
+                        level={5}
+                        className="mb-4 text-vintage-primary"
+                      >
+                        Lịch trình
+                      </VintageHeading>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {service.schedule.map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between items-center p-3 bg-vintage-warm rounded-lg"
+                          >
+                            <span className="font-medium">{item.day}:</span>
+                            <span className="text-vintage-primary">
+                              {item.time}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bảng giá từ JSON */}
+                  {service.priceRanges && service.priceRanges.length > 0 && (
+                    <VintageCard className="p-8 shadow-elegant mt-8">
+                      <VintageHeading
+                        level={3}
+                        className="mb-6 text-vintage-dark"
+                      >
+                        Bảng giá dịch vụ
+                      </VintageHeading>
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr className="bg-vintage-primary text-white">
+                              <th className="p-4 text-left">Gói dịch vụ</th>
+                              <th className="p-4 text-left">Thời hạn</th>
+                              <th className="p-4 text-left">Giá</th>
+                              <th className="p-4 text-left"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {service.priceRanges.map((price, index) => (
+                              <tr
+                                key={index}
+                                className={
+                                  index % 2 === 0
+                                    ? "bg-white"
+                                    : "bg-vintage-warm/30"
+                                }
+                              >
+                                <td className="p-4 font-medium">
+                                  {price.name}
+                                </td>
+                                <td className="p-4">{price.duration}</td>
+                                <td className="p-4 text-vintage-primary font-bold">
+                                  {price.price}
+                                </td>
+                                <td className="p-4">
+                                  <Link to="/membership">
+                                    <button className="px-4 py-2 bg-vintage-gold/20 hover:bg-vintage-gold/40 text-vintage-primary rounded-lg transition-colors flex items-center text-sm">
+                                      <Crown className="h-4 w-4 mr-2" />
+                                      <span>Đăng ký</span>
+                                    </button>
+                                  </Link>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </VintageCard>
+                  )}
                 </VintageCard>
               )}
 
@@ -1142,6 +1346,46 @@ export default function ServiceDetail() {
           </VintageContainer>
         </VintageSection>
       </motion.div>
+
+      {/* Thêm section hiển thị đánh giá nếu có từ JSON */}
+      {service.reviews && service.reviews.length > 0 && (
+        <VintageCard className="p-8 shadow-elegant mt-8">
+          <VintageHeading level={3} className="mb-6 text-vintage-dark">
+            Đánh giá từ khách hàng
+          </VintageHeading>
+          <div className="space-y-6">
+            {service.reviews.map((review, idx) => (
+              <div key={idx} className="bg-vintage-warm/30 p-6 rounded-xl">
+                <div className="flex items-center mb-4">
+                  <div className="bg-vintage-primary text-white rounded-full w-10 h-10 flex items-center justify-center font-bold mr-4">
+                    {review.user.charAt(0)}
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-vintage-dark">
+                      {review.user}
+                    </h5>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < review.rating
+                              ? "text-vintage-gold fill-current"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <p className="text-vintage-neutral italic">
+                  "{review.comment}"
+                </p>
+              </div>
+            ))}
+          </div>
+        </VintageCard>
+      )}
     </motion.div>
   );
 }

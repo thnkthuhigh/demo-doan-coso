@@ -330,7 +330,7 @@ const AdminNav = ({ activeModule, setActiveModule }) => {
                           ${
                             activeModule === item.id
                               ? "glass-card shadow-2xl border-2 border-white/40 transform scale-105"
-                              : "hover:glass-card hover:shadow-lg bg-white/10 hover:bg-white/20"
+                              : "hover:glass-card hover:shadow-lg bg-black/10 hover:bg-white/20"
                           }
                         `}
                       >
@@ -376,7 +376,7 @@ const AdminNav = ({ activeModule, setActiveModule }) => {
 
                           {/* Ripple effect */}
                           {activeModule === item.id && (
-                            <div className="absolute inset-0 rounded-xl bg-white/20 ripple-effect"></div>
+                            <div className="absolute inset-0 rounded-xl bg-black/20 ripple-effect"></div>
                           )}
                         </div>
 

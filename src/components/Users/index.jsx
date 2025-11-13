@@ -19,6 +19,10 @@ import {
   Waves,
   Leaf,
 } from "lucide-react";
+import axios from "axios";
+import { toast } from "react-toastify";
+
+const API_URL = "http://localhost:5000";
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -240,53 +244,88 @@ const UserProfile = () => {
     }
   };
 
+  // Thay đổi endpoint và cách xử lý update profile
   const handleSave = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
+      console.log("Saving profile data:", form);
+
+      // Lấy token từ localStorage
       const token = localStorage.getItem("token");
-
       if (!token) {
-        navigate("/login");
-        return;
+        throw new Error("Không có token đăng nhập");
       }
 
-      const formData = new FormData();
-      Object.keys(form).forEach((key) => {
-        formData.append(key, form[key]);
-      });
-
-      if (avatar) {
-        formData.append("avatar", avatar);
-      }
-
-      const response = await fetch("http://localhost:5000/api/auth/profile", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      // 1. Cập nhật thông tin cơ bản (sử dụng đúng endpoint)
+      const userResponse = await axios.put(
+        `${API_URL}/api/users/${user._id}`, // Thay đổi endpoint này
+        {
+          username: form.username,
+          email: form.email,
+          fullName: form.fullName,
+          phone: form.phone,
+          gender: form.gender,
+          address: form.address,
+          dob: form.dob,
         },
-        body: formData,
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      if (response.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
-        return;
-      }
+      console.log("Profile updated:", userResponse.data);
 
-      if (response.ok) {
-        const updatedUser = await response.json();
-        setUser(updatedUser);
-        setEditMode(false);
-        setAvatar(null);
-        setPreviewUrl("");
-        alert("Cập nhật thông tin thành công!");
+      // 2. Xử lý avatar nếu có thay đổi
+      if (avatar) {
+        console.log("Updating avatar...");
+        const formData = new FormData();
+        formData.append("avatar", avatar);
+
+        const avatarResponse = await axios.post(
+          `${API_URL}/api/images/avatar/${user._id}`, // API endpoint avatar đúng
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        console.log("Avatar updated:", avatarResponse.data);
+
+        // Cập nhật user state với avatar mới
+        setUser(avatarResponse.data.user);
+        localStorage.setItem("user", JSON.stringify(avatarResponse.data.user));
       } else {
-        throw new Error("Failed to update profile");
+        // Cập nhật user state không có avatar mới
+        setUser(userResponse.data.user);
+        localStorage.setItem("user", JSON.stringify(userResponse.data.user));
       }
+
+      setEditMode(false);
+      toast.success("Cập nhật hồ sơ thành công");
     } catch (error) {
       console.error("Update error:", error);
-      alert("Có lỗi xảy ra khi cập nhật thông tin!");
+
+      // Thêm thông tin chi tiết về lỗi
+      if (error.response) {
+        // Lỗi từ server với status code
+        toast.error(
+          `Cập nhật thất bại: ${
+            error.response.data?.message || error.response.statusText
+          }`
+        );
+      } else if (error.request) {
+        // Không nhận được phản hồi từ server
+        toast.error("Không thể kết nối đến server");
+      } else {
+        // Lỗi trong quá trình thiết lập request
+        toast.error(`Lỗi: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -377,35 +416,6 @@ const UserProfile = () => {
               Đang tải thông tin...
             </h3>
             <p className="text-slate-500">Vui lòng chờ trong giây lát</p>
-
-            {/* Enhanced Debug tools */}
-            <div className="mt-6 space-y-2">
-              <button
-                onClick={debugToken}
-                className="block mx-auto text-xs text-slate-400 hover:text-slate-600 bg-slate-100 px-3 py-1 rounded"
-              >
-                🔍 Debug Token
-              </button>
-              <button
-                onClick={testAPI}
-                className="block mx-auto text-xs text-slate-400 hover:text-slate-600 bg-slate-100 px-3 py-1 rounded"
-              >
-                🌐 Test API
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.reload();
-                }}
-                className="block mx-auto text-xs text-red-400 hover:text-red-600 bg-red-50 px-3 py-1 rounded"
-              >
-                🗑️ Clear & Reload
-              </button>
-            </div>
-
-            <div className="mt-4 text-xs text-slate-400">
-              <p>Nếu tải quá lâu, hãy click Debug Token để kiểm tra</p>
-            </div>
           </div>
         </motion.div>
       </div>

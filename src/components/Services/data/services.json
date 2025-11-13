@@ -1,11 +1,11 @@
 {
   "services": [
     {
-      "id": "680e7c02bd9026931bcf281a",
+      "id": "1",
       "title": "FITNESS",
       "slug": "fitness",
-      "shortDescription": "Dịch vụ tập luyện thể hình chuyên nghiệp với trang thiết bị hiện đại",
-      "fullDescription": "TMN Fitness cung cấp dịch vụ tập luyện thể hình với thiết bị hiện đại hàng đầu, đáp ứng mọi nhu cầu từ người mới bắt đầu đến vận động viên chuyên nghiệp. Chúng tôi tập trung vào việc cung cấp môi trường tập luyện an toàn, hiệu quả với sự hướng dẫn từ các huấn luyện viên được chứng nhận quốc tế.",
+      "shortDescription": "Dịch vụ rèn luyện thể chất toàn diện với các bài tập cải thiện sức khỏe tim mạch, tăng sức mạnh cơ bắp, giảm mỡ, nâng cao độ linh hoạt và vóc dáng.",
+      "fullDescription": "Dịch vụ rèn luyện thể chất toàn diện với các bài tập cải thiện sức khỏe tim mạch, tăng sức mạnh cơ bắp, giảm mỡ, nâng cao độ linh hoạt và vóc dáng. Đây là một trong những dịch vụ cốt lõi được thiết kế phù hợp cho mọi đối tượng tại phòng gym. TMN Fitness cung cấp dịch vụ tập luyện thể hình với thiết bị hiện đại hàng đầu, đáp ứng mọi nhu cầu từ người mới bắt đầu đến vận động viên chuyên nghiệp.",
       "mainImage": "https://media.gettyimages.com/id/546825853/photo/older-hispanic-woman-lifting-weights-in-living-room.jpg?s=612x612&w=0&k=20&c=ZWrlJG-qQUNjLLYh2RrvLIMLi7E_nYf1Fx3-cea4OVM=",
       "images": [
         "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop",
@@ -81,11 +81,11 @@
       ]
     },
     {
-      "id": "680e7df1bd9026931bcf283b",
+      "id": "2",
       "title": "DANCE COVER",
       "slug": "dance-cover",
-      "shortDescription": "Khám phá niềm đam mê nhảy cùng các biên đạo hàng đầu",
-      "fullDescription": "TMN Dance Cover mang đến trải nghiệm khám phá nhịp điệu âm nhạc thông qua những bước nhảy sôi động. Với đội ngũ biên đạo tài năng và kinh nghiệm, chúng tôi giúp bạn học hỏi nhiều phong cách nhảy hiện đại, từ K-pop cover đến Hip-hop, Jazz, Contemporary và nhiều hơn nữa. Mỗi buổi học là một hành trình khám phá bản thân và tự tin thể hiện cá tính qua từng động tác.",
+      "shortDescription": "Dịch vụ tập luyện vũ đạo được lấy cảm hứng từ các nhóm nhạc đình đám, đặc biệt là K-Pop, mang đến trải nghiệm kết hợp giữa giải trí và rèn luyện thể chất.",
+      "fullDescription": "Dịch vụ tập luyện vũ đạo được lấy cảm hứng từ các nhóm nhạc đình đám, đặc biệt là K-Pop, mang đến trải nghiệm kết hợp giữa giải trí và rèn luyện thể chất. Thông qua các bước nhảy sôi động, học viên không chỉ nâng cao sức khỏe, cải thiện độ dẻo dai và thể lực mà còn phát triển khả năng cảm nhạc, sự tự tin và phong cách biểu diễn. TMN Dance Cover mang đến trải nghiệm khám phá nhịp điệu âm nhạc thông qua những bước nhảy sôi động với đội ngũ biên đạo tài năng và kinh nghiệm.",
       "mainImage": "https://media.gettyimages.com/id/1030366566/photo/sensual-couple-performing-an-artistic.jpg?s=612x612&w=0&k=20&c=9vhwAHZZNWP9FcC20VzhmpEcisbjurotlqjNzT-Hfbk=",
       "images": [
         "https://images.unsplash.com/photo-1551989745-347c28b620d9?q=80&w=1000&auto=format&fit=crop",
@@ -153,11 +153,11 @@
       ]
     },
     {
-      "id": "680f1a0629b5f45b363274f6",
+      "id": "3",
       "title": "ZUMBA",
       "slug": "zumba",
-      "shortDescription": "Đốt cháy calo với những điệu nhảy Zumba sôi động",
-      "fullDescription": "Zumba tại TMN Gym là sự kết hợp hoàn hảo giữa vũ đạo và thể dục nhịp điệu với âm nhạc Latin sôi động. Không chỉ là bộ môn giảm cân hiệu quả, Zumba còn mang đến niềm vui và năng lượng tích cực qua từng động tác. Các buổi tập được thiết kế phù hợp với mọi đối tượng, từ người mới bắt đầu đến những người đã có kinh nghiệm, giúp bạn đốt cháy calo mà không cảm thấy như đang tập luyện gò bó.",
+      "shortDescription": "Dịch vụ tập luyện thể dục theo nhạc kết hợp giữa các bước nhảy Latin và bài tập cardio, mang lại cảm giác vui nhộn, sôi động nhưng vẫn hiệu quả trong việc đốt cháy calo.",
+      "fullDescription": "Dịch vụ tập luyện thể dục theo nhạc kết hợp giữa các bước nhảy Latin và bài tập cardio, mang lại cảm giác vui nhộn, sôi động nhưng vẫn hiệu quả trong việc đốt cháy calo, giảm cân và cải thiện thể lực. Zumba tại TMN Gym là sự kết hợp hoàn hảo giữa vũ đạo và thể dục nhịp điệu với âm nhạc Latin sôi động, giúp bạn đốt cháy calo mà không cảm thấy như đang tập luyện gò bó.",
       "mainImage": "https://media.gettyimages.com/id/680886440/photo/exercising-at-the-gym.jpg?s=612x612&w=0&k=20&c=qc3lPk3k-yzz_HKhbuRtN8rfQDR8d3mDD6Xyv1YFC8E=",
       "images": [
         "https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1000&auto=format&fit=crop",
@@ -225,11 +225,11 @@
       ]
     },
     {
-      "id": "680f1b1229b5f45b363274fd",
+      "id": "4",
       "title": "PERSONAL TRAINER",
       "slug": "personal-trainer",
-      "shortDescription": "Chương trình huấn luyện cá nhân với HLV chuyên nghiệp",
-      "fullDescription": "Dịch vụ Personal Trainer tại TMN Gym là giải pháp tập luyện hiệu quả với sự hướng dẫn trực tiếp từ các huấn luyện viên chuyên nghiệp. Chúng tôi cam kết mang đến chương trình tập luyện được thiết kế riêng biệt, phù hợp với thể trạng, mục tiêu và thời gian của từng cá nhân. Với PT, bạn không chỉ được hướng dẫn kỹ thuật tập luyện đúng đắn mà còn nhận được lời khuyên về dinh dưỡng, lối sống để đạt kết quả tối ưu trong thời gian ngắn nhất.",
+      "shortDescription": "Dịch vụ huấn luyện viên cá nhân 1 kèm 1, giúp người tập xây dựng lộ trình tập luyện và dinh dưỡng cá nhân hóa, phù hợp với mục tiêu như giảm cân, tăng cơ, tăng sức bền.",
+      "fullDescription": "Dịch vụ huấn luyện viên cá nhân 1 kèm 1, giúp người tập xây dựng lộ trình tập luyện và dinh dưỡng cá nhân hóa, phù hợp với mục tiêu như giảm cân, tăng cơ, tăng sức bền hoặc phục hồi chức năng. Dịch vụ Personal Trainer tại TMN Gym là giải pháp tập luyện hiệu quả với sự hướng dẫn trực tiếp từ các huấn luyện viên chuyên nghiệp, đảm bảo kỹ thuật tập luyện đúng đắn và kết quả tối ưu.",
       "mainImage": "https://media.gettyimages.com/id/1392310150/photo/young-man-helping-his-girlfriend-during-her-sports-training-in-a-health-club.jpg?s=612x612&w=0&k=20&c=db1uW5yKg04GawBIoAcFjHyy1TRnEd1OVAFfYaN76kY=",
       "images": [
         "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=1000&auto=format&fit=crop",
@@ -296,11 +296,11 @@
       ]
     },
     {
-      "id": "680f1b4c29b5f45b36327500",
+      "id": "5",
       "title": "YOGA",
       "slug": "yoga",
-      "shortDescription": "Tìm lại sự cân bằng cho thân - tâm - trí",
-      "fullDescription": "Yoga tại TMN Gym là sự kết hợp hoàn hảo giữa các động tác vật lý, kỹ thuật thở và thiền định, giúp cải thiện sức khỏe thể chất lẫn tinh thần. Các lớp học được thiết kế phù hợp với nhiều trình độ khác nhau, từ người mới bắt đầu đến người thực hành yoga lâu năm. Với không gian yên tĩnh, ánh sáng dịu nhẹ và không khí trong lành, chúng tôi tạo ra môi trường lý tưởng để bạn kết nối với bản thân, cải thiện sự dẻo dai và tìm thấy sự bình yên nội tại.",
+      "shortDescription": "Dịch vụ tập luyện kết hợp giữa các động tác dẻo dai, kiểm soát hơi thở và thiền định, giúp tăng cường sự linh hoạt, cân bằng cơ thể – tinh thần.",
+      "fullDescription": "Dịch vụ tập luyện kết hợp giữa các động tác dẻo dai, kiểm soát hơi thở và thiền định, giúp tăng cường sự linh hoạt, cân bằng cơ thể – tinh thần, cải thiện sức khỏe toàn diện và giảm căng thẳng hiệu quả. Yoga tại TMN Gym là không gian lý tưởng để bạn kết nối với bản thân, cải thiện sự dẻo dai và tìm thấy sự bình yên nội tại.",
       "mainImage": "https://media.gettyimages.com/id/2155324511/photo/diverse-group-of-students-doing-crescent-lunge-pose-during-yoga-class.jpg?s=612x612&w=0&k=20&c=o59qnl_-jc8qhA0Gr3FTpnF6qTjguqlTr1AaZ4VOioA=",
       "images": [
         "https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?q=80&w=1000&auto=format&fit=crop",
@@ -375,11 +375,11 @@
       ]
     },
     {
-      "id": "80f1c4729b5f45b36327503",
+      "id": "6",
       "title": "MUAY THAI",
       "slug": "muay-thai",
-      "shortDescription": "Học võ thuật Thái Lan đỉnh cao, rèn luyện thể lực và kỹ năng tự vệ",
-      "fullDescription": "Muay Thai tại TMN Gym là nơi lý tưởng để trải nghiệm môn võ thuật Thái Lan đích thực. Được huấn luyện bởi các võ sư chuyên nghiệp với kinh nghiệm thi đấu quốc tế, học viên sẽ được học từ những kỹ thuật cơ bản đến nâng cao như đấm, đá, gối, cùi chỏ và các chiến thuật thi đấu. Không chỉ giúp rèn luyện sức mạnh, sự dẻo dai và khả năng tự vệ, Muay Thai còn là cách tuyệt vời để đốt cháy calo, giảm cân và xây dựng cơ bắp săn chắc.",
+      "shortDescription": "Dịch vụ huấn luyện võ thuật truyền thống Thái Lan, nổi bật với kỹ thuật sử dụng cả tay, chân, khuỷu tay và đầu gối, giúp người tập nâng cao thể lực, giảm cân nhanh.",
+      "fullDescription": "Môn quyền Thái là dịch vụ huấn luyện võ thuật truyền thống Thái Lan, nổi bật với kỹ thuật sử dụng cả tay, chân, khuỷu tay và đầu gối, giúp người tập nâng cao thể lực, giảm cân nhanh, tăng phản xạ và khả năng tự vệ. Muay Thai tại TMN Gym là nơi lý tưởng để trải nghiệm môn võ thuật Thái Lan đích thực, được huấn luyện bởi các võ sư chuyên nghiệp với kinh nghiệm thi đấu quốc tế.",
       "mainImage": "https://media.gettyimages.com/id/618981846/photo/boxing-her-way-to-a-ripper-body.jpg?s=612x612&w=0&k=20&c=2SnDLdpS0VUHaNWmlrFlzHZReyHtezVEZhDLxWPatQs=",
       "images": [
         "https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=1000&auto=format&fit=crop",
@@ -447,11 +447,11 @@
       ]
     },
     {
-      "id": "680f1cf029b5f45b36327506",
+      "id": "7",
       "title": "BOXING",
       "slug": "boxing",
-      "shortDescription": "Rèn luyện sức mạnh và kỹ thuật quyền Anh chuyên nghiệp",
-      "fullDescription": "Boxing tại TMN Gym mang đến trải nghiệm tập luyện quyền Anh chuyên nghiệp với các huấn luyện viên giàu kinh nghiệm. Từ người mới bắt đầu đến các võ sĩ có kinh nghiệm, chúng tôi cung cấp chương trình huấn luyện phù hợp để phát triển kỹ thuật đấm, phản xạ, thể lực và chiến thuật thi đấu. Boxing không chỉ là môn võ thuật mà còn là bài tập cardio hiệu quả, giúp đốt cháy calo, giảm căng thẳng và xây dựng sự tự tin. Tham gia các buổi tập với cường độ cao, bạn sẽ cải thiện sức mạnh, sự nhanh nhẹn và độ bền của cơ thể.",
+      "shortDescription": "Dịch vụ huấn luyện quyền Anh, tập trung vào các kỹ thuật đấm, di chuyển, phòng thủ và chiến thuật thi đấu. Boxing giúp người tập tăng cường sức mạnh, tốc độ, sự linh hoạt.",
+      "fullDescription": "Dịch vụ huấn luyện quyền Anh, tập trung vào các kỹ thuật đấm, di chuyển, phòng thủ và chiến thuật thi đấu. Boxing giúp người tập tăng cường sức mạnh, tốc độ, sự linh hoạt, phản xạ và khả năng tự vệ. Boxing tại TMN Gym mang đến trải nghiệm tập luyện quyền Anh chuyên nghiệp với các huấn luyện viên giàu kinh nghiệm, giúp phát triển kỹ thuật đấm, phản xạ, thể lực và chiến thuật thi đấu.",
       "mainImage": "https://media.gettyimages.com/id/481686206/photo/boxing-power.jpg?s=612x612&w=0&k=20&c=-zms0hnbqMWKd4oCRY_-99_aYNtvrEweZEMsgCgl_wE=",
       "images": [
         "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?q=80&w=1000&auto=format&fit=crop",
@@ -519,11 +519,11 @@
       ]
     },
     {
-      "id": "680f1de629b5f45b36327509",
+      "id": "8",
       "title": "CYCLING",
       "slug": "cycling",
-      "shortDescription": "Đạp xe trong nhà với âm nhạc sôi động và huấn luyện viên năng động",
-      "fullDescription": "Cycling tại TMN Gym là lớp tập đạp xe trong nhà (Indoor Cycling) với cường độ cao, kết hợp với âm nhạc sôi động và sự hướng dẫn của huấn luyện viên đầy năng lượng. Buổi tập kéo dài 45-60 phút, mô phỏng trải nghiệm đạp xe ngoài trời với các thay đổi về tốc độ và độ khó, từ đạp bằng phẳng đến leo dốc và sprint. Đây là bài tập cardio hiệu quả giúp đốt cháy calo, tăng cường sức khỏe tim mạch, đồng thời xây dựng sức mạnh cho phần thân dưới mà không gây áp lực lên các khớp.",
+      "shortDescription": "Dịch vụ tập luyện đạp xe trong nhà (spin bike) hoặc ngoài trời, giúp cải thiện sức khỏe tim mạch, tăng cường sức bền, đốt cháy calo và giảm cân hiệu quả.",
+      "fullDescription": "Dịch vụ tập luyện đạp xe trong nhà (spin bike) hoặc ngoài trời, giúp cải thiện sức khỏe tim mạch, tăng cường sức bền, đốt cháy calo và giảm cân hiệu quả. Cycling tại TMN Gym là lớp tập đạp xe trong nhà với cường độ cao, kết hợp với âm nhạc sôi động và sự hướng dẫn của huấn luyện viên đầy năng lượng, mô phỏng trải nghiệm đạp xe ngoài trời.",
       "mainImage": "https://media.gettyimages.com/id/909443742/photo/happy-black-athlete-practicing-on-exercise-bike-in-a-health-club.jpg?s=612x612&w=0&k=20&c=kceZHR0QxwGYan2a7HiFoM8kzxV196t_u7PZT5buYr4=",
       "images": [
         "https://images.unsplash.com/photo-1534787238916-9ba6764efd4f?q=80&w=1000&auto=format&fit=crop",
@@ -546,25 +546,21 @@
           "price": "1.500.000₫",
           "duration": "16 buổi"
         },
-        {
-          "name": "Gói không giới hạn",
-          "price": "2.000.000₫",
-          "duration": "1 tháng"
-        },
+        { "name": "Gói cao cấp", "price": "2.800.000₫", "duration": "32 buổi" },
         { "name": "Vé lẻ", "price": "120.000₫", "duration": "1 buổi" }
       ],
       "instructors": [
         {
-          "name": "Thanh Hà",
-          "avatar": "https://images.unsplash.com/photo-1548690312-e3b70d1a873b?q=80&w=200&auto=format&fit=crop",
-          "specialty": "Cycling & HIIT",
-          "experience": "6 năm"
+          "name": "Minh Quân",
+          "avatar": "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?q=80&w=200&auto=format&fit=crop",
+          "specialty": "Indoor Cycling",
+          "experience": "8 năm"
         },
         {
-          "name": "Quang Minh",
-          "avatar": "https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?q=80&w=200&auto=format&fit=crop",
-          "specialty": "Endurance Cycling",
-          "experience": "8 năm"
+          "name": "Hương Giang",
+          "avatar": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=200&auto=format&fit=crop",
+          "specialty": "Rhythm Cycling",
+          "experience": "6 năm"
         }
       ],
       "schedule": [
@@ -572,28 +568,28 @@
           "day": "Thứ Hai - Thứ Sáu",
           "time": "6:00 - 7:00, 12:00 - 13:00, 18:00 - 20:00"
         },
-        { "day": "Thứ Bảy", "time": "8:00 - 10:00" }
+        { "day": "Thứ Bảy - Chủ Nhật", "time": "8:00 - 10:00, 16:00 - 18:00" }
       ],
       "reviews": [
         {
-          "user": "Lan Anh",
+          "user": "Thanh Thúy",
           "rating": 5,
-          "comment": "Lớp học năng động với âm nhạc sôi động. Đã giúp tôi giảm 5kg sau 2 tháng tập luyện."
+          "comment": "Đã tập được 3 tháng và giảm 7kg. Lớp học nhiều năng lượng và rất vui."
         },
         {
-          "user": "Xuân Thành",
-          "rating": 4,
-          "comment": "HLV Thanh Hà rất nhiệt tình và chuyên nghiệp. Mỗi buổi tập đều thử thách nhưng thú vị."
+          "user": "Anh Tuấn",
+          "rating": 5,
+          "comment": "Huấn luyện viên rất chuyên nghiệp, âm nhạc bắt tai và không khí lớp học tuyệt vời."
         }
       ],
       "faq": [
         {
-          "question": "Tôi chưa từng đạp xe, có thể tham gia không?",
-          "answer": "Hoàn toàn có thể! Huấn luyện viên sẽ hướng dẫn cách điều chỉnh xe và kỹ thuật đạp phù hợp với trình độ của bạn."
+          "question": "Tôi chưa từng đạp xe thể thao, có thể tham gia không?",
+          "answer": "Tất nhiên! Các buổi học đều có hướng dẫn chi tiết về cách điều chỉnh xe và kỹ thuật đạp phù hợp với trình độ của bạn."
         },
         {
-          "question": "Cần chuẩn bị gì khi tham gia lớp Cycling?",
-          "answer": "Bạn chỉ cần mặc quần áo thể thao thoáng mát, mang theo nước và khăn. Nếu có, hãy đi giày cycling chuyên dụng, nếu không giày thể thao thông thường cũng được."
+          "question": "Tôi cần chuẩn bị gì khi tham gia lớp Cycling?",
+          "answer": "Bạn chỉ cần mặc quần áo thể thao thoải mái, mang theo nước và khăn. Chúng tôi cung cấp giày đạp chuyên dụng nếu bạn cần."
         }
       ]
     }
